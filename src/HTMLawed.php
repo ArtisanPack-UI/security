@@ -198,12 +198,12 @@ function htmLawed( string $t, mixed $C = 1, mixed $S = array() ): string
     // Handle CDATA, comments, and entities.
 
     if ( $C['cdata'] || $C['comment'] ) {
-        $t = preg_replace_callback( '`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', 'DigitalShopfrontCms\Functions\HTMLawed\hl_commentCdata', $t );
+        $t = preg_replace_callback( '`<!(?:(?:--.*?--)|(?:\[CDATA\[.*?\]\]))>`sm', 'Digitalshopfront\Security\HTMLawed\hl_commentCdata', $t );
     }
     $t =
         preg_replace_callback(
             '`&amp;([a-zA-Z][a-zA-Z0-9]{1,30}|#(?:[0-9]{1,8}|[Xx][0-9A-Fa-f]{1,7}));`',
-            'DigitalShopfrontCms\Functions\HTMLawed\hl_entity',
+            'Digitalshopfront\Security\HTMLawed\hl_entity',
             str_replace( '&', '&amp;', $t ) );
     if ( $C['unique_ids'] && !isset( $GLOBALS['hl_Ids'] ) ) {
         $GLOBALS['hl_Ids'] = array();
@@ -215,7 +215,7 @@ function htmLawed( string $t, mixed $C = 1, mixed $S = array() ): string
 
     // Handle remaining text.
 
-    $t = preg_replace_callback( '`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', 'DigitalShopfrontCms\Functions\HTMLawed\hl_tag', $t );
+    $t = preg_replace_callback( '`<(?:(?:\s|$)|(?:[^>]*(?:>|$)))|>`m', 'Digitalshopfront\Security\HTMLawed\hl_tag', $t );
     $t = $C['balance'] ? hl_balance( $t, $C['keep_bad'], $C['parent'] ) : $t;
     $t = ( ( $C['cdata'] || $C['comment'] ) && strpos( $t, "\x01" ) !== false )
         ? str_replace( array( "\x01", "\x02", "\x03", "\x04", "\x05" ), array( '', '', '&', '<', '>' ), $t )

@@ -3,13 +3,14 @@
     "description": "Provides escaping and sanitation functions to provide security for Digital Shopfront CMS.",
     "type": "library",
     "license": "GPL-3.0-or-later",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "autoload": {
         "psr-4": {
             "Digitalshopfront\\Security\\": "src/"
         },
         "files": [
-            "src/helpers.php"
+            "src/helpers.php",
+            "src/HTMLawed.php"
         ]
     },
     "autoload-dev": {
@@ -30,7 +31,8 @@
     },
     "require-dev": {
         "pestphp/pest": "^3.8",
-        "pestphp/pest-plugin-laravel": "^3.1"
+        "pestphp/pest-plugin-laravel": "^3.1",
+        "orchestra/testbench": "^10.2"
     },
     "config": {
         "allow-plugins": {

@@ -3,8 +3,15 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Orchestra\Testbench\TestCase as Orchestra;
+use Digitalshopfront\Security\SecurityServiceProvider;
 
-abstract class TestCase extends BaseTestCase
+class TestCase extends Orchestra
 {
-    //
+    protected function getPackageProviders( $app )
+    {
+        return [
+            SecurityServiceProvider::class,
+        ];
+    }
 }

@@ -19,6 +19,7 @@ class Security
         if ( $email === null || $email === '' ) {
             return '';
         }
+
         return filter_var( $email, FILTER_SANITIZE_EMAIL );
     }
 
