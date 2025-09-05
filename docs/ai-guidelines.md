@@ -1,10 +1,10 @@
 ---
-title: AI Guidelines
+title: AI Guidelines for Security
 ---
 
-# AI Guidelines
+# AI Guidelines for Security
 
-## Security (artisanpack-ui-security)
+## ArtisanPack UI Security Package
 
 **Primary Goal:** To ensure that all generated code is secure by default and follows Laravel security best practices.
 
