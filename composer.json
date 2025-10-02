@@ -27,7 +27,8 @@
   "require": {
     "php": "^8.2",
     "illuminate/support": ">=5.3",
-    "laminas/laminas-escaper": "^2.16"
+    "laminas/laminas-escaper": "^2.16",
+    "artisanpack-ui/core": "^1.0"
   },
   "require-dev": {
     "pestphp/pest": "^3.8",
