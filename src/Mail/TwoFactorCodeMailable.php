@@ -34,7 +34,7 @@ class TwoFactorCodeMailable extends Mailable
 	 * @since 1.2.0
 	 * @var int
 	 */
-	public int $code;
+	protected int $code;
 
 	/**
 	 * Create a new message instance.
@@ -73,6 +73,9 @@ class TwoFactorCodeMailable extends Mailable
 	{
 		return new Content(
 			markdown: 'artisanpack-ui-security::emails.two-factor-code',
+			with:     [
+						  'code' => $this->code,
+					  ]
 		);
 	}
 }
