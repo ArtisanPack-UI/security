@@ -4,7 +4,7 @@ title: Getting Started with ArtisanPack UI Security
 
 # Getting Started
 
-The ArtisanPack UI Security package provides essential security functions for Laravel applications, specifically designed for the Digital Shopfront CMS. It offers comprehensive data sanitization and output escaping functions to protect against common web vulnerabilities.
+The ArtisanPack UI Security package provides essential security functions for Laravel applications, specifically designed for the Digital Shopfront CMS. It offers comprehensive data sanitization and output escaping functions to protect against common web vulnerabilities, plus robust two-factor authentication (2FA) capabilities.
 
 ## Installation
 
@@ -13,6 +13,59 @@ Install the package via Composer:
 ```bash
 composer require ArtisanPackUI/security
 ```
+
+### Additional Setup for Two-Factor Authentication
+
+If you plan to use the 2FA features, you'll need to perform additional setup steps:
+
+#### 1. Publish and Run Migration
+
+The package will automatically register its service provider. However, you need to add the required database columns to your User model:
+
+```php
+// In a migration file
+Schema::table('users', function (Blueprint $table) {
+    $table->string('two_factor_secret')->nullable();
+    $table->text('two_factor_recovery_codes')->nullable();
+    $table->timestamp('two_factor_enabled_at')->nullable();
+});
+```
+
+#### 2. Add Trait to User Model
+
+Add the `TwoFactorAuthenticatable` trait to your User model:
+
+```php
+use ArtisanPackUI\Security\TwoFactor\TwoFactorAuthenticatable;
+
+class User extends Authenticatable
+{
+    use TwoFactorAuthenticatable;
+    
+    // ... rest of your User model
+}
+```
+
+#### 3. Create Required Route and View
+
+**⚠️ Critical:** You must create a route named `two-factor.challenge` and its corresponding view:
+
+```php
+// In routes/web.php
+Route::get('/two-factor/challenge', function () {
+    return view('auth.two-factor-challenge');
+})->name('two-factor.challenge');
+
+Route::post('/two-factor/challenge', function (Request $request) {
+    // Handle 2FA verification logic
+})->name('two-factor.verify');
+```
+
+#### 4. Configure Mail Settings
+
+Since the default 2FA provider uses email, ensure your application's mail configuration is properly set up.
+
+For complete 2FA implementation details, see the [Two-Factor Authentication Guide](two-factor-authentication.md).
 
 ## Basic Usage
 
