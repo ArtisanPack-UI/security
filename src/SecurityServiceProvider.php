@@ -91,7 +91,7 @@ class SecurityServiceProvider extends ServiceProvider
 		}
 
 		// If the entire 2FA feature is disabled, do not register any of its components.
-		if ( ! config( 'security.enabled' ) ) {
+		if ( ! config( 'artisanpack.security.enabled' ) ) {
 			return;
 		}
 
@@ -121,7 +121,7 @@ class SecurityServiceProvider extends ServiceProvider
 	 */
 	protected function ensureTwoFactorChallengeRouteExists(): void
 	{
-		$routeName = config( 'security.routes.verify' );
+		$routeName = config( 'artisanpack.security.routes.verify' );
 
 		if ( ! Route::has( $routeName ) ) {
 			throw new Exception(

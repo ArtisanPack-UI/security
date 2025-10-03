@@ -54,7 +54,7 @@ class TwoFactorMiddleware
 			$user->hasTwoFactorEnabled() &&
 			! $request->session()->get( self::SESSION_KEY )
 		) {
-			return redirect()->route( config( 'security.routes.verify' ) );
+			return redirect()->route( config( 'artisanpack.security.routes.verify' ) );
 		}
 
 		return $next( $request );

@@ -79,7 +79,7 @@ class TwoFactorManager
 	 */
 	public function getDefaultDriver(): string
 	{
-		$default = config( 'security.two_factor.default' );
+		$default = config( 'artisanpack.security.two_factor.default' );
 
 		if ( is_null( $default ) ) {
 			throw new InvalidArgumentException( 'No default two-factor provider has been configured.' );
