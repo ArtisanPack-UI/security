@@ -14,8 +14,11 @@
 
 namespace ArtisanPackUI\Security\TwoFactor;
 
+use Exception;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use PragmaRX\Google2FA\Google2FA;
+use RuntimeException;
 
 /**
  * Provides two-factor authentication capabilities to a model.
@@ -59,31 +62,56 @@ trait TwoFactorAuthenticatable
 	 * @since 1.2.0
 	 *
 	 * @return void
+	 * @throws Exception If secret generation or saving fails.
 	 */
 	public function generateTwoFactorSecret(): void
 	{
-		$google2fa = app( Google2FA::class );
+		try {
+			$google2fa = app( Google2FA::class );
 
-		$this->two_factor_secret = encrypt( $google2fa->generateSecretKey() );
-		$this->save();
+			$this->two_factor_secret = encrypt( $google2fa->generateSecretKey() );
+
+			if ( ! $this->save() ) {
+				throw new RuntimeException( 'Failed to save the new two-factor secret to the database.' );
+			}
+		} catch ( Exception $e ) {
+			Log::error( 'Failed to generate 2FA secret for user: ' . $this->id, [
+				'error' => $e->getMessage(),
+			] );
+
+			// Re-throw the exception so the calling code knows the operation failed.
+			throw $e;
+		}
 	}
 
 	/**
-	 * Generates a new set of recovery codes.
+	 * Generates new recovery codes for the user.
 	 *
 	 * @since 1.2.0
 	 *
 	 * @return void
+	 * @throws Exception If recovery code generation or saving fails.
 	 */
 	public function generateRecoveryCodes(): void
 	{
-		$this->two_factor_recovery_codes = encrypt(
-			json_encode(
-				Collection::times( 8, function () {
-					return bin2hex( random_bytes( 8 ) );
-				} )->all()
-			)
-		);
-		$this->save();
+		try {
+			$this->two_factor_recovery_codes = encrypt(
+				json_encode(
+					Collection::times( 8, function () {
+						return bin2hex( random_bytes( 8 ) );
+					} )->all()
+				)
+			);
+
+			if ( ! $this->save() ) {
+				throw new RuntimeException( 'Failed to save new recovery codes to the database.' );
+			}
+		} catch ( Exception $e ) {
+			Log::error( 'Failed to generate recovery codes for user: ' . $this->id, [
+				'error' => $e->getMessage(),
+			] );
+
+			throw $e;
+		}
 	}
 }

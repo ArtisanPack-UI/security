@@ -75,21 +75,29 @@ class TwoFactorManager
 	 * @since 1.2.0
 	 *
 	 * @return string
+	 * @throws InvalidArgumentException If a default driver is not configured.
 	 */
 	public function getDefaultDriver(): string
 	{
-		return config( 'security.two_factor.default' );
+		$default = config( 'security.two_factor.default' );
+
+		if ( is_null( $default ) ) {
+			throw new InvalidArgumentException( 'No default two-factor provider has been configured.' );
+		}
+
+		return $default;
 	}
 
 	/**
-	 * Resolve the given provider by name.
+	 * Resolve a given provider.
 	 *
 	 * @since 1.2.0
 	 *
 	 * @param string $name The name of the provider.
-	 * @return TwoFactorProvider
+	 * @return \ArtisanPackUI\Security\Contracts\TwoFactorProvider
 	 *
-	 * @throws InvalidArgumentException
+	 * @throws InvalidArgumentException If the provider is not defined, does not specify a driver, or the driver is
+	 *                                   invalid.
 	 */
 	protected function resolve( string $name ): TwoFactorProvider
 	{
@@ -99,6 +107,18 @@ class TwoFactorManager
 			throw new InvalidArgumentException( "Two-factor provider [{$name}] is not defined." );
 		}
 
-		return App::make( $config['driver'] );
+		if ( ! isset( $config['driver'] ) ) {
+			throw new InvalidArgumentException( "Two-factor provider [{$name}] does not specify a driver." );
+		}
+
+		$instance = App::make( $config['driver'] );
+
+		if ( ! $instance instanceof TwoFactorProvider ) {
+			throw new InvalidArgumentException(
+				"Driver [{$config['driver']}] for two-factor provider [{$name}] must implement the TwoFactorProvider interface."
+			);
+		}
+
+		return $instance;
 	}
 }
