@@ -26,7 +26,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class TwoFactorCodeMailable extends Mailable
 {
-	use Queueable, SerializesModels;
+	use SerializesModels;
 
 	/**
 	 * The two-factor authentication code.
