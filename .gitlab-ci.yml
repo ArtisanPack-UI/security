@@ -31,6 +31,10 @@ build:vendors:
   image: php:8.2
   before_script:
     - |
+      # Install system dependencies
+      apt-get update && apt-get install -y git unzip
+      # Install PHP extensions
+      docker-php-ext-install zip
       # Install Composer
       php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
       php composer-setup.php
