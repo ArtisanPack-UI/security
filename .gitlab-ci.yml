@@ -32,7 +32,7 @@ build:vendors:
   before_script:
     - |
       # Install system dependencies
-      apt-get update && apt-get install -y git unzip
+      apt-get update && apt-get install -y git unzip libzip-dev
       # Install PHP extensions
       docker-php-ext-install zip
       # Install Composer
