@@ -6,11 +6,11 @@ This plan assumes the best practice is to define named limiters and allow the en
 
 ## 1. Configuration
 
-First, we will add a new `rate_limiting` section to the main configuration file. This will allow users to enable/disable the feature and define various rate limit policies.
+First, we will add a new `rateLimiting` section to the main configuration file. This will allow users to enable/disable the feature and define various rate limit policies.
 
 **File:** `config/security.php`
 
-**Action:** Add a new `rate_limiting` key to the configuration array.
+**Action:** Add a new `rateLimiting` key to the configuration array.
 
 ```php
 // In config/security.php
@@ -26,31 +26,31 @@ return [
     | Rate Limiting
     |--------------------------------------------------------------------------
     |
-    | Here you may configure the rate limiting settings for your application.
+    | Here you may configure the `rateLimiting` settings for your application.
     | You can define different limiters for various parts of your
     | application, such as the API, web routes, or specific actions
     | like login attempts and password resets.
     |
     */
-    'rate_limiting' => [
+    'rateLimiting' => [
         'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
 
         'limiters' => [
             'web' => [
-                'max_attempts' => 60,
-                'decay_minutes' => 1,
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
             ],
             'api' => [
-                'max_attempts' => 60,
-                'decay_minutes' => 1,
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
             ],
             'login' => [
-                'max_attempts' => 5,
-                'decay_minutes' => 1,
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
             ],
             'password_reset' => [
-                'max_attempts' => 5,
-                'decay_minutes' => 1,
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
             ],
         ],
     ],
@@ -89,15 +89,15 @@ public function boot(Kernel $kernel): void
  */
 protected function bootRateLimiting(): void
 {
-    if (!config('artisanpack.security.rate_limiting.enabled')) {
+    if (!config('artisanpack.security.rateLimiting.enabled')) {
         return;
     }
 
-    $limiters = config('artisanpack.security.rate_limiting.limiters', []);
+    $limiters = config('artisanpack.security.rateLimiting.limiters', []);
 
     foreach ($limiters as $name => $config) {
-        $maxAttempts = $config['max_attempts'] ?? 60;
-        $decayMinutes = $config['decay_minutes'] ?? 1;
+        $maxAttempts = $config['maxAttempts'] ?? 60;
+        $decayMinutes = $config['decayMinutes'] ?? 1;
 
         RateLimiter::for($name, function (Request $request) use ($maxAttempts, $decayMinutes) {
             $key = optional($request->user())->id ?: $request->ip();
@@ -192,10 +192,10 @@ class RateLimitingTest extends TestCase
         parent::setUp();
 
         // Enable rate limiting and define a test route with a limiter
-        Config::set('artisanpack.security.rate_limiting.enabled', true);
-        Config::set('artisanpack.security.rate_limiting.limiters.test', [
-            'max_attempts' => 3,
-            'decay_minutes' => 1,
+        Config::set('artisanpack.security.rateLimiting.enabled', true);
+        Config::set('artisanpack.security.rateLimiting.limiters.test', [
+            'maxAttempts' => 3,
+            'decayMinutes' => 1,
         ]);
 
         // Manually boot the provider to register our test limiter
@@ -263,30 +263,30 @@ The rate limiting feature is enabled by default. To customize the settings, publ
 php artisan vendor:publish --tag=artisanpack-package-config
 ```
 
-This will create a `config/artisanpack/security.php` file. You can then edit the `rate_limiting` section.
+This will create a `config/artisanpack/security.php` file. You can then edit the `rateLimiting` section.
 
 ```php
 // config/artisanpack/security.php
 
-'rate_limiting' => [
+'rateLimiting' => [
     'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
 
     'limiters' => [
         'web' => [
-            'max_attempts' => 60,
-            'decay_minutes' => 1,
+            'maxAttempts' => 60,
+            'decayMinutes' => 1,
         ],
         'api' => [
-            'max_attempts' => 60,
-            'decay_minutes' => 1,
+            'maxAttempts' => 60,
+            'decayMinutes' => 1,
         ],
         'login' => [
-            'max_attempts' => 5,
-            'decay_minutes' => 1,
+            'maxAttempts' => 5,
+            'decayMinutes' => 1,
         ],
         'password_reset' => [
-            'max_attempts' => 5,
-            'decay_minutes' => 1,
+            'maxAttempts' => 5,
+            'decayMinutes' => 1,
         ],
     ],
 ],
