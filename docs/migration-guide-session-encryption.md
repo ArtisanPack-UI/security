@@ -1,6 +1,6 @@
 # Migration Guide: Session Encryption
 
-This guide outlines the changes related to session encryption in the ArtisanPack UI Security package. As of version X.X.X, session encryption is enforced by default to enhance application security.
+This guide outlines the changes related to session encryption in the ArtisanPack UI Security package. As of version 2.0, session encryption is enforced by default to enhance application security.
 
 ## Session Encryption by Default
 

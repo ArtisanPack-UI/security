@@ -50,9 +50,7 @@ class SecurityServiceProvider extends ServiceProvider
             ]);
 		}
 
-        if (config('artisanpack.security.encrypt')) {
-            $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
-        }
+        $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
 
 		$this->bootTwoFactorAuthentication();
 	}
