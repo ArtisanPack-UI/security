@@ -4,6 +4,7 @@ namespace ArtisanPackUI\Security;
 
 use ArtisanPackUI\Security\Console\Commands\CheckSessionSecurity;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
+use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
 use Illuminate\Contracts\Http\Kernel;
@@ -51,6 +52,7 @@ class SecurityServiceProvider extends ServiceProvider
 		}
 
         $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
+        $kernel->pushMiddleware(SecurityHeadersMiddleware::class);
 
 		$this->bootTwoFactorAuthentication();
 	}

@@ -1,142 +1,218 @@
-# Plan for Enabling Session Encryption by Default
+# Plan: Implement Security Headers Middleware
 
-This document outlines the plan to enable session encryption by default in the `artisanpack/security` package. This change will enhance the security of applications using this package by protecting session data from being intercepted and read.
+This document outlines the step-by-step plan to create and integrate a `SecurityHeadersMiddleware` into the ArtisanPack UI Security package.
 
-## Phase 1: Add Session Encryption Configuration
+## 1. Configuration
 
-### File to Modify
+The security header policies will be configurable. The main configuration file is the ideal place for these settings.
 
-`config/security.php`
+**File:** `config/security.php`
 
-### Change Details
-
-A new configuration key, `encrypt`, will be added to the `security.php` configuration file. This setting will control whether session encryption is enforced.
-
-- **Default Value:** `true`
-- **Environment Variable:** The setting can be overridden using the `SESSION_ENCRYPT` environment variable.
-
-### Proposed Code
-
-The following snippet will be added to the `return` array in `config/security.php`:
+**Action:** Add a new `security-headers` key to the main configuration array. This key will hold an array of headers and their default values.
 
 ```php
+// In config/security.php
+
+return [
+    // ... existing configuration ...
+
     /*
     |--------------------------------------------------------------------------
-    | Enforce Session Encryption
+    | Security Headers
     |--------------------------------------------------------------------------
     |
-    | This option determines whether the package should enforce that the
-    | application's session cookie is encrypted. When enabled, this
-    | package will verify that session encryption is not disabled
-    | in production environments.
+    | Here you may define the security headers that will be applied to all
+    | responses. You can override these values in your application's
+    | config/artisanpack/security.php file.
     |
     */
-    'encrypt' => env('SESSION_ENCRYPT', true),
+    'security-headers' => [
+        'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
+        'X-Frame-Options' => 'SAMEORIGIN',
+        'X-Content-Type-Options' => 'nosniff',
+        'X-XSS-Protection' => '1; mode=block',
+        'Referrer-Policy' => 'no-referrer-when-downgrade',
+        'Content-Security-Policy' => "default-src 'self'",
+    ],
+];
 ```
 
-## Phase 2: Implement Configuration Validation
+## 2. Middleware Implementation
 
-To ensure that session encryption is not accidentally disabled in production, two validation mechanisms will be implemented.
+A new middleware class will be created to handle the logic of adding the headers to the response.
 
-### 1. Environment Validation Middleware
+**Location:** `src/Http/Middleware/`
+**New File:** `SecurityHeadersMiddleware.php`
 
-A new middleware will be created to check for session encryption when the application is in a production environment.
+**Action:** Create the new middleware file. It will read the configuration and apply the headers to the outgoing response.
 
-#### File to Create
+```php
+// In src/Http/Middleware/SecurityHeadersMiddleware.php
 
-`src/Http/Middleware/EnsureSessionIsEncrypted.php`
+namespace ArtisanPackUI\Security\Http\Middleware;
 
-#### Logic
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
-The middleware will perform the following checks:
+class SecurityHeadersMiddleware
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        /** @var Response $response */
+        $response = $next($request);
 
-1. Is the application environment `production`?
-2. Is `config('artisanpack.security.encrypt')` set to `false`?
+        $headers = config('artisanpack.security.security-headers', []);
 
-If both conditions are met, the middleware will throw a `\RuntimeException` to prevent the application from running with an insecure configuration.
+        foreach ($headers as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $response->headers->set($key, $value);
+            }
+        }
 
-#### Registration
+        return $response;
+    }
+}
+```
 
-The middleware will be registered in the `boot` method of `src/SecurityServiceProvider.php`. It will be pushed to the `web` middleware group.
+## 3. Service Provider Registration
 
-### 2. Artisan Command
+The new middleware must be registered with the Laravel Kernel to be executed on every request. This is done in the package's service provider.
 
-A new Artisan command will be created to allow developers to check the status of their session encryption configuration.
+**File:** `src/SecurityServiceProvider.php`
 
-#### File to Create
+**Action:** In the `boot` method, use the injected `Kernel` to push the new middleware onto the global middleware stack.
 
-`src/Console/Commands/CheckSessionSecurity.php`
+```php
+// In src/SecurityServiceProvider.php, inside the boot() method
 
-#### Command Signature
+use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
+// ... other use statements
+
+public function boot(Kernel $kernel): void
+{
+    // ... existing boot logic ...
+
+    $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
+    $kernel->pushMiddleware(SecurityHeadersMiddleware::class); // Add this line
+
+    $this->bootTwoFactorAuthentication();
+}
+```
+
+## 4. Testing
+
+A feature test should be created to ensure the middleware correctly adds the configured headers to the response.
+
+**Location:** `tests/Feature/`
+**New File:** `SecurityHeadersMiddlewareTest.php`
+
+**Action:** Create a new test file that verifies the middleware's behavior.
+
+```php
+// In tests/Feature/SecurityHeadersMiddlewareTest.php
+
+namespace Tests\Feature;
+
+use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Config;
+use Tests\TestCase;
+
+class SecurityHeadersMiddlewareTest extends TestCase
+{
+    /** @test */
+    public function it_adds_configured_security_headers_to_the_response()
+    {
+        $headers = [
+            'X-Frame-Options' => 'DENY',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'",
+        ];
+        Config::set('artisanpack.security.security-headers', $headers);
+
+        $request = new Request();
+        $middleware = new SecurityHeadersMiddleware();
+
+        $response = $middleware->handle($request, function () {
+            return new Response('Test Content');
+        });
+
+        $this->assertEquals('DENY', $response->headers->get('X-Frame-Options'));
+        $this->assertEquals('nosniff', $response->headers->get('X-Content-Type-Options'));
+        $this->assertEquals("default-src 'none'", $response->headers->get('Content-Security-Policy'));
+    }
+
+    /** @test */
+    public function it_does_not_add_headers_that_are_null_or_empty()
+    {
+        $headers = [
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-Content-Type-Options' => null, // This should be ignored
+            'Referrer-Policy' => '', // This should be ignored
+        ];
+        Config::set('artisanpack.security.security-headers', $headers);
+
+        $request = new Request();
+        $middleware = new SecurityHeadersMiddleware();
+
+        $response = $middleware->handle($request, function () {
+            return new Response('Test Content');
+        });
+
+        $this->assertEquals('SAMEORIGIN', $response->headers->get('X-Frame-Options'));
+        $this->assertFalse($response->headers->has('X-Content-Type-Options'));
+        $this->assertFalse($response->headers->has('Referrer-Policy'));
+    }
+}
+```
+
+## 5. Documentation
+
+A new documentation file should be created to explain the feature, its configuration, and how to use it.
+
+**Location:** `docs/`
+**New File:** `security-headers.md`
+
+**Action:** Create the new markdown file with the following content.
+
+```markdown
+# Security Headers
+
+The ArtisanPack UI Security package automatically adds essential security headers to all outgoing responses to protect your application from common attacks like clickjacking and cross-site scripting (XSS).
+
+## Configuration
+
+The headers are enabled by default. You can customize them by publishing the package's configuration file:
 
 ```bash
-php artisan security:check-session
+php artisan vendor:publish --tag=artisanpack-package-config
 ```
 
-#### Logic
+This will create a `config/artisanpack/security.php` file in your application. You can then edit the `security-headers` array to modify or disable specific headers. To disable a header, set its value to `null` or an empty string.
 
-The command will check the value of `config('artisanpack.security.encrypt')`.
+```php
+// config/artisanpack/security.php
 
-- If `true`, it will output a success message.
-- If `false`, it will output a warning. If the application environment is `production`, the warning will be more severe.
+'security-headers' => [
+    'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
+    'X-Frame-Options' => 'SAMEORIGIN',
+    'X-Content-Type-Options' => 'nosniff',
+    'X-XSS-Protection' => '1; mode=block',
+    'Referrer-Policy' => 'no-referrer-when-downgrade',
+    // Disable CSP by setting it to null
+    'Content-Security-Policy' => null,
+],
+```
 
-#### Registration
+## Default Headers
 
-The command will be registered in the `boot` method of `src/SecurityServiceProvider.php` within the `if ($this->app->runningInConsole())` block.
+- **Strict-Transport-Security:** Enforces HTTPS across your site.
+- **X-Frame-Options:** Protects against clickjacking.
+- **X-Content-Type-Options:** Prevents MIME-sniffing.
+- **X-XSS-Protection:** A basic XSS filter (mostly for older browsers).
+- **Referrer-Policy:** Controls how much referrer information is sent.
+- **Content-Security-Policy (CSP):** A powerful tool to prevent XSS and data injection attacks. The default is very restrictive (`default-src 'self'`); you will likely need to customize it for your application.
 
-## Phase 3: Documentation Updates
-
-To communicate this change to users, the package documentation will be updated.
-
-### 1. Migration Guide
-
-A new migration guide will be created to help existing users upgrade.
-
-#### File to Create
-
-`docs/migration-guide-session-encryption.md`
-
-#### Content
-
-- Explanation that session encryption is now enabled by default.
-- Instructions on how to use the `SESSION_ENCRYPT` environment variable to manage the setting.
-- Information about the new `security:check-session` Artisan command.
-
-### 2. Update Existing Documentation
-
-The `security-guidelines.md` document will be updated to include the benefits of session encryption.
-
-#### File to Modify
-
-`docs/security-guidelines.md`
-
-#### Content to Add
-
-A new section will be added explaining:
-
-- The importance of session encryption.
-- How the package enforces session encryption in production.
-- A reference to the new migration guide.
-
-## Phase 4: Testing
-
-To ensure the new functionality is working correctly and does not introduce any regressions, a suite of tests will be developed.
-
-### Test Files to Create/Modify
-
-- `tests/Unit/SessionEncryptionTest.php`
-- `tests/Feature/CheckSessionSecurityCommandTest.php`
-- `tests/Feature/EnsureSessionIsEncryptedMiddlewareTest.php`
-
-### Test Cases
-
-- **Unit Test:**
-    - Verify that `config('artisanpack.security.encrypt')` defaults to `true`.
-- **Feature Tests (Middleware):**
-    - Test that the middleware allows requests when encryption is enabled.
-    - Test that the middleware throws an exception in production when encryption is disabled.
-    - Test that the middleware does not throw an exception in a non-production environment when encryption is disabled.
-- **Feature Tests (Artisan Command):**
-    - Test the command's output when session encryption is enabled.
-    - Test the command's output when session encryption is disabled (non-production).
-    - Test the command's output when session encryption is disabled (production).
+```
