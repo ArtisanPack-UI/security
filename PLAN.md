@@ -1,218 +1,329 @@
-# Plan: Implement Security Headers Middleware
+# Plan: Implement Rate Limiting Protection
 
-This document outlines the step-by-step plan to create and integrate a `SecurityHeadersMiddleware` into the ArtisanPack UI Security package.
+This document outlines the step-by-step plan to integrate a configurable, robust rate-limiting system into the ArtisanPack UI Security package, leveraging Laravel's built-in capabilities.
+
+This plan assumes the best practice is to define named limiters and allow the end-user to apply them via middleware aliases, rather than creating a new middleware class that reimplements core framework functionality.
 
 ## 1. Configuration
 
-The security header policies will be configurable. The main configuration file is the ideal place for these settings.
+First, we will add a new `rateLimiting` section to the main configuration file. This will allow users to enable/disable the feature and define various rate limit policies.
 
 **File:** `config/security.php`
 
-**Action:** Add a new `security-headers` key to the main configuration array. This key will hold an array of headers and their default values.
+**Action:** Add a new `rateLimiting` key to the configuration array.
 
 ```php
 // In config/security.php
 
 return [
     // ... existing configuration ...
+    'security-headers' => [
+        // ... existing headers ...
+    ],
 
     /*
     |--------------------------------------------------------------------------
-    | Security Headers
+    | Rate Limiting
     |--------------------------------------------------------------------------
     |
-    | Here you may define the security headers that will be applied to all
-    | responses. You can override these values in your application's
-    | config/artisanpack/security.php file.
+    | Here you may configure the `rateLimiting` settings for your application.
+    | You can define different limiters for various parts of your
+    | application, such as the API, web routes, or specific actions
+    | like login attempts and password resets.
     |
     */
-    'security-headers' => [
-        'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
-        'X-Frame-Options' => 'SAMEORIGIN',
-        'X-Content-Type-Options' => 'nosniff',
-        'X-XSS-Protection' => '1; mode=block',
-        'Referrer-Policy' => 'no-referrer-when-downgrade',
-        'Content-Security-Policy' => "default-src 'self'",
+    'rateLimiting' => [
+        'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
+
+        'limiters' => [
+            'web' => [
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
+            ],
+            'api' => [
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
+            ],
+            'login' => [
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
+            ],
+            'password_reset' => [
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
+            ],
+        ],
     ],
 ];
 ```
 
-## 2. Middleware Implementation
+## 2. Service Provider Integration
 
-A new middleware class will be created to handle the logic of adding the headers to the response.
-
-**Location:** `src/Http/Middleware/`
-**New File:** `SecurityHeadersMiddleware.php`
-
-**Action:** Create the new middleware file. It will read the configuration and apply the headers to the outgoing response.
-
-```php
-// In src/Http/Middleware/SecurityHeadersMiddleware.php
-
-namespace ArtisanPackUI\Security\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-
-class SecurityHeadersMiddleware
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        /** @var Response $response */
-        $response = $next($request);
-
-        $headers = config('artisanpack.security.security-headers', []);
-
-        foreach ($headers as $key => $value) {
-            if ($value !== null && $value !== '') {
-                $response->headers->set($key, $value);
-            }
-        }
-
-        return $response;
-    }
-}
-```
-
-## 3. Service Provider Registration
-
-The new middleware must be registered with the Laravel Kernel to be executed on every request. This is done in the package's service provider.
+Next, we will configure Laravel's `RateLimiter` in the service provider. This will create the named limiters based on the configuration file. This approach avoids creating a redundant middleware class and uses the framework as intended.
 
 **File:** `src/SecurityServiceProvider.php`
 
-**Action:** In the `boot` method, use the injected `Kernel` to push the new middleware onto the global middleware stack.
+**Action:** In the `boot` method, read the configuration and define the limiters.
 
 ```php
-// In src/SecurityServiceProvider.php, inside the boot() method
+// In src/SecurityServiceProvider.php
 
-use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
-// ... other use statements
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
+
+// ... inside the boot() method
 
 public function boot(Kernel $kernel): void
 {
     // ... existing boot logic ...
-
-    $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
-    $kernel->pushMiddleware(SecurityHeadersMiddleware::class); // Add this line
-
-    $this->bootTwoFactorAuthentication();
+    $this->bootRateLimiting();
 }
+
+/**
+ * Boots the rate limiting services.
+ *
+ * Configures the named rate limiters based on the package's configuration file.
+ *
+ * @return void
+ */
+protected function bootRateLimiting(): void
+{
+    if (!config('artisanpack.security.rateLimiting.enabled')) {
+        return;
+    }
+
+    $limiters = config('artisanpack.security.rateLimiting.limiters', []);
+
+    foreach ($limiters as $name => $config) {
+        $maxAttempts = $config['maxAttempts'] ?? 60;
+        $decayMinutes = $config['decayMinutes'] ?? 1;
+
+        RateLimiter::for($name, function (Request $request) use ($maxAttempts, $decayMinutes) {
+            $key = optional($request->user())->id ?: $request->ip();
+            return Limit::perMinutes($decayMinutes, $maxAttempts)->by($key);
+        });
+    }
+}
+```
+
+## 3. Artisan Command
+
+An Artisan command is needed to allow administrators to manually clear rate limits for a specific IP address or user.
+
+**Location:** `src/Console/Commands/`
+**New File:** `ClearRateLimits.php`
+
+**Action:** Create the new Artisan command file.
+
+```php
+// In src/Console/Commands/ClearRateLimits.php
+
+namespace ArtisanPackUI\Security\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\RateLimiter;
+
+class ClearRateLimits extends Command
+{
+    protected $signature = 'security:rate-limit:clear {--ip=} {--user=}';
+    protected $description = 'Clear the rate limiter cache for a given IP address or user ID';
+
+    public function handle(): int
+    {
+        $ip = $this->option('ip');
+        $user = $this->option('user');
+
+        if (!$ip && !$user) {
+            $this->error('You must provide either an --ip or a --user option.');
+            return 1;
+        }
+
+        if ($ip) {
+            RateLimiter::clear($ip);
+            $this->info("Cleared rate limit for IP: {$ip}");
+        }
+
+        if ($user) {
+            RateLimiter::clear($user);
+            $this->info("Cleared rate limit for User ID: {$user}");
+        }
+
+        return 0;
+    }
+}
+```
+
+**Action:** Register the command in `src/SecurityServiceProvider.php`.
+
+```php
+// In src/SecurityServiceProvider.php, inside boot() method's runningInConsole() block:
+use ArtisanPackUI\Security\Console\Commands\ClearRateLimits;
+// ...
+$this->commands([
+    CheckSessionSecurity::class,
+    ClearRateLimits::class, // Add this line
+]);
 ```
 
 ## 4. Testing
 
-A feature test should be created to ensure the middleware correctly adds the configured headers to the response.
+A feature test is required to validate that the rate limiters work as expected.
 
 **Location:** `tests/Feature/`
-**New File:** `SecurityHeadersMiddlewareTest.php`
+**New File:** `RateLimitingTest.php`
 
-**Action:** Create a new test file that verifies the middleware's behavior.
+**Action:** Create a new test file that defines a temporary route and tests the configured limiters.
 
 ```php
-// In tests/Feature/SecurityHeadersMiddlewareTest.php
+// In tests/Feature/RateLimitingTest.php
 
 namespace Tests\Feature;
 
-use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
-class SecurityHeadersMiddlewareTest extends TestCase
+class RateLimitingTest extends TestCase
 {
-    /** @test */
-    public function it_adds_configured_security_headers_to_the_response()
+    protected function setUp(): void
     {
-        $headers = [
-            'X-Frame-Options' => 'DENY',
-            'X-Content-Type-Options' => 'nosniff',
-            'Content-Security-Policy' => "default-src 'none'",
-        ];
-        Config::set('artisanpack.security.security-headers', $headers);
+        parent::setUp();
 
-        $request = new Request();
-        $middleware = new SecurityHeadersMiddleware();
+        // Enable rate limiting and define a test route with a limiter
+        Config::set('artisanpack.security.rateLimiting.enabled', true);
+        Config::set('artisanpack.security.rateLimiting.limiters.test', [
+            'maxAttempts' => 3,
+            'decayMinutes' => 1,
+        ]);
 
-        $response = $middleware->handle($request, function () {
-            return new Response('Test Content');
-        });
+        // Manually boot the provider to register our test limiter
+        $this->app->register(\ArtisanPackUI\Security\SecurityServiceProvider::class);
 
-        $this->assertEquals('DENY', $response->headers->get('X-Frame-Options'));
-        $this->assertEquals('nosniff', $response->headers->get('X-Content-Type-Options'));
-        $this->assertEquals("default-src 'none'", $response->headers->get('Content-Security-Policy'));
+        Route::get('/_test/rate-limited-route', function () {
+            return 'Success';
+        })->middleware('throttle:test');
     }
 
     /** @test */
-    public function it_does_not_add_headers_that_are_null_or_empty()
+    public function it_rate_limits_requests_from_the_same_ip()
     {
-        $headers = [
-            'X-Frame-Options' => 'SAMEORIGIN',
-            'X-Content-Type-Options' => null, // This should be ignored
-            'Referrer-Policy' => '', // This should be ignored
-        ];
-        Config::set('artisanpack.security.security-headers', $headers);
+        $response = null;
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->get('/_test/rate-limited-route');
+            $response->assertStatus(200);
+        }
 
-        $request = new Request();
-        $middleware = new SecurityHeadersMiddleware();
+        // The 4th request should be throttled
+        $response = $this->get('/_test/rate-limited-route');
+        $response->assertStatus(429); // Too Many Requests
+    }
 
-        $response = $middleware->handle($request, function () {
-            return new Response('Test Content');
-        });
+    /** @test */
+    public function it_rate_limits_requests_for_an_authenticated_user()
+    {
+        $user = new User();
+        $user->id = 1;
+        $this->actingAs($user);
 
-        $this->assertEquals('SAMEORIGIN', $response->headers->get('X-Frame-Options'));
-        $this->assertFalse($response->headers->has('X-Content-Type-Options'));
-        $this->assertFalse($response->headers->has('Referrer-Policy'));
+        $response = null;
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->get('/_test/rate-limited-route');
+            $response->assertStatus(200);
+        }
+
+        // The 4th request should be throttled
+        $response = $this->get('/_test/rate-limited-route');
+        $response->assertStatus(429);
     }
 }
+
 ```
 
 ## 5. Documentation
 
-A new documentation file should be created to explain the feature, its configuration, and how to use it.
+Finally, create a documentation file explaining how to configure and use the new rate-limiting feature.
 
 **Location:** `docs/`
-**New File:** `security-headers.md`
+**New File:** `rate-limiting.md`
 
-**Action:** Create the new markdown file with the following content.
+**Action:** Create the markdown file with instructions.
 
-```markdown
-# Security Headers
+````markdown
+# Rate Limiting
 
-The ArtisanPack UI Security package automatically adds essential security headers to all outgoing responses to protect your application from common attacks like clickjacking and cross-site scripting (XSS).
+The ArtisanPack UI Security package provides a simple way to protect your application from brute force attacks by rate limiting incoming requests. It leverages Laravel's built-in rate-limiting capabilities.
 
 ## Configuration
 
-The headers are enabled by default. You can customize them by publishing the package's configuration file:
+The rate limiting feature is enabled by default. To customize the settings, publish the package's configuration file:
 
 ```bash
 php artisan vendor:publish --tag=artisanpack-package-config
 ```
 
-This will create a `config/artisanpack/security.php` file in your application. You can then edit the `security-headers` array to modify or disable specific headers. To disable a header, set its value to `null` or an empty string.
+This will create a `config/artisanpack/security.php` file. You can then edit the `rateLimiting` section.
 
 ```php
 // config/artisanpack/security.php
 
-'security-headers' => [
-    'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
-    'X-Frame-Options' => 'SAMEORIGIN',
-    'X-Content-Type-Options' => 'nosniff',
-    'X-XSS-Protection' => '1; mode=block',
-    'Referrer-Policy' => 'no-referrer-when-downgrade',
-    // Disable CSP by setting it to null
-    'Content-Security-Policy' => null,
+'rateLimiting' => [
+    'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
+
+    'limiters' => [
+        'web' => [
+            'maxAttempts' => 60,
+            'decayMinutes' => 1,
+        ],
+        'api' => [
+            'maxAttempts' => 60,
+            'decayMinutes' => 1,
+        ],
+        'login' => [
+            'maxAttempts' => 5,
+            'decayMinutes' => 1,
+        ],
+        'password_reset' => [
+            'maxAttempts' => 5,
+            'decayMinutes' => 1,
+        ],
+    ],
 ],
 ```
 
-## Default Headers
+## Usage
 
-- **Strict-Transport-Security:** Enforces HTTPS across your site.
-- **X-Frame-Options:** Protects against clickjacking.
-- **X-Content-Type-Options:** Prevents MIME-sniffing.
-- **X-XSS-Protection:** A basic XSS filter (mostly for older browsers).
-- **Referrer-Policy:** Controls how much referrer information is sent.
-- **Content-Security-Policy (CSP):** A powerful tool to prevent XSS and data injection attacks. The default is very restrictive (`default-src 'self'`); you will likely need to customize it for your application.
+To apply a rate limit to a route or route group, use the `throttle` middleware with the name of the limiter you defined in the configuration file.
 
+For example, to protect your login routes:
+
+```php
+// In routes/web.php
+
+Route::post('/login', [LoginController::class, 'store'])
+    ->middleware('throttle:login');
 ```
+
+To protect your entire API:
+
+```php
+// In routes/api.php
+
+Route::group(['middleware' => 'throttle:api'], function () {
+    // Your API routes...
+});
+```
+
+## Clearing Rate Limits
+
+You can clear the rate limiter cache for a specific user or IP address using the provided Artisan command:
+
+```bash
+# Clear for a specific IP address
+php artisan security:rate-limit:clear --ip="127.0.0.1"
+
+# Clear for a specific user ID
+php artisan security:rate-limit:clear --user=1
+```
+````

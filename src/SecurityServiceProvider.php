@@ -3,11 +3,15 @@
 namespace ArtisanPackUI\Security;
 
 use ArtisanPackUI\Security\Console\Commands\CheckSessionSecurity;
+use ArtisanPackUI\Security\Console\Commands\ClearRateLimits;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -48,6 +52,7 @@ class SecurityServiceProvider extends ServiceProvider
 
             $this->commands([
                 CheckSessionSecurity::class,
+                ClearRateLimits::class,
             ]);
 		}
 
@@ -55,6 +60,8 @@ class SecurityServiceProvider extends ServiceProvider
         $kernel->pushMiddleware(SecurityHeadersMiddleware::class);
 
 		$this->bootTwoFactorAuthentication();
+
+		$this->bootRateLimiting();
 	}
 
 	/**
@@ -139,6 +146,32 @@ class SecurityServiceProvider extends ServiceProvider
 				"ArtisanPack UI Security: The named route '{$routeName}' is not defined. " .
 				"Please ensure you have created this route in your application's web routes file as required by the package configuration."
 			);
+		}
+	}
+
+	/**
+	 * Boots the rate limiting services.
+	 *
+	 * Configures the named rate limiters based on the package's configuration file.
+	 *
+	 * @return void
+	 */
+	protected function bootRateLimiting(): void
+	{
+		if (!config('artisanpack.security.rateLimiting.enabled')) {
+			return;
+		}
+
+		$limiters = config('artisanpack.security.rateLimiting.limiters', []);
+
+		foreach ($limiters as $name => $config) {
+			$maxAttempts = $config['maxAttempts'] ?? 60;
+			$decayMinutes = $config['decayMinutes'] ?? 1;
+
+			RateLimiter::for($name, function (Request $request) use ($maxAttempts, $decayMinutes) {
+				$key = optional($request->user())->id ?: $request->ip();
+				return Limit::perMinutes($decayMinutes, $maxAttempts)->by($key);
+			});
 		}
 	}
 }

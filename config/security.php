@@ -88,4 +88,38 @@ return [
         'Referrer-Policy' => 'no-referrer-when-downgrade',
         'Content-Security-Policy' => "default-src 'self'",
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the rate limiting settings for your application.
+    | You can define different limiters for various parts of your
+    | application, such as the API, web routes, or specific actions
+    | like login attempts and password resets.
+    |
+    */
+    'rateLimiting' => [
+        'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
+
+        'limiters' => [
+            'web' => [
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
+            ],
+            'api' => [
+                'maxAttempts' => 60,
+                'decayMinutes' => 1,
+            ],
+            'login' => [
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
+            ],
+            'password_reset' => [
+                'maxAttempts' => 5,
+                'decayMinutes' => 1,
+            ],
+        ],
+    ],
 ];
