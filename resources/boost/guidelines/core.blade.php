@@ -73,95 +73,95 @@ Always escape data before displaying it in views, especially user-generated cont
                 color: {{ escCss($userColor) }};
             }
 		</style>
-		@endverbatim
-		@endverbatim
+	</code-snippet>
+@endverbatim
 
-		Available escaping functions:
-		- `escHtml()` - Escape for HTML body content
-		- `escAttr()` - Escape for HTML attributes
-		- `escUrl()` - Escape for URLs
-		- `escJs()` - Escape for JavaScript contexts
-		- `escCss()` - Escape for CSS contexts
+Available escaping functions:
+- `escHtml()` - Escape for HTML body content
+- `escAttr()` - Escape for HTML attributes
+- `escUrl()` - Escape for URLs
+- `escJs()` - Escape for JavaScript contexts
+- `escCss()` - Escape for CSS contexts
 
-		### HTML Filtering
+### HTML Filtering
 
-		Use `kses()` for WordPress-style HTML filtering when you need to allow some HTML but want to sanitize it:
+Use `kses()` for WordPress-style HTML filtering when you need to allow some HTML but want to sanitize it:
 
-		@verbatim
-			<code-snippet name="Filter HTML content" lang="php">
-				// Allow only safe HTML tags
-				$safeHtml = kses($userContent);
+@verbatim
+	<code-snippet name="Filter HTML content" lang="php">
+		// Allow only safe HTML tags
+		$safeHtml = kses($userContent);
 
-				// Display in view
-				<div class="content">
-					{!! kses($userContent) !!}
-				</div>
-			</code-snippet>
-		@endverbatim
+		// Display in view
+		<div class="content">
+			{!! kses($userContent) !!}
+		</div>
+	</code-snippet>
+@endverbatim
 
-		### Two-Factor Authentication
+### Two-Factor Authentication
 
-		Implement 2FA with email codes or Google Authenticator/TOTP:
+Implement 2FA with email codes or Google Authenticator/TOTP:
 
-		@verbatim
-			<code-snippet name="Implement two-factor authentication" lang="php">
-				use ArtisanPackUI\Security\Facades\TwoFactor;
-				use ArtisanPackUI\Security\TwoFactor\TwoFactorAuthenticatable;
+@verbatim
+	<code-snippet name="Implement two-factor authentication" lang="php">
+		use ArtisanPackUI\Security\Facades\TwoFactor;
+		use ArtisanPackUI\Security\TwoFactor\TwoFactorAuthenticatable;
 
-				// 1. Add trait to User model
-				class User extends Authenticatable
-				{
-				use TwoFactorAuthenticatable;
+		// 1. Add trait to User model
+		class User extends Authenticatable
+		{
+		use TwoFactorAuthenticatable;
 
-				// Add these columns to users table migration:
-				// $table->text('two_factor_secret')->nullable();
-				// $table->text('two_factor_recovery_codes')->nullable();
-				// $table->timestamp('two_factor_enabled_at')->nullable();
-				}
+		// Add these columns to users table migration:
+		// $table->text('two_factor_secret')->nullable();
+		// $table->text('two_factor_recovery_codes')->nullable();
+		// $table->timestamp('two_factor_enabled_at')->nullable();
+		}
 
-				// 2. Enable 2FA for a user
-				TwoFactor::enable($user);
+		// 2. Enable 2FA for a user
+		TwoFactor::enable($user);
 
-				// 3. Generate and send challenge (after login)
-				TwoFactor::generateChallenge($user);
+		// 3. Generate and send challenge (after login)
+		TwoFactor::generateChallenge($user);
 
-				// 4. Verify the code
-				if (TwoFactor::verify($user, $request->input('code'))) {
-				// User authenticated successfully
-				}
+		// 4. Verify the code
+		if (TwoFactor::verify($user, $request->input('code'))) {
+		// User authenticated successfully
+		}
 
-				// 5. Switch provider (email or google2fa)
-				TwoFactor::setProvider('google2fa');
-			</code-snippet>
-		@endverbatim
+		// 5. Switch provider (email or google2fa)
+		TwoFactor::setProvider('google2fa');
+	</code-snippet>
+@endverbatim
 
-		**Required for 2FA:**
-		- Create route named `two-factor.challenge` for code entry
-		- Create view for 2FA code input form
-		- Add required database columns to users table
-		- Add `TwoFactorAuthenticatable` trait to User model
+**Required for 2FA:**
+- Create route named `two-factor.challenge` for code entry
+- Create view for 2FA code input form
+- Add required database columns to users table
+- Add `TwoFactorAuthenticatable` trait to User model
 
-		### Session Security
+### Session Security
 
-		Enable encrypted sessions for enhanced security:
+Enable encrypted sessions for enhanced security:
 
-		@verbatim
-			<code-snippet name="Enable session encryption" lang="php">
-				// Add to app/Http/Kernel.php
-				protected $middleware = [
-				\ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted::class,
-				];
+@verbatim
+	<code-snippet name="Enable session encryption" lang="php">
+		// Add to app/Http/Kernel.php
+		protected $middleware = [
+		\ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted::class,
+		];
 
-				// Check session security status
-				php artisan security:check-session
-			</code-snippet>
-		@endverbatim
+		// Check session security status
+		php artisan security:check-session
+	</code-snippet>
+@endverbatim
 
-		### Best Practices
+### Best Practices
 
-		- **Controller Layer**: Sanitize input as early as possible (in form requests or controllers)
-		- **View Layer**: Always escape output, even if you think the data is safe
-		- **Database Layer**: Use Eloquent ORM or Query Builder with parameter binding (Laravel handles this)
-		- **Forms**: Always include `@csrf` directive in forms
-		- **API Responses**: Escape data before returning in JSON responses when needed
-		- **Validation**: Combine sanitization with Laravel's validation rules for robust security
+- **Controller Layer**: Sanitize input as early as possible (in form requests or controllers)
+- **View Layer**: Always escape output, even if you think the data is safe
+- **Database Layer**: Use Eloquent ORM or Query Builder with parameter binding (Laravel handles this)
+- **Forms**: Always include `@csrf` directive in forms
+- **API Responses**: Escape data before returning in JSON responses when needed
+- **Validation**: Combine sanitization with Laravel's validation rules for robust security
