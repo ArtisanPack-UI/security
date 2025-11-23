@@ -69,4 +69,23 @@ return [
 
 		],
 	],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security Headers
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the security headers that will be applied to all
+    | responses. You can override these values in your application's
+    | config/artisanpack/security.php file.
+    |
+    */
+    'security-headers' => [
+        'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
+        'X-Frame-Options' => 'SAMEORIGIN',
+        'X-Content-Type-Options' => 'nosniff',
+        'X-XSS-Protection' => '1; mode=block',
+        'Referrer-Policy' => 'no-referrer-when-downgrade',
+        'Content-Security-Policy' => "default-src 'self'",
+    ],
 ];
