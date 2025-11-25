@@ -268,17 +268,6 @@ echo '<script>var data = ' . escJs($data) . ';</script>';
 - [ ] Use HTTPS in production
 - [ ] Keep dependencies updated
 - [ ] Implement proper error handling
-
-### Session Security
-
-**Enforce Session Encryption**
-
-Unencrypted session data can expose sensitive user information to attackers if a session cookie is intercepted. This package enforces session encryption by default in production environments to mitigate this risk.
-
-- **Verification:** The package includes a middleware that checks if session encryption is active in production. If it is not, it will throw a `RuntimeException` to prevent the application from running with an insecure configuration.
-- **Checking Status:** You can check the status of your session encryption using the `php artisan security:check-session` command.
-
-For more details on this feature and how to configure it, please see the [Session Encryption Migration Guide](./migration-guide-session-encryption.md).
 - [ ] Log security-related events
 
 ## Testing Security
