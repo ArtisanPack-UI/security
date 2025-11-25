@@ -79,6 +79,15 @@ return [
     | responses. You can override these values in your application's
     | config/artisanpack/security.php file.
     |
+    | Note: For Livewire/Alpine.js applications, the CSP policy below includes:
+    |   - 'unsafe-eval' for Alpine.js expression evaluation
+    |   - 'unsafe-inline' for Livewire's dynamic inline styles
+    |   - External font sources (fonts.bunny.net, fonts.gstatic.com)
+    |   - Data URIs for inline images/SVGs
+    |
+    | For production, consider implementing CSP nonces instead of 'unsafe-inline'
+    | and 'unsafe-eval' for enhanced security.
+    |
     */
     'security-headers' => [
         'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
@@ -86,7 +95,15 @@ return [
         'X-Content-Type-Options' => 'nosniff',
         'X-XSS-Protection' => '1; mode=block',
         'Referrer-Policy' => 'no-referrer-when-downgrade',
-        'Content-Security-Policy' => "default-src 'self'",
+        'Content-Security-Policy' => implode('; ', [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com data:",
+            "img-src 'self' data: https:",
+            "connect-src 'self'",
+            "frame-ancestors 'self'",
+        ]),
     ],
 
     /*
