@@ -6,11 +6,12 @@ use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SecurityHeadersMiddlewareTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_adds_configured_security_headers_to_the_response()
     {
         $headers = [
@@ -32,7 +33,7 @@ class SecurityHeadersMiddlewareTest extends TestCase
         $this->assertEquals("default-src 'none'", $response->headers->get('Content-Security-Policy'));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_add_headers_that_are_null_or_empty()
     {
         $headers = [

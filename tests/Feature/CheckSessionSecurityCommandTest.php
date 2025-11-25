@@ -5,10 +5,11 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 
 class CheckSessionSecurityCommandTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_shows_success_message_when_encryption_is_enabled()
     {
         Config::set('artisanpack.security.encrypt', true);
@@ -18,7 +19,7 @@ class CheckSessionSecurityCommandTest extends TestCase
         $this->assertStringContainsString('Session encryption is enabled.', Artisan::output());
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_warning_message_when_encryption_is_disabled()
     {
         Config::set('artisanpack.security.encrypt', false);
@@ -28,7 +29,7 @@ class CheckSessionSecurityCommandTest extends TestCase
         $this->assertStringContainsString('Session encryption is disabled.', Artisan::output());
     }
 
-    /** @test */
+    #[Test]
     public function it_shows_error_message_when_encryption_is_disabled_in_production()
     {
         Config::set('artisanpack.security.encrypt', false);

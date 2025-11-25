@@ -2,15 +2,18 @@
 
 namespace ArtisanPackUI\Security;
 
+use ArtisanPackUI\Security\Console\Commands\CheckSecurityConfiguration;
 use ArtisanPackUI\Security\Console\Commands\CheckSessionSecurity;
 use ArtisanPackUI\Security\Console\Commands\ClearRateLimits;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
+use ArtisanPackUI\Security\Services\EnvironmentValidationService;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -53,6 +56,7 @@ class SecurityServiceProvider extends ServiceProvider
             $this->commands([
                 CheckSessionSecurity::class,
                 ClearRateLimits::class,
+                CheckSecurityConfiguration::class,
             ]);
 		}
 
@@ -62,6 +66,8 @@ class SecurityServiceProvider extends ServiceProvider
 		$this->bootTwoFactorAuthentication();
 
 		$this->bootRateLimiting();
+
+        $this->bootProductionValidations();
 	}
 
 	/**
@@ -174,4 +180,30 @@ class SecurityServiceProvider extends ServiceProvider
 			});
 		}
 	}
+
+    /**
+     * Boot production validations.
+     *
+     * @return void
+     */
+    protected function bootProductionValidations(): void
+    {
+        if ($this->app->isProduction()) {
+            $validator = app(EnvironmentValidationService::class);
+            $results = $validator->validate('production');
+
+            if (!empty($results['errors'])) {
+                foreach ($results['errors'] as $error) {
+                    Log::critical('Security configuration error: ' . $error);
+                }
+            }
+
+            if (!empty($results['warnings'])) {
+                foreach ($results['warnings'] as $warning) {
+                    Log::warning('Security configuration warning: ' . $warning);
+                }
+            }
+        }
+    }
 }
+

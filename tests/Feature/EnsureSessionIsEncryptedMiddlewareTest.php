@@ -6,11 +6,12 @@ use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use Tests\TestCase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 
 class EnsureSessionIsEncryptedMiddlewareTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_allows_requests_when_encryption_is_enabled_in_production()
     {
         Config::set('artisanpack.security.encrypt', true);
@@ -28,7 +29,7 @@ class EnsureSessionIsEncryptedMiddlewareTest extends TestCase
         $this->assertEquals('OK', $response);
     }
 
-    /** @test */
+    #[Test]
     public function it_throws_exception_when_encryption_is_disabled_in_production()
     {
         $this->expectException(RuntimeException::class);
@@ -46,7 +47,7 @@ class EnsureSessionIsEncryptedMiddlewareTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_allows_requests_when_encryption_is_disabled_in_local_environment()
     {
         Config::set('artisanpack.security.encrypt', false);

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RateLimitingTest extends TestCase
@@ -26,7 +27,7 @@ class RateLimitingTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_rate_limits_requests_from_the_same_ip()
     {
         Route::get('/_test/rate-limited-route', function () {
@@ -44,7 +45,7 @@ class RateLimitingTest extends TestCase
         $response->assertStatus(429); // Too Many Requests
     }
 
-    /** @test */
+    #[Test]
     public function it_rate_limits_requests_for_an_authenticated_user()
     {
         Route::get('/_test/rate-limited-route', function () {
