@@ -239,4 +239,42 @@ class Security
 	{
 		return htmLawed( $html, $config, $spec );
 	}
+
+    /**
+     * Sanitizes an array of data based on the provided rules.
+     *
+     * @param array $data
+     * @param array $rules
+     * @return array
+     */
+    public function sanitize(array $data, array $rules): array
+    {
+        foreach ($data as $key => &$value) {
+            if (is_string($value)) {
+                $rule = $rules[$key] ?? 'text';
+                $value = $this->applySanitizationRule($rule, $value);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Apply the given sanitization rule to the value.
+     *
+     * @param string $rule
+     * @param string $value
+     * @return string
+     */
+    protected function applySanitizationRule(string $rule, string $value): string
+    {
+        return match ($rule) {
+            'html' => $this->kses($value),
+            'email' => $this->sanitizeEmail($value),
+            'url' => $this->sanitizeUrl($value),
+            'filename' => $this->sanitizeFilename($value),
+            'text' => $this->sanitizeText($value),
+            default => $this->sanitizeText($value),
+        };
+    }
 }

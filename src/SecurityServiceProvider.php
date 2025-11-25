@@ -7,6 +7,11 @@ use ArtisanPackUI\Security\Console\Commands\CheckSessionSecurity;
 use ArtisanPackUI\Security\Console\Commands\ClearRateLimits;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
+use ArtisanPackUI\Security\Http\Middleware\XssProtection;
+use ArtisanPackUI\Security\Rules\NoHtml;
+use ArtisanPackUI\Security\Rules\PasswordPolicy;
+use ArtisanPackUI\Security\Rules\SecureFile;
+use ArtisanPackUI\Security\Rules\SecureUrl;
 use ArtisanPackUI\Security\Services\EnvironmentValidationService;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
@@ -16,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 
 class SecurityServiceProvider extends ServiceProvider
@@ -62,12 +68,31 @@ class SecurityServiceProvider extends ServiceProvider
 
         $kernel->pushMiddleware(EnsureSessionIsEncrypted::class);
         $kernel->pushMiddleware(SecurityHeadersMiddleware::class);
+        $kernel->pushMiddleware(XssProtection::class);
 
 		$this->bootTwoFactorAuthentication();
 
 		$this->bootRateLimiting();
 
         $this->bootProductionValidations();
+
+        Validator::extend('password_policy', function ($attribute, $value, $parameters, $validator) {
+            return (new PasswordPolicy)->passes($attribute, $value);
+        });
+
+        Validator::extend('secure_url', function ($attribute, $value, $parameters, $validator) {
+            return (new SecureUrl)->passes($attribute, $value);
+        });
+
+        Validator::extend('no_html', function ($attribute, $value, $parameters, $validator) {
+            return (new NoHtml)->passes($attribute, $value);
+        });
+
+        Validator::extend('secure_file', function ($attribute, $value, $parameters, $validator) {
+            $allowedMimeTypes = $parameters[0] ?? [];
+            $maxSize = $parameters[1] ?? null;
+            return (new SecureFile($allowedMimeTypes, $maxSize))->passes($attribute, $value);
+        });
 	}
 
 	/**

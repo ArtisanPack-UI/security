@@ -118,25 +118,40 @@ return [
     |
     */
     'rateLimiting' => [
-        'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
-
-        'limiters' => [
-            'web' => [
-                'maxAttempts' => 60,
-                'decayMinutes' => 1,
-            ],
-            'api' => [
-                'maxAttempts' => 60,
-                'decayMinutes' => 1,
-            ],
-            'login' => [
-                'maxAttempts' => 5,
-                'decayMinutes' => 1,
-            ],
-            'password_reset' => [
-                'maxAttempts' => 5,
-                'decayMinutes' => 1,
+            'enabled' => env('SECURITY_RATE_LIMITING_ENABLED', true),
+    
+            'limiters' => [
+                'web' => [
+                    'maxAttempts' => 60,
+                    'decayMinutes' => 1,
+                ],
+                'api' => [
+                    'maxAttempts' => 60,
+                    'decayMinutes' => 1,
+                ],
+                'login' => [
+                    'maxAttempts' => 5,
+                    'decayMinutes' => 1,
+                ],
+                'password_reset' => [
+                    'maxAttempts' => 5,
+                    'decayMinutes' => 1,
+                ],
             ],
         ],
-    ],
-];
+    
+        /*
+        |--------------------------------------------------------------------------
+        | XSS Protection
+        |--------------------------------------------------------------------------
+        |
+        | Here you may configure the XSS protection settings for your application.
+        | When enabled, all incoming request data will be sanitized to prevent
+        | cross-site scripting attacks.
+        |
+        */
+        'xss' => [
+            'enabled' => env('SECURITY_XSS_PROTECTION_ENABLED', false),
+        ],
+    ];
+    

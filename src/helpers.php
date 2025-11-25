@@ -126,3 +126,10 @@ if ( !function_exists( 'kses' ) ) {
 	}
 }
 
+if ( !function_exists('sanitize')) {
+    function sanitize(array $data, array $rules): array
+    {
+        return security()->sanitize($data, $rules);
+    }
+}
+
