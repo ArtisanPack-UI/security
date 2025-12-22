@@ -4,7 +4,8 @@
       "Bash(mkdir:*)",
       "Bash(./vendor/bin/phpunit:*)",
       "Bash(./vendor/bin/pest:*)",
-      "Bash(composer update:*)"
+      "Bash(composer update:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": []
