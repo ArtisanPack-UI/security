@@ -36,7 +36,11 @@
     "pestphp/pest-plugin-laravel": "^3.1",
     "orchestra/testbench": "^10.2",
     "laravel/pint": "^1.25",
-    "artisanpack-ui/code-style-pint": "^1.0"
+    "artisanpack-ui/code-style-pint": "^1.0",
+    "laravel/sanctum": "^4.0"
+  },
+  "suggest": {
+    "laravel/sanctum": "Required for API Security Layer (^4.0). Install with: composer require laravel/sanctum. The API Security Layer gracefully disables itself if Sanctum is not installed."
   },
   "config": {
     "allow-plugins": {

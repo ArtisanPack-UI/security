@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ArtisanPackUI\Security\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckTokenAbilityAny
+{
+    /**
+     * Handle an incoming request.
+     *
+     * Check if the current token has ANY of the required abilities.
+     *
+     * Usage:
+     *   ->middleware('token.ability.any:write,admin')
+     */
+    public function handle(Request $request, Closure $next, ...$abilities): Response
+    {
+        if (empty($abilities)) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+                'error' => 'unauthenticated',
+            ], 401);
+        }
+
+        $token = $user->currentAccessToken();
+
+        if (! $token) {
+            return response()->json([
+                'message' => 'No access token present.',
+                'error' => 'no_token',
+            ], 401);
+        }
+
+        // Check if token has any of the required abilities
+        foreach ($abilities as $ability) {
+            if ($this->tokenHasAbility($token, $ability)) {
+                return $next($request);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Token does not have any of the required abilities.',
+            'error' => 'insufficient_ability',
+            'required_abilities' => $abilities,
+        ], 403);
+    }
+
+    /**
+     * Check if the token has a specific ability.
+     */
+    protected function tokenHasAbility($token, string $ability): bool
+    {
+        // Use our extended method if available
+        if (method_exists($token, 'hasAbility')) {
+            return $token->hasAbility($ability);
+        }
+
+        // Fallback to Sanctum's standard behavior
+        $abilities = $token->abilities ?? [];
+
+        return in_array('*', $abilities, true)
+            || in_array($ability, $abilities, true);
+    }
+}

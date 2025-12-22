@@ -10,6 +10,7 @@ Welcome to the ArtisanPack UI Security package documentation. This package provi
 
 - [Getting Started](getting-started) - Installation, setup, and basic usage
 - [Role-Based Access Control](rbac) - How to manage roles and permissions
+- [API Security Layer](api-security) - Token-based API authentication with Sanctum
 - [Two-Factor Authentication](two-factor-authentication) - Complete 2FA setup and implementation guide
 - [API Reference](api-reference) - Complete function reference with examples
 

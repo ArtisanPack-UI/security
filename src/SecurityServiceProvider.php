@@ -9,10 +9,20 @@ use ArtisanPackUI\Security\Console\Commands\CreateRole;
 use ArtisanPackUI\Security\Console\Commands\CreatePermission;
 use ArtisanPackUI\Security\Console\Commands\AssignRole;
 use ArtisanPackUI\Security\Console\Commands\RevokeRole;
+use ArtisanPackUI\Security\Console\Commands\CreateApiToken;
+use ArtisanPackUI\Security\Console\Commands\ListApiTokens;
+use ArtisanPackUI\Security\Console\Commands\RevokeApiToken;
+use ArtisanPackUI\Security\Console\Commands\PruneApiTokens;
+use ArtisanPackUI\Security\Console\Commands\CheckApiSecurity;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
 use ArtisanPackUI\Security\Http\Middleware\XssProtection;
 use ArtisanPackUI\Security\Http\Middleware\CheckPermission;
+use ArtisanPackUI\Security\Http\Middleware\ApiSecurity;
+use ArtisanPackUI\Security\Http\Middleware\ApiRateLimiting;
+use ArtisanPackUI\Security\Http\Middleware\CheckTokenAbility;
+use ArtisanPackUI\Security\Http\Middleware\CheckTokenAbilityAny;
+use ArtisanPackUI\Security\Models\ApiToken;
 use ArtisanPackUI\Security\Rules\NoHtml;
 use ArtisanPackUI\Security\Rules\PasswordPolicy;
 use ArtisanPackUI\Security\Rules\SecureFile;
@@ -89,6 +99,8 @@ class SecurityServiceProvider extends ServiceProvider
         $this->bootProductionValidations();
 
         $this->bootRbac();
+
+        $this->bootApiSecurity();
 
         Validator::extend('password_policy', function ($attribute, $value, $parameters, $validator) {
             return (new PasswordPolicy)->passes($attribute, $value);
@@ -340,6 +352,122 @@ class SecurityServiceProvider extends ServiceProvider
         } else {
             Cache::forget($cacheKey);
         }
+    }
+
+    /**
+     * Boot the API security services.
+     *
+     * This method implements graceful degradation when Sanctum is not installed.
+     * When SECURITY_API_ENABLED=true but Sanctum is missing:
+     * - In production: Logs a critical error but continues without API features
+     * - In development: Logs a warning for visibility
+     *
+     * @return void
+     */
+    protected function bootApiSecurity(): void
+    {
+        if (! config('artisanpack.security.api.enabled')) {
+            return;
+        }
+
+        // Check if Sanctum is installed - graceful degradation if missing
+        if (! class_exists(\Laravel\Sanctum\Sanctum::class)) {
+            $message = 'ArtisanPack Security: API Security Layer is enabled (SECURITY_API_ENABLED=true) ' .
+                'but Laravel Sanctum is not installed. API features will be disabled. ' .
+                'Install Sanctum with: composer require laravel/sanctum';
+
+            if ($this->app->isProduction()) {
+                // In production, log critical as this is likely a configuration/deployment issue
+                Log::critical($message);
+            } else {
+                // In development, warn so developers are aware
+                Log::warning($message);
+            }
+
+            return;
+        }
+
+        // Configure Sanctum to use our extended token model
+        $this->configureSanctum();
+
+        // Register API rate limiters
+        $this->registerApiRateLimiters();
+
+        // Register middleware aliases
+        $this->app['router']->aliasMiddleware('api.security', ApiSecurity::class);
+        $this->app['router']->aliasMiddleware('api.throttle', ApiRateLimiting::class);
+        $this->app['router']->aliasMiddleware('token.ability', CheckTokenAbility::class);
+        $this->app['router']->aliasMiddleware('token.ability.any', CheckTokenAbilityAny::class);
+
+        // Load API migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations/api');
+
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                CreateApiToken::class,
+                ListApiTokens::class,
+                RevokeApiToken::class,
+                PruneApiTokens::class,
+                CheckApiSecurity::class,
+            ]);
+        }
+    }
+
+    /**
+     * Configure Laravel Sanctum for our extended functionality.
+     *
+     * @return void
+     */
+    protected function configureSanctum(): void
+    {
+        // Set custom token model
+        \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(ApiToken::class);
+    }
+
+    /**
+     * Register API-specific rate limiters.
+     *
+     * @return void
+     */
+    protected function registerApiRateLimiters(): void
+    {
+        if (! config('artisanpack.security.api.rate_limiting.enabled')) {
+            return;
+        }
+
+        // Authenticated API limiter
+        RateLimiter::for('api-authenticated', function (Request $request) {
+            $config = config('artisanpack.security.api.rate_limiting.authenticated', [
+                'max_attempts' => 60,
+                'decay_minutes' => 1,
+            ]);
+
+            return Limit::perMinutes($config['decay_minutes'], $config['max_attempts'])
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Guest API limiter
+        RateLimiter::for('api-guest', function (Request $request) {
+            $config = config('artisanpack.security.api.rate_limiting.guest', [
+                'max_attempts' => 30,
+                'decay_minutes' => 1,
+            ]);
+
+            return Limit::perMinutes($config['decay_minutes'], $config['max_attempts'])
+                ->by($request->ip());
+        });
+
+        // Token request limiter
+        RateLimiter::for('api-token-request', function (Request $request) {
+            $config = config('artisanpack.security.api.rate_limiting.token_requests', [
+                'max_attempts' => 5,
+                'decay_minutes' => 1,
+            ]);
+
+            return Limit::perMinutes($config['decay_minutes'], $config['max_attempts'])
+                ->by($request->ip());
+        });
     }
 }
 

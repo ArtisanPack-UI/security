@@ -166,5 +166,107 @@ return [
     'xss' => [
         'enabled' => env('SECURITY_XSS_PROTECTION_ENABLED', false),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Security Layer
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the API security settings for your application.
+    | This feature extends Laravel Sanctum with additional token management,
+    | expiration, revocation, and API-specific rate limiting.
+    |
+    | Note: This feature requires Laravel Sanctum to be installed.
+    |
+    */
+    'api' => [
+        'enabled' => env('SECURITY_API_ENABLED', true),
+
+        /*
+         * Authentication driver configuration.
+         * Sanctum is the default and recommended driver.
+         */
+        'driver' => 'sanctum',
+
+        /*
+         * Token configuration for Sanctum.
+         */
+        'tokens' => [
+            /*
+             * Default token expiration in minutes.
+             * Set to null for non-expiring tokens.
+             */
+            'expiration' => env('API_TOKEN_EXPIRATION', 60 * 24 * 7), // 7 days
+
+            /*
+             * Prefix for token names to identify tokens created by this package.
+             */
+            'prefix' => env('API_TOKEN_PREFIX', 'artisanpack'),
+        ],
+
+        /*
+         * Define available token abilities/scopes.
+         * These can be assigned when creating tokens.
+         */
+        'abilities' => [
+            'read' => 'Read-only access to resources',
+            'write' => 'Create and update resources',
+            'delete' => 'Delete resources',
+            'admin' => 'Full administrative access',
+        ],
+
+        /*
+         * Ability groups for convenience.
+         * Assign a group name to get all included abilities.
+         */
+        'ability_groups' => [
+            'readonly' => ['read'],
+            'standard' => ['read', 'write'],
+            'full' => ['read', 'write', 'delete'],
+            'admin' => ['read', 'write', 'delete', 'admin'],
+        ],
+
+        /*
+         * API-specific rate limiting configuration.
+         * These override the general rate limiting settings for API routes.
+         */
+        'rate_limiting' => [
+            'enabled' => env('API_RATE_LIMITING_ENABLED', true),
+
+            /*
+             * Default rate limit for authenticated API requests.
+             */
+            'authenticated' => [
+                'max_attempts' => env('API_RATE_LIMIT_AUTHENTICATED', 60),
+                'decay_minutes' => 1,
+            ],
+
+            /*
+             * Rate limit for unauthenticated/guest API requests.
+             */
+            'guest' => [
+                'max_attempts' => env('API_RATE_LIMIT_GUEST', 30),
+                'decay_minutes' => 1,
+            ],
+
+            /*
+             * Rate limit for token creation/authentication endpoints.
+             */
+            'token_requests' => [
+                'max_attempts' => env('API_RATE_LIMIT_TOKEN', 5),
+                'decay_minutes' => 1,
+            ],
+        ],
+
+        /*
+         * Routes configuration for token management endpoints.
+         * Set enabled to true to register built-in token management routes.
+         */
+        'routes' => [
+            'enabled' => env('API_ROUTES_ENABLED', false),
+            'prefix' => 'api/auth',
+            'middleware' => ['api'],
+        ],
+    ],
 ];
     
