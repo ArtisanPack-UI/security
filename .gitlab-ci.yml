@@ -43,6 +43,8 @@ build:vendors:
       # Configure GitLab authentication for Composer
       composer config --global gitlab-token.gitlab.com ${CI_JOB_TOKEN}
   script:
+    # Clear vendor directory to ensure fresh install when lock file changes
+    - rm -rf vendor
     - composer install --no-interaction --prefer-dist --optimize-autoloader
 
 tests:
