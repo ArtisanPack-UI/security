@@ -48,18 +48,19 @@ class ValidationRulesTest extends TestCase
     #[Test]
     public function it_validates_secure_files()
     {
-        $rule = new SecureFile(['image/png'], 1024);
-
-        // Test with a valid file
-        $file = UploadedFile::fake()->image('avatar.png')->size(500);
+        // Test with a default rule - valid jpg file
+        $rule = new SecureFile();
+        $file = UploadedFile::fake()->image('avatar.jpg', 100, 100);
         $this->assertValidates($rule, $file);
 
-        // Test with a file that is too large
-        $file = UploadedFile::fake()->image('avatar.png')->size(2048);
+        // Test with blocked extension (php) - should fail
+        $rule = new SecureFile();
+        $file = UploadedFile::fake()->create('malware.php', 100, 'text/x-php');
         $this->assertFailsValidation($rule, $file);
 
-        // Test with a file of the wrong mime type
-        $file = UploadedFile::fake()->image('avatar.jpg')->size(500);
+        // Test with size limit exceeded
+        $rule = (new SecureFile())->maxKilobytes(1); // 1KB max
+        $file = UploadedFile::fake()->create('large.jpg', 2048, 'image/jpeg'); // 2MB file
         $this->assertFailsValidation($rule, $file);
     }
 }

@@ -4,6 +4,7 @@ namespace ArtisanPackUI\Security;
 
 use ArtisanPackUI\Security\Console\Commands\CheckSecurityConfiguration;
 use ArtisanPackUI\Security\Console\Commands\CheckSessionSecurity;
+use ArtisanPackUI\Security\Console\Commands\CleanupExpiredFiles;
 use ArtisanPackUI\Security\Console\Commands\ClearRateLimits;
 use ArtisanPackUI\Security\Console\Commands\CreateRole;
 use ArtisanPackUI\Security\Console\Commands\CreatePermission;
@@ -17,13 +18,19 @@ use ArtisanPackUI\Security\Console\Commands\CheckApiSecurity;
 use ArtisanPackUI\Security\Console\Commands\ListSecurityEvents;
 use ArtisanPackUI\Security\Console\Commands\ClearSecurityEvents;
 use ArtisanPackUI\Security\Console\Commands\ExportSecurityEvents;
+use ArtisanPackUI\Security\Console\Commands\ScanQuarantinedFiles;
 use ArtisanPackUI\Security\Console\Commands\SecurityEventStats;
 use ArtisanPackUI\Security\Console\Commands\DetectSuspiciousActivity;
 use ArtisanPackUI\Security\Contracts\BreachCheckerInterface;
+use ArtisanPackUI\Security\Contracts\FileValidatorInterface;
+use ArtisanPackUI\Security\Contracts\MalwareScannerInterface;
 use ArtisanPackUI\Security\Contracts\PasswordSecurityServiceInterface;
+use ArtisanPackUI\Security\Contracts\SecureFileStorageInterface;
 use ArtisanPackUI\Security\Contracts\SecurityEventLoggerInterface;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
+use ArtisanPackUI\Security\Http\Middleware\ScanUploadedFiles;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
+use ArtisanPackUI\Security\Http\Middleware\ValidateFileUpload;
 use ArtisanPackUI\Security\Http\Middleware\XssProtection;
 use ArtisanPackUI\Security\Http\Middleware\CheckPermission;
 use ArtisanPackUI\Security\Http\Middleware\ApiSecurity;
@@ -45,11 +52,18 @@ use ArtisanPackUI\Security\Rules\NotCompromised;
 use ArtisanPackUI\Security\Rules\PasswordComplexity;
 use ArtisanPackUI\Security\Rules\PasswordHistoryRule;
 use ArtisanPackUI\Security\Rules\PasswordPolicy;
+use ArtisanPackUI\Security\Rules\SafeFilename;
 use ArtisanPackUI\Security\Rules\SecureFile;
 use ArtisanPackUI\Security\Rules\SecureUrl;
 use ArtisanPackUI\Security\Services\EnvironmentValidationService;
+use ArtisanPackUI\Security\Services\FileUploadRateLimiter;
+use ArtisanPackUI\Security\Services\FileValidationService;
 use ArtisanPackUI\Security\Services\HaveIBeenPwnedService;
 use ArtisanPackUI\Security\Services\PasswordSecurityService;
+use ArtisanPackUI\Security\Services\Scanners\ClamAvScanner;
+use ArtisanPackUI\Security\Services\Scanners\NullScanner;
+use ArtisanPackUI\Security\Services\Scanners\VirusTotalScanner;
+use ArtisanPackUI\Security\Services\SecureFileStorageService;
 use ArtisanPackUI\Security\Services\SecurityEventLogger;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
@@ -101,6 +115,31 @@ class SecurityServiceProvider extends ServiceProvider
 			);
 		});
 
+		// Register file upload security services
+		$this->app->singleton(FileValidatorInterface::class, FileValidationService::class);
+
+		$this->app->singleton(MalwareScannerInterface::class, function ($app) {
+			$driver = config('artisanpack.security.fileUpload.malwareScanning.driver', 'null');
+
+			return match ($driver) {
+				'clamav' => new ClamAvScanner(),
+				'virustotal' => new VirusTotalScanner(),
+				default => new NullScanner(),
+			};
+		});
+
+		$this->app->singleton(FileUploadRateLimiter::class, function ($app) {
+			return new FileUploadRateLimiter($app->make(\Illuminate\Cache\RateLimiter::class));
+		});
+
+		$this->app->singleton(SecureFileStorageInterface::class, function ($app) {
+			return new SecureFileStorageService(
+				$app->make(\Illuminate\Filesystem\FilesystemManager::class),
+				$app->make(FileValidatorInterface::class),
+				$app->make(MalwareScannerInterface::class)
+			);
+		});
+
 		$this->mergeConfigFrom(
 			__DIR__ . '/../config/security.php', 'artisanpack-security-temp'
 		);
@@ -148,6 +187,8 @@ class SecurityServiceProvider extends ServiceProvider
 
         $this->bootPasswordSecurity();
 
+        $this->bootFileUploadSecurity();
+
         Validator::extend('password_policy', function ($attribute, $value, $parameters, $validator) {
             return (new PasswordPolicy)->passes($attribute, $value);
         });
@@ -161,9 +202,11 @@ class SecurityServiceProvider extends ServiceProvider
         });
 
         Validator::extend('secure_file', function ($attribute, $value, $parameters, $validator) {
-            $allowedMimeTypes = $parameters[0] ?? [];
-            $maxSize = $parameters[1] ?? null;
-            return (new SecureFile($allowedMimeTypes, $maxSize))->passes($attribute, $value);
+            return (new SecureFile())->passes($attribute, $value);
+        });
+
+        Validator::extend('safe_filename', function ($attribute, $value, $parameters, $validator) {
+            return (new SafeFilename())->passes($attribute, $value);
         });
 
         // Password security validation rules
@@ -650,6 +693,36 @@ class SecurityServiceProvider extends ServiceProvider
         if (class_exists(Livewire::class)) {
             Livewire::component('password-strength-meter', PasswordStrengthMeter::class);
         }
+    }
+
+    /**
+     * Boot the file upload security services.
+     *
+     * @return void
+     */
+    protected function bootFileUploadSecurity(): void
+    {
+        if (! config('artisanpack.security.fileUpload.enabled', true)) {
+            return;
+        }
+
+        // Load file upload migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations/uploads');
+
+        // Register middleware aliases
+        $this->app['router']->aliasMiddleware('validate.upload', ValidateFileUpload::class);
+        $this->app['router']->aliasMiddleware('scan.upload', ScanUploadedFiles::class);
+
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ScanQuarantinedFiles::class,
+                CleanupExpiredFiles::class,
+            ]);
+        }
+
+        // Load secure file serving routes
+        $this->loadRoutesFrom(__DIR__ . '/../routes/secure-files.php');
     }
 }
 
