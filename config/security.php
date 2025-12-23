@@ -412,5 +412,90 @@ return [
             'middleware' => ['web', 'auth', 'can:viewSecurityDashboard'],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Security
+    |--------------------------------------------------------------------------
+    |
+    | Configure enhanced password security features including complexity
+    | validation, history tracking, expiration policies, strength metering,
+    | and breach checking via HaveIBeenPwned.
+    |
+    */
+    'passwordSecurity' => [
+        'enabled' => env('SECURITY_PASSWORD_ENABLED', true),
+
+        /*
+         * Password complexity requirements
+         */
+        'complexity' => [
+            'minLength' => 8,
+            'maxLength' => 128,
+            'requireUppercase' => true,
+            'requireLowercase' => true,
+            'requireNumbers' => true,
+            'requireSymbols' => true,
+            'minUniqueCharacters' => 4,
+            'disallowRepeatingCharacters' => 3, // Max consecutive repeating chars
+            'disallowSequentialCharacters' => 3, // e.g., "abc", "123"
+            'disallowCommonPasswords' => true,
+            'disallowUserAttributes' => true, // Disallow email, name in password
+        ],
+
+        /*
+         * Password history settings
+         */
+        'history' => [
+            'enabled' => true,
+            'count' => 5, // Number of previous passwords to remember
+            'minDaysBetweenChanges' => 1, // Minimum days before password can be changed
+        ],
+
+        /*
+         * Password expiration settings
+         */
+        'expiration' => [
+            'enabled' => false,
+            'days' => 90, // Days until password expires
+            'warningDays' => 14, // Days before expiration to warn user
+            'graceLogins' => 3, // Number of logins allowed after expiration
+            'exemptRoles' => [], // Roles exempt from expiration
+        ],
+
+        /*
+         * Password breach checking (HaveIBeenPwned)
+         */
+        'breachChecking' => [
+            'enabled' => env('SECURITY_BREACH_CHECK_ENABLED', true),
+            'onRegistration' => true,
+            'onPasswordChange' => true,
+            'onLogin' => false, // Check on every login (performance impact)
+            'blockCompromised' => true, // Block or warn only
+            'apiTimeout' => 5, // Seconds
+            'cacheResults' => true,
+            'cacheTtl' => 86400, // Cache breach results for 24 hours
+        ],
+
+        /*
+         * Password strength meter settings
+         */
+        'strengthMeter' => [
+            'enabled' => true,
+            'showFeedback' => true,
+            'minScore' => 3, // Minimum zxcvbn score (0-4)
+            'showCrackTime' => true,
+        ],
+
+        /*
+         * Logging settings
+         */
+        'logging' => [
+            'passwordChanges' => true,
+            'failedValidations' => true,
+            'breachDetections' => true,
+            'expirationWarnings' => true,
+        ],
+    ],
 ];
     

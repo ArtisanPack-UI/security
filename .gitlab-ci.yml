@@ -18,7 +18,9 @@ include:
 build:vendors:
   stage: build
   artifacts:
-    untracked: true
+    paths:
+      - vendor/
+    expire_in: 1 hour
   only:
     refs:
       - merge_requests

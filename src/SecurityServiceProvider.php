@@ -19,6 +19,8 @@ use ArtisanPackUI\Security\Console\Commands\ClearSecurityEvents;
 use ArtisanPackUI\Security\Console\Commands\ExportSecurityEvents;
 use ArtisanPackUI\Security\Console\Commands\SecurityEventStats;
 use ArtisanPackUI\Security\Console\Commands\DetectSuspiciousActivity;
+use ArtisanPackUI\Security\Contracts\BreachCheckerInterface;
+use ArtisanPackUI\Security\Contracts\PasswordSecurityServiceInterface;
 use ArtisanPackUI\Security\Contracts\SecurityEventLoggerInterface;
 use ArtisanPackUI\Security\Http\Middleware\EnsureSessionIsEncrypted;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
@@ -28,7 +30,10 @@ use ArtisanPackUI\Security\Http\Middleware\ApiSecurity;
 use ArtisanPackUI\Security\Http\Middleware\ApiRateLimiting;
 use ArtisanPackUI\Security\Http\Middleware\CheckTokenAbility;
 use ArtisanPackUI\Security\Http\Middleware\CheckTokenAbilityAny;
+use ArtisanPackUI\Security\Http\Middleware\EnforcePasswordPolicy;
+use ArtisanPackUI\Security\Http\Middleware\RequirePasswordChange;
 use ArtisanPackUI\Security\Listeners\LogAuthenticationEvents;
+use ArtisanPackUI\Security\Livewire\PasswordStrengthMeter;
 use ArtisanPackUI\Security\Livewire\SecurityDashboard;
 use ArtisanPackUI\Security\Livewire\SecurityEventList;
 use ArtisanPackUI\Security\Livewire\SecurityStats;
@@ -36,10 +41,15 @@ use ArtisanPackUI\Security\Models\ApiToken;
 use ArtisanPackUI\Security\Observers\PermissionObserver;
 use ArtisanPackUI\Security\Observers\RoleObserver;
 use ArtisanPackUI\Security\Rules\NoHtml;
+use ArtisanPackUI\Security\Rules\NotCompromised;
+use ArtisanPackUI\Security\Rules\PasswordComplexity;
+use ArtisanPackUI\Security\Rules\PasswordHistoryRule;
 use ArtisanPackUI\Security\Rules\PasswordPolicy;
 use ArtisanPackUI\Security\Rules\SecureFile;
 use ArtisanPackUI\Security\Rules\SecureUrl;
 use ArtisanPackUI\Security\Services\EnvironmentValidationService;
+use ArtisanPackUI\Security\Services\HaveIBeenPwnedService;
+use ArtisanPackUI\Security\Services\PasswordSecurityService;
 use ArtisanPackUI\Security\Services\SecurityEventLogger;
 use ArtisanPackUI\Security\TwoFactor\TwoFactorManager;
 use Exception;
@@ -78,6 +88,18 @@ class SecurityServiceProvider extends ServiceProvider
 		});
 
 		$this->app->alias(SecurityEventLoggerInterface::class, 'security-events');
+
+		// Register breach checker service
+		$this->app->singleton(BreachCheckerInterface::class, function ($app) {
+			return new HaveIBeenPwnedService();
+		});
+
+		// Register password security service
+		$this->app->singleton(PasswordSecurityServiceInterface::class, function ($app) {
+			return new PasswordSecurityService(
+				$app->make(BreachCheckerInterface::class)
+			);
+		});
 
 		$this->mergeConfigFrom(
 			__DIR__ . '/../config/security.php', 'artisanpack-security-temp'
@@ -124,6 +146,8 @@ class SecurityServiceProvider extends ServiceProvider
 
         $this->bootEventLogging();
 
+        $this->bootPasswordSecurity();
+
         Validator::extend('password_policy', function ($attribute, $value, $parameters, $validator) {
             return (new PasswordPolicy)->passes($attribute, $value);
         });
@@ -140,6 +164,25 @@ class SecurityServiceProvider extends ServiceProvider
             $allowedMimeTypes = $parameters[0] ?? [];
             $maxSize = $parameters[1] ?? null;
             return (new SecureFile($allowedMimeTypes, $maxSize))->passes($attribute, $value);
+        });
+
+        // Password security validation rules
+        // Note: These rules auto-resolve the authenticated user from the request context.
+        // For explicit user context, use the rule classes directly in form requests:
+        //   new PasswordComplexity($user), new PasswordHistoryRule($user)
+        Validator::extend('password_complexity', function ($attribute, $value, $parameters, $validator) {
+            $user = request()->user();
+            return (new PasswordComplexity($user))->passes($attribute, $value);
+        });
+
+        Validator::extend('password_history', function ($attribute, $value, $parameters, $validator) {
+            $user = request()->user();
+            return (new PasswordHistoryRule($user))->passes($attribute, $value);
+        });
+
+        Validator::extend('not_compromised', function ($attribute, $value, $parameters, $validator) {
+            $threshold = (int) ($parameters[0] ?? 0);
+            return (new NotCompromised($threshold))->passes($attribute, $value);
         });
 	}
 
@@ -583,6 +626,30 @@ class SecurityServiceProvider extends ServiceProvider
 
         // Load dashboard routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/security-dashboard.php');
+    }
+
+    /**
+     * Boot the password security services.
+     *
+     * @return void
+     */
+    protected function bootPasswordSecurity(): void
+    {
+        if (! config('artisanpack.security.passwordSecurity.enabled', true)) {
+            return;
+        }
+
+        // Load password security migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations/password');
+
+        // Register middleware aliases
+        $this->app['router']->aliasMiddleware('password.policy', EnforcePasswordPolicy::class);
+        $this->app['router']->aliasMiddleware('password.change', RequirePasswordChange::class);
+
+        // Register Livewire component if Livewire is available
+        if (class_exists(Livewire::class)) {
+            Livewire::component('password-strength-meter', PasswordStrengthMeter::class);
+        }
     }
 }
 
