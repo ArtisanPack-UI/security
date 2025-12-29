@@ -8,7 +8,8 @@
       "Bash(php:*)",
       "Bash(git fetch:*)",
       "Bash(xargs git branch -D)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(composer dump-autoload:*)"
     ],
     "deny": [],
     "ask": []

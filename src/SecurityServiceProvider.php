@@ -24,6 +24,12 @@ use ArtisanPackUI\Security\Console\Commands\DetectSuspiciousActivity;
 use ArtisanPackUI\Security\Console\Commands\CspPrune;
 use ArtisanPackUI\Security\Console\Commands\CspStats;
 use ArtisanPackUI\Security\Console\Commands\CspTest;
+use ArtisanPackUI\Security\Console\Commands\AnalyticsProcessCommand;
+use ArtisanPackUI\Security\Console\Commands\GenerateSecurityReportCommand;
+use ArtisanPackUI\Security\Console\Commands\PruneAnalyticsDataCommand;
+use ArtisanPackUI\Security\Console\Commands\SyncThreatFeedsCommand;
+use ArtisanPackUI\Security\Console\Commands\TestSiemConnectionCommand;
+use ArtisanPackUI\Security\Console\Commands\UpdateBehaviorBaselinesCommand;
 use ArtisanPackUI\Security\Console\Commands\SecurityAudit;
 use ArtisanPackUI\Security\Console\Commands\SecurityAuthAudit;
 use ArtisanPackUI\Security\Console\Commands\SecurityBaseline;
@@ -334,6 +340,8 @@ class SecurityServiceProvider extends ServiceProvider
         $this->bootSecurityTesting();
 
         $this->bootAdvancedAuthentication();
+
+        $this->bootAnalytics();
 
         Validator::extend('password_policy', function ($attribute, $value, $parameters, $validator) {
             return (new PasswordPolicy)->passes($attribute, $value);
@@ -1096,6 +1104,280 @@ class SecurityServiceProvider extends ServiceProvider
         // Step-up authentication modal
         if (config('artisanpack.security.step_up_authentication.enabled', true)) {
             Livewire::component('step-up-authentication-modal', StepUpAuthenticationModal::class);
+        }
+    }
+
+    /**
+     * Boot the analytics services.
+     *
+     * @return void
+     */
+    protected function bootAnalytics(): void
+    {
+        if (! config('artisanpack.security.analytics.enabled', false)) {
+            return;
+        }
+
+        // Load analytics migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations/analytics');
+
+        // Register analytics services
+        $this->registerAnalyticsServices();
+
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                AnalyticsProcessCommand::class,
+                GenerateSecurityReportCommand::class,
+                PruneAnalyticsDataCommand::class,
+                SyncThreatFeedsCommand::class,
+                TestSiemConnectionCommand::class,
+                UpdateBehaviorBaselinesCommand::class,
+            ]);
+        }
+
+        // Load analytics routes if dashboard is enabled
+        if (config('artisanpack.security.analytics.dashboard.enabled', false)) {
+            $this->loadRoutesFrom(__DIR__ . '/../routes/analytics-dashboard.php');
+        }
+    }
+
+    /**
+     * Register analytics services.
+     *
+     * @return void
+     */
+    protected function registerAnalyticsServices(): void
+    {
+        // Metrics Collector
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\Metrics\MetricsCollector::class, function ($app) {
+            return new \ArtisanPackUI\Security\Analytics\Metrics\MetricsCollector(
+                config('artisanpack.security.analytics.metrics', [])
+            );
+        });
+
+        // Anomaly Detection Service
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\AnomalyDetection\AnomalyDetectionService::class, function ($app) {
+            $service = new \ArtisanPackUI\Security\Analytics\AnomalyDetection\AnomalyDetectionService(
+                config('artisanpack.security.analytics.anomaly_detection', [])
+            );
+
+            // Register additional detectors
+            $this->registerAnomalyDetectors($service);
+
+            return $service;
+        });
+
+        // Threat Intelligence Service
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\ThreatIntelligence\ThreatIntelligenceService::class, function ($app) {
+            $service = new \ArtisanPackUI\Security\Analytics\ThreatIntelligence\ThreatIntelligenceService(
+                config('artisanpack.security.analytics.threat_intelligence', [])
+            );
+
+            // Register additional providers
+            $this->registerThreatIntelProviders($service);
+
+            return $service;
+        });
+
+        // Incident Responder
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\IncidentResponse\IncidentResponder::class, function ($app) {
+            $service = new \ArtisanPackUI\Security\Analytics\IncidentResponse\IncidentResponder(
+                config('artisanpack.security.analytics.incident_response', [])
+            );
+
+            // Register additional response actions
+            $this->registerResponseActions($service);
+
+            return $service;
+        });
+
+        // Alert Manager
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\Alerting\AlertManager::class, function ($app) {
+            $service = new \ArtisanPackUI\Security\Analytics\Alerting\AlertManager(
+                config('artisanpack.security.analytics.alerting', [])
+            );
+
+            // Register additional alert channels
+            $this->registerAlertChannels($service);
+
+            return $service;
+        });
+
+        // Dashboard Data Provider
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\Dashboard\DashboardDataProvider::class, function ($app) {
+            return new \ArtisanPackUI\Security\Analytics\Dashboard\DashboardDataProvider();
+        });
+
+        // Report Generator
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\Reports\ReportGenerator::class, function ($app) {
+            return new \ArtisanPackUI\Security\Analytics\Reports\ReportGenerator(
+                config('artisanpack.security.analytics.reports', [])
+            );
+        });
+
+        // SIEM Export Service
+        $this->app->singleton(\ArtisanPackUI\Security\Analytics\Siem\SiemExportService::class, function ($app) {
+            $service = new \ArtisanPackUI\Security\Analytics\Siem\SiemExportService(
+                config('artisanpack.security.analytics.siem', [])
+            );
+
+            // Register additional exporters
+            $this->registerSiemExporters($service);
+
+            return $service;
+        });
+    }
+
+    /**
+     * Register anomaly detectors.
+     *
+     * @param  \ArtisanPackUI\Security\Analytics\AnomalyDetection\AnomalyDetectionService  $service
+     * @return void
+     */
+    protected function registerAnomalyDetectors($service): void
+    {
+        $detectorConfigs = config('artisanpack.security.analytics.anomaly_detection.detectors', []);
+
+        if (! empty($detectorConfigs['geo_velocity'])) {
+            $service->registerDetector(new \ArtisanPackUI\Security\Analytics\AnomalyDetection\Detectors\GeoVelocityDetector(
+                $detectorConfigs['geo_velocity']
+            ));
+        }
+
+        if (! empty($detectorConfigs['brute_force'])) {
+            $service->registerDetector(new \ArtisanPackUI\Security\Analytics\AnomalyDetection\Detectors\BruteForceDetector(
+                $detectorConfigs['brute_force']
+            ));
+        }
+
+        if (! empty($detectorConfigs['credential_stuffing'])) {
+            $service->registerDetector(new \ArtisanPackUI\Security\Analytics\AnomalyDetection\Detectors\CredentialStuffingDetector(
+                $detectorConfigs['credential_stuffing']
+            ));
+        }
+
+        if (! empty($detectorConfigs['privilege_escalation'])) {
+            $service->registerDetector(new \ArtisanPackUI\Security\Analytics\AnomalyDetection\Detectors\PrivilegeEscalationDetector(
+                $detectorConfigs['privilege_escalation']
+            ));
+        }
+
+        if (! empty($detectorConfigs['access_pattern'])) {
+            $service->registerDetector(new \ArtisanPackUI\Security\Analytics\AnomalyDetection\Detectors\AccessPatternDetector(
+                $detectorConfigs['access_pattern']
+            ));
+        }
+    }
+
+    /**
+     * Register threat intelligence providers.
+     *
+     * @param  \ArtisanPackUI\Security\Analytics\ThreatIntelligence\ThreatIntelligenceService  $service
+     * @return void
+     */
+    protected function registerThreatIntelProviders($service): void
+    {
+        $providerConfigs = config('artisanpack.security.analytics.threat_intelligence.providers', []);
+
+        if (! empty($providerConfigs['ipqualityscore'])) {
+            $service->registerProvider(new \ArtisanPackUI\Security\Analytics\ThreatIntelligence\Providers\IpQualityScoreProvider(
+                $providerConfigs['ipqualityscore']
+            ));
+        }
+
+        if (! empty($providerConfigs['google_safe_browsing'])) {
+            $service->registerProvider(new \ArtisanPackUI\Security\Analytics\ThreatIntelligence\Providers\GoogleSafeBrowsingProvider(
+                $providerConfigs['google_safe_browsing']
+            ));
+        }
+
+        if (! empty($providerConfigs['custom_feeds'])) {
+            foreach ($providerConfigs['custom_feeds'] as $feedConfig) {
+                $service->registerProvider(new \ArtisanPackUI\Security\Analytics\ThreatIntelligence\Providers\CustomFeedProvider(
+                    $feedConfig
+                ));
+            }
+        }
+    }
+
+    /**
+     * Register incident response actions.
+     *
+     * @param  \ArtisanPackUI\Security\Analytics\IncidentResponse\IncidentResponder  $service
+     * @return void
+     */
+    protected function registerResponseActions($service): void
+    {
+        // Register default response actions
+        $service->registerAction(new \ArtisanPackUI\Security\Analytics\IncidentResponse\Actions\LockAccountAction());
+        $service->registerAction(new \ArtisanPackUI\Security\Analytics\IncidentResponse\Actions\ForcePasswordResetAction());
+        $service->registerAction(new \ArtisanPackUI\Security\Analytics\IncidentResponse\Actions\RateLimitIpAction());
+        $service->registerAction(new \ArtisanPackUI\Security\Analytics\IncidentResponse\Actions\TerminateSessionAction());
+        $service->registerAction(new \ArtisanPackUI\Security\Analytics\IncidentResponse\Actions\EnableEnhancedLoggingAction());
+    }
+
+    /**
+     * Register alert channels.
+     *
+     * @param  \ArtisanPackUI\Security\Analytics\Alerting\AlertManager  $service
+     * @return void
+     */
+    protected function registerAlertChannels($service): void
+    {
+        $channelConfigs = config('artisanpack.security.analytics.alerting.channels', []);
+
+        if (! empty($channelConfigs['teams'])) {
+            $service->registerChannel(new \ArtisanPackUI\Security\Analytics\Alerting\Channels\TeamsChannel(
+                $channelConfigs['teams']
+            ));
+        }
+
+        if (! empty($channelConfigs['opsgenie'])) {
+            $service->registerChannel(new \ArtisanPackUI\Security\Analytics\Alerting\Channels\OpsGenieChannel(
+                $channelConfigs['opsgenie']
+            ));
+        }
+
+        if (! empty($channelConfigs['webhook'])) {
+            $service->registerChannel(new \ArtisanPackUI\Security\Analytics\Alerting\Channels\WebhookChannel(
+                $channelConfigs['webhook']
+            ));
+        }
+
+        if (! empty($channelConfigs['sms'])) {
+            $service->registerChannel(new \ArtisanPackUI\Security\Analytics\Alerting\Channels\SmsChannel(
+                $channelConfigs['sms']
+            ));
+        }
+
+        if (! empty($channelConfigs['database'])) {
+            $service->registerChannel(new \ArtisanPackUI\Security\Analytics\Alerting\Channels\DatabaseChannel(
+                $channelConfigs['database']
+            ));
+        }
+    }
+
+    /**
+     * Register SIEM exporters.
+     *
+     * @param  \ArtisanPackUI\Security\Analytics\Siem\SiemExportService  $service
+     * @return void
+     */
+    protected function registerSiemExporters($service): void
+    {
+        $exporterConfigs = config('artisanpack.security.analytics.siem.providers', []);
+
+        if (! empty($exporterConfigs['datadog'])) {
+            $service->registerExporter(new \ArtisanPackUI\Security\Analytics\Siem\Exporters\DatadogExporter(
+                $exporterConfigs['datadog']
+            ));
+        }
+
+        if (! empty($exporterConfigs['webhook'])) {
+            $service->registerExporter(new \ArtisanPackUI\Security\Analytics\Siem\Exporters\WebhookExporter(
+                $exporterConfigs['webhook']
+            ));
         }
     }
 }

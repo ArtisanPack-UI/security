@@ -6,7 +6,8 @@
   "version": "1.0.3",
   "autoload": {
     "psr-4": {
-      "ArtisanPackUI\\Security\\": "src/"
+      "ArtisanPackUI\\Security\\": "src/",
+      "ArtisanPackUI\\Security\\Database\\Factories\\": "database/factories/"
     },
     "files": [
       "src/helpers.php",
