@@ -1531,5 +1531,126 @@ return [
         'channel' => env('SECURITY_LOG_CHANNEL', 'security'),
         'level' => env('SECURITY_LOG_LEVEL', 'info'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security Commands Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the security artisan commands behavior and defaults.
+    |
+    */
+    'commands' => [
+        /*
+         * User security check command configuration.
+         */
+        'user_security' => [
+            /*
+             * Maximum password age in days before warning.
+             */
+            'password_max_age_days' => 90,
+
+            /*
+             * Send notifications to users with security issues.
+             */
+            'notify_on_issues' => false,
+
+            /*
+             * Security checks to run by default.
+             */
+            'checks' => [
+                'password' => true,
+                '2fa' => true,
+                'sessions' => true,
+                'lockouts' => true,
+                'suspicious_activity' => true,
+                'api_tokens' => true,
+            ],
+        ],
+
+        /*
+         * Security headers test command configuration.
+         */
+        'headers_test' => [
+            /*
+             * Use strict security requirements by default.
+             */
+            'strict_mode' => false,
+
+            /*
+             * Required headers that must be present.
+             */
+            'required_headers' => [
+                'Strict-Transport-Security',
+                'X-Frame-Options',
+                'X-Content-Type-Options',
+                'Content-Security-Policy',
+            ],
+
+            /*
+             * Recommended headers (warnings if missing).
+             */
+            'recommended_headers' => [
+                'Referrer-Policy',
+                'Permissions-Policy',
+                'Cross-Origin-Opener-Policy',
+                'Cross-Origin-Resource-Policy',
+            ],
+        ],
+
+        /*
+         * Dependency scan command configuration.
+         */
+        'dependency_scan' => [
+            /*
+             * Severity level that causes command to fail.
+             */
+            'fail_on_severity' => 'high',
+
+            /*
+             * Include outdated package warnings.
+             */
+            'include_outdated' => true,
+
+            /*
+             * How old a package can be before considered outdated (in years).
+             */
+            'outdated_threshold_years' => 2,
+        ],
+
+        /*
+         * CSP generation command configuration.
+         */
+        'csp_generate' => [
+            /*
+             * Default preset for generated CSP policies.
+             */
+            'default_preset' => 'livewire',
+
+            /*
+             * Include violation reporting by default.
+             */
+            'include_report_uri' => true,
+        ],
+
+        /*
+         * Security audit command configuration.
+         */
+        'audit' => [
+            /*
+             * Default output format.
+             */
+            'default_format' => 'json',
+
+            /*
+             * Scanners to run by default.
+             */
+            'default_scanners' => [
+                'owasp',
+                'dependencies',
+                'config',
+            ],
+        ],
+    ],
 ];
     

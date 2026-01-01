@@ -30,11 +30,15 @@ use ArtisanPackUI\Security\Console\Commands\PruneAnalyticsDataCommand;
 use ArtisanPackUI\Security\Console\Commands\SyncThreatFeedsCommand;
 use ArtisanPackUI\Security\Console\Commands\TestSiemConnectionCommand;
 use ArtisanPackUI\Security\Console\Commands\UpdateBehaviorBaselinesCommand;
+use ArtisanPackUI\Security\Console\Commands\CheckUserSecurity;
+use ArtisanPackUI\Security\Console\Commands\GenerateCspPolicy;
+use ArtisanPackUI\Security\Console\Commands\ScanDependencies;
 use ArtisanPackUI\Security\Console\Commands\SecurityAudit;
 use ArtisanPackUI\Security\Console\Commands\SecurityAuthAudit;
 use ArtisanPackUI\Security\Console\Commands\SecurityBaseline;
 use ArtisanPackUI\Security\Console\Commands\SecurityBenchmarkCommand;
 use ArtisanPackUI\Security\Console\Commands\SecurityScan;
+use ArtisanPackUI\Security\Console\Commands\TestSecurityHeaders;
 use ArtisanPackUI\Security\Console\Commands\CleanupExpiredSessions;
 use ArtisanPackUI\Security\Console\Commands\CleanupInactiveDevices;
 use ArtisanPackUI\Security\Console\Commands\ListWebAuthnCredentials;
@@ -963,10 +967,17 @@ class SecurityServiceProvider extends ServiceProvider
         // Register console commands
         if ($this->app->runningInConsole()) {
             $this->commands([
+                // Core security testing commands
                 SecurityScan::class,
                 SecurityAudit::class,
                 SecurityBenchmarkCommand::class,
                 SecurityBaseline::class,
+
+                // Security commands suite
+                GenerateCspPolicy::class,
+                ScanDependencies::class,
+                TestSecurityHeaders::class,
+                CheckUserSecurity::class,
             ]);
         }
     }
