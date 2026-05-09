@@ -305,6 +305,7 @@ return [
 The `artisanpack-ui/cms-framework` package currently has its own RBAC implementation (`Role`, `Permission` models, `HasRolesAndPermissions` trait, migrations, managers, policies, and API controllers). Once this RBAC package is available, the CMS framework should adopt it as a dependency to eliminate duplication.
 
 **What RBAC owns (CMS framework removes)**:
+
 | Concern | RBAC Package | CMS Framework |
 |---------|-------------|---------------|
 | `Role` model (base) | Owns | Extends via subclass |
@@ -316,6 +317,7 @@ The `artisanpack-ui/cms-framework` package currently has its own RBAC implementa
 | Gate integration | Owns | Uses it |
 
 **What CMS framework keeps (CMS-specific layer)**:
+
 | Concern | CMS Framework |
 |---------|---------------|
 | `RoleManager` / `PermissionManager` | Keeps (registration helpers with hook system) |

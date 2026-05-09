@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post(
-    config('artisanpack.security.csp.reporting.uri', '/csp-violation'),
-    [CspViolationController::class, 'report'],
-)->name('csp.violation.report');
+if (config('artisanpack.security.csp.reporting.enabled', true)) {
+    Route::post(
+        config('artisanpack.security.csp.reporting.uri', '/csp-violation'),
+        [CspViolationController::class, 'report'],
+    )->name('csp.violation.report');
+}

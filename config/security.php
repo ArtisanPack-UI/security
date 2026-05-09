@@ -102,11 +102,14 @@ return [
     | API Security Layer
     |--------------------------------------------------------------------------
     |
-    | Here you may configure the API security settings for your application.
-    | This feature extends Laravel Sanctum with additional token management,
-    | expiration, revocation, and API-specific rate limiting.
+    | Configures the core API security middleware shipped with this package
+    | (`api.security` + `api.rate_limit`). API-specific rate limiting splits
+    | the budget between authenticated and guest callers so a flood of guest
+    | traffic can't starve real users.
     |
-    | Note: This feature requires Laravel Sanctum to be installed.
+    | Token CRUD, abilities, ability groups, and the token-management route
+    | scaffolding moved to `artisanpack-ui/security-auth`. If you need any of
+    | that, pull in the sibling package — its config wires those features.
     |
     */
 
@@ -114,52 +117,7 @@ return [
         'enabled' => env('SECURITY_API_ENABLED', true),
 
         /*
-         * Authentication driver configuration.
-         * Sanctum is the default and recommended driver.
-         */
-        'driver' => 'sanctum',
-
-        /*
-         * Token configuration for Sanctum.
-         */
-        'tokens' => [
-            /*
-             * Default token expiration in minutes.
-             * Set to null for non-expiring tokens.
-             */
-            'expiration' => env('API_TOKEN_EXPIRATION', 60 * 24 * 7), // 7 days
-
-            /*
-             * Prefix for token names to identify tokens created by this package.
-             */
-            'prefix' => env('API_TOKEN_PREFIX', 'artisanpack'),
-        ],
-
-        /*
-         * Define available token abilities/scopes.
-         * These can be assigned when creating tokens.
-         */
-        'abilities' => [
-            'read' => 'Read-only access to resources',
-            'write' => 'Create and update resources',
-            'delete' => 'Delete resources',
-            'admin' => 'Full administrative access',
-        ],
-
-        /*
-         * Ability groups for convenience.
-         * Assign a group name to get all included abilities.
-         */
-        'ability_groups' => [
-            'readonly' => ['read'],
-            'standard' => ['read', 'write'],
-            'full' => ['read', 'write', 'delete'],
-            'admin' => ['read', 'write', 'delete', 'admin'],
-        ],
-
-        /*
-         * API-specific rate limiting configuration.
-         * These override the general rate limiting settings for API routes.
+         * API-specific rate limiting consumed by the api.rate_limit middleware.
          */
         'rate_limiting' => [
             'enabled' => env('API_RATE_LIMITING_ENABLED', true),
@@ -168,7 +126,7 @@ return [
              * Default rate limit for authenticated API requests.
              */
             'authenticated' => [
-                'max_attempts' => env('API_RATE_LIMIT_AUTHENTICATED', 60),
+                'max_attempts'  => env('API_RATE_LIMIT_AUTHENTICATED', 60),
                 'decay_minutes' => 1,
             ],
 
@@ -176,27 +134,9 @@ return [
              * Rate limit for unauthenticated/guest API requests.
              */
             'guest' => [
-                'max_attempts' => env('API_RATE_LIMIT_GUEST', 30),
+                'max_attempts'  => env('API_RATE_LIMIT_GUEST', 30),
                 'decay_minutes' => 1,
             ],
-
-            /*
-             * Rate limit for token creation/authentication endpoints.
-             */
-            'token_requests' => [
-                'max_attempts' => env('API_RATE_LIMIT_TOKEN', 5),
-                'decay_minutes' => 1,
-            ],
-        ],
-
-        /*
-         * Routes configuration for token management endpoints.
-         * Set enabled to true to register built-in token management routes.
-         */
-        'routes' => [
-            'enabled' => env('API_ROUTES_ENABLED', false),
-            'prefix' => 'api/auth',
-            'middleware' => ['api'],
         ],
     ],
 
@@ -436,33 +376,6 @@ return [
     */
 
     'commands' => [
-        /*
-         * User security check command configuration.
-         */
-        'user_security' => [
-            /*
-             * Maximum password age in days before warning.
-             */
-            'password_max_age_days' => 90,
-
-            /*
-             * Send notifications to users with security issues.
-             */
-            'notify_on_issues' => false,
-
-            /*
-             * Security checks to run by default.
-             */
-            'checks' => [
-                'password' => true,
-                '2fa' => true,
-                'sessions' => true,
-                'lockouts' => true,
-                'suspicious_activity' => true,
-                'api_tokens' => true,
-            ],
-        ],
-
         /*
          * Security headers test command configuration.
          */

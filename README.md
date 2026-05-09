@@ -13,7 +13,7 @@ The **core** Laravel security toolkit in the ArtisanPack UI ecosystem. Focused o
 - **KSES filtering** — `kses()` WordPress-style allowed-tag filtering
 - **Validation rules** — `NoHtml`, `SecureUrl`
 - **Middleware** — `csp`, `security.headers`, `xss.protection`, `api.security`, `api.rate_limit`
-- **Content Security Policy** — nonce generator, policy builder, presets, violation reporting endpoint, CSP dashboard Livewire component, Artisan commands (`csp:test`, `csp:stats`, `csp:prune`, `security:generate-csp`)
+- **Content Security Policy** — nonce generator, policy builder, presets, violation reporting endpoint, CSP dashboard Livewire component (optional — requires `livewire/livewire`), Artisan commands (`csp:test`, `csp:stats`, `csp:prune`, `security:generate-csp`)
 - **Security audit commands** — `security:audit`, `security:scan`, `security:baseline`, `security:benchmark`, `security:check-config`, `security:test-headers`, `security:scan-deps`
 - **Testing infrastructure** — OWASP scanner, configuration scanner, penetration testing helpers, performance benchmarks, report generators
 
