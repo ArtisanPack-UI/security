@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanPackUI\Security\Http\Middleware;
 
 use Closure;
@@ -10,15 +12,13 @@ class XssProtection
     /**
      * Handle an incoming request.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
         if (config('artisanpack.security.xss.enabled', false)) {
             $input = $request->all();
-            array_walk_recursive($input, function (&$input) {
+            array_walk_recursive($input, function (&$input): void {
                 if (is_string($input)) {
                     $input = kses($input);
                 }

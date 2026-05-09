@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanPackUI\Security\Http\Middleware;
 
 use Closure;
@@ -8,15 +10,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeadersMiddleware
 {
-    public function handle(Request $request, Closure $next): \Symfony\Component\HttpFoundation\Response
+    public function handle(Request $request, Closure $next): Response
     {
-        /** @var \Symfony\Component\HttpFoundation\Response $response */
+        /** @var Response $response */
         $response = $next($request);
 
         $headers = config('artisanpack.security.security-headers', []);
 
         foreach ($headers as $key => $value) {
-            if ($value !== null && $value !== '') {
+            if (null !== $value && '' !== $value) {
                 $response->headers->set($key, $value);
             }
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Testing\Traits;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
+use Countable;
 
 trait TestsSessionSecurity
 {
@@ -21,7 +22,7 @@ trait TestsSessionSecurity
                 'Session cookie does not have the Secure flag enabled in production',
                 'A02:2021-Cryptographic Failures',
                 'config/session.php',
-                'Set SESSION_SECURE_COOKIE=true in production'
+                'Set SESSION_SECURE_COOKIE=true in production',
             ));
         }
 
@@ -31,18 +32,18 @@ trait TestsSessionSecurity
                 'Session cookie does not have the HttpOnly flag',
                 'A02:2021-Cryptographic Failures',
                 'config/session.php',
-                'Ensure session.http_only is set to true'
+                'Ensure session.http_only is set to true',
             ));
         }
 
         $sameSite = $sessionConfig['same_site'] ?? null;
-        if ($sameSite === null || $sameSite === 'none') {
+        if (null === $sameSite || 'none' === $sameSite) {
             $this->recordFinding(SecurityFinding::medium(
                 'Session Cookie SameSite Not Strict',
                 'Session cookie SameSite attribute is not set to Strict or Lax',
                 'A01:2021-Broken Access Control',
                 'config/session.php',
-                'Set SESSION_SAME_SITE=lax or SESSION_SAME_SITE=strict'
+                'Set SESSION_SAME_SITE=lax or SESSION_SAME_SITE=strict',
             ));
         }
     }
@@ -60,7 +61,7 @@ trait TestsSessionSecurity
                 "Session lifetime ({$lifetime} minutes) exceeds recommended maximum ({$maxLifetimeMinutes} minutes)",
                 'A07:2021-Identification and Authentication Failures',
                 'config/session.php',
-                "Consider reducing session lifetime to {$maxLifetimeMinutes} minutes or less"
+                "Consider reducing session lifetime to {$maxLifetimeMinutes} minutes or less",
             ));
         }
     }
@@ -81,14 +82,14 @@ trait TestsSessionSecurity
                 'Session Fixation Risk',
                 'Session ID not regenerated after privilege change',
                 'A07:2021-Identification and Authentication Failures',
-                remediation: 'Call session()->regenerate() after privilege changes'
+                remediation: 'Call session()->regenerate() after privilege changes',
             ));
         }
 
         $this->assertNotEquals(
             $sessionIdBefore,
             $sessionIdAfter,
-            'Session ID should be regenerated on privilege change'
+            'Session ID should be regenerated on privilege change',
         );
     }
 
@@ -109,7 +110,7 @@ trait TestsSessionSecurity
                     "Session driver '{$driver}' stores session data without encryption",
                     'A02:2021-Cryptographic Failures',
                     'config/session.php',
-                    'Set SESSION_ENCRYPT=true for sensitive applications'
+                    'Set SESSION_ENCRYPT=true for sensitive applications',
                 ));
             }
         }
@@ -136,7 +137,7 @@ trait TestsSessionSecurity
 
         $this->assertNull(
             session('test_key'),
-            'Session data should be cleared on logout'
+            'Session data should be cleared on logout',
         );
     }
 
@@ -158,7 +159,7 @@ trait TestsSessionSecurity
         $this->assertCount(
             count($sessionIds),
             $uniqueIds,
-            'Session IDs should be unique'
+            'Session IDs should be unique',
         );
 
         // Check minimum entropy (session IDs should be at least 128 bits)
@@ -166,7 +167,7 @@ trait TestsSessionSecurity
             $this->assertGreaterThanOrEqual(
                 32, // 32 hex chars = 128 bits
                 strlen($id),
-                'Session ID should have sufficient entropy'
+                'Session ID should have sufficient entropy',
             );
         }
     }
@@ -199,7 +200,7 @@ trait TestsSessionSecurity
      * Assert that an array has a specific count.
      * This method must be implemented by the class using this trait.
      */
-    abstract protected function assertCount(int $expectedCount, \Countable|iterable $haystack, string $message = ''): void;
+    abstract protected function assertCount(int $expectedCount, Countable|iterable $haystack, string $message = ''): void;
 
     /**
      * Assert that a value is greater than or equal to another.

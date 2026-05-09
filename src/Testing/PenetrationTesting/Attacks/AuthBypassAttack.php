@@ -6,14 +6,15 @@ namespace ArtisanPackUI\Security\Testing\PenetrationTesting\Attacks;
 
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackInterface;
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackResult;
+use Exception;
 
 class AuthBypassAttack implements AttackInterface
 {
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method = $options['method'] ?? 'get';
-        $requiresAuth = $options['requires_auth'] ?? true;
+        $method          = $options['method'] ?? 'get';
+        $requiresAuth    = $options['requires_auth'] ?? true;
 
         // Test 1: Access without authentication
         try {
@@ -21,12 +22,12 @@ class AuthBypassAttack implements AttackInterface
 
             if ($requiresAuth && in_array($response->status(), [200, 201, 204])) {
                 $vulnerabilities[] = [
-                    'type' => 'auth-missing',
+                    'type'        => 'auth-missing',
                     'description' => 'Endpoint accessible without authentication',
                     'status_code' => $response->status(),
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Access denied as expected
         }
 
@@ -44,13 +45,13 @@ class AuthBypassAttack implements AttackInterface
                 attack: $this->getName(),
                 severity: 'critical',
                 findings: $vulnerabilities,
-                metadata: ['uri' => $uri, 'method' => $method]
+                metadata: ['uri' => $uri, 'method' => $method],
             );
         }
 
         return AttackResult::notVulnerable(
             attack: $this->getName(),
-            metadata: ['uri' => $uri, 'method' => $method]
+            metadata: ['uri' => $uri, 'method' => $method],
         );
     }
 
@@ -91,13 +92,13 @@ class AuthBypassAttack implements AttackInterface
 
                 if (in_array($response->status(), [200, 201, 204])) {
                     $vulnerabilities[] = [
-                        'type' => 'jwt-bypass',
+                        'type'        => 'jwt-bypass',
                         'description' => 'Endpoint accepts manipulated JWT',
-                        'payload' => substr($jwt, 0, 50).'...',
+                        'payload'     => substr($jwt, 0, 50).'...',
                     ];
                     break;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Expected - invalid JWT rejected
             }
         }
@@ -128,7 +129,7 @@ class AuthBypassAttack implements AttackInterface
 
         // Check session configuration for security best practices
         $sessionConfig = config('session');
-        $issues = [];
+        $issues        = [];
 
         if (($sessionConfig['same_site'] ?? null) === 'none') {
             $issues[] = 'SameSite cookie attribute set to "none"';
@@ -144,12 +145,12 @@ class AuthBypassAttack implements AttackInterface
 
         // Always flag for manual verification since automated testing is not possible
         $vulnerabilities[] = [
-            'type' => 'session-fixation-risk',
-            'description' => 'Session fixation cannot be automatically verified. Manual review required to ensure session ID regeneration after authentication.',
-            'uri' => $uri,
+            'type'               => 'session-fixation-risk',
+            'description'        => 'Session fixation cannot be automatically verified. Manual review required to ensure session ID regeneration after authentication.',
+            'uri'                => $uri,
             'current_session_id' => substr($currentSessionId, 0, 8).'...',
-            'config_issues' => $issues,
-            'recommendation' => 'Verify that session()->regenerate() is called after successful authentication in your LoginController',
+            'config_issues'      => $issues,
+            'recommendation'     => 'Verify that session()->regenerate() is called after successful authentication in your LoginController',
         ];
     }
 
@@ -171,9 +172,9 @@ class AuthBypassAttack implements AttackInterface
         // Capture baseline response BEFORE testing with manipulated headers
         $baselineStatus = null;
         try {
-            $baseResponse = $testCase->$method($uri);
+            $baseResponse   = $testCase->$method($uri);
             $baselineStatus = $baseResponse->status();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Baseline request failed, assume protected
             $baselineStatus = 401;
         }
@@ -189,13 +190,13 @@ class AuthBypassAttack implements AttackInterface
                 if (in_array($baselineStatus, [401, 403]) &&
                     in_array($response->status(), [200, 201, 204])) {
                     $vulnerabilities[] = [
-                        'type' => 'header-bypass',
+                        'type'        => 'header-bypass',
                         'description' => "Authentication bypassed via {$header} header",
-                        'header' => $header,
-                        'value' => $value,
+                        'header'      => $header,
+                        'value'       => $value,
                     ];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Expected behavior
             }
         }

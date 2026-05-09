@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use ArtisanPackUI\Security\Contracts\CspPolicyInterface;
 use ArtisanPackUI\Security\Http\Middleware\ContentSecurityPolicy;
 use ArtisanPackUI\Security\Models\CspViolationReport;
 use ArtisanPackUI\Security\Services\Csp\CspNonceGenerator;
-use ArtisanPackUI\Security\Services\Csp\CspPolicyService;
 use ArtisanPackUI\Security\Testing\CspAssertions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -32,7 +33,7 @@ class CspTest extends TestCase
     #[Test]
     public function it_adds_csp_header_to_response(): void
     {
-        $request = Request::create('/test', 'GET');
+        $request    = Request::create('/test', 'GET');
         $middleware = app(ContentSecurityPolicy::class);
 
         $response = $middleware->handle($request, function () {
@@ -47,7 +48,7 @@ class CspTest extends TestCase
     {
         Config::set('artisanpack.security.csp.reportOnly', true);
 
-        $request = Request::create('/test', 'GET');
+        $request    = Request::create('/test', 'GET');
         $middleware = app(ContentSecurityPolicy::class);
 
         $response = $middleware->handle($request, function () {
@@ -63,7 +64,7 @@ class CspTest extends TestCase
     {
         Config::set('artisanpack.security.csp.enabled', false);
 
-        $request = Request::create('/test', 'GET');
+        $request    = Request::create('/test', 'GET');
         $middleware = app(ContentSecurityPolicy::class);
 
         $response = $middleware->handle($request, function () {
@@ -77,7 +78,7 @@ class CspTest extends TestCase
     #[Test]
     public function it_includes_nonce_in_csp_header(): void
     {
-        $request = Request::create('/test', 'GET');
+        $request    = Request::create('/test', 'GET');
         $middleware = app(ContentSecurityPolicy::class);
 
         $response = $middleware->handle($request, function () {
@@ -134,7 +135,7 @@ class CspTest extends TestCase
     {
         Config::set('artisanpack.security.csp.excludedRoutes', ['api/*']);
 
-        $request = Request::create('/api/users', 'GET');
+        $request    = Request::create('/api/users', 'GET');
         $middleware = app(ContentSecurityPolicy::class);
 
         $response = $middleware->handle($request, function () {
@@ -168,8 +169,8 @@ class CspTest extends TestCase
         // Valid report should be accepted
         $validReport = [
             'csp-report' => [
-                'document-uri' => 'https://example.com/page',
-                'blocked-uri' => 'https://evil.com/script.js',
+                'document-uri'       => 'https://example.com/page',
+                'blocked-uri'        => 'https://evil.com/script.js',
                 'violated-directive' => 'script-src',
             ],
         ];
@@ -293,19 +294,19 @@ class CspTest extends TestCase
     public function it_generates_fingerprint_for_deduplication(): void
     {
         $report1 = [
-            'document-uri' => 'https://example.com/page',
-            'blocked-uri' => 'https://evil.com/script.js',
+            'document-uri'       => 'https://example.com/page',
+            'blocked-uri'        => 'https://evil.com/script.js',
             'violated-directive' => 'script-src',
-            'source-file' => 'script.js',
-            'line-number' => 10,
+            'source-file'        => 'script.js',
+            'line-number'        => 10,
         ];
 
         $report2 = [
-            'document-uri' => 'https://example.com/page',
-            'blocked-uri' => 'https://evil.com/script.js',
+            'document-uri'       => 'https://example.com/page',
+            'blocked-uri'        => 'https://evil.com/script.js',
             'violated-directive' => 'script-src',
-            'source-file' => 'script.js',
-            'line-number' => 10,
+            'source-file'        => 'script.js',
+            'line-number'        => 10,
         ];
 
         $fingerprint1 = CspViolationReport::generateFingerprint($report1);
@@ -318,14 +319,14 @@ class CspTest extends TestCase
     public function it_generates_different_fingerprints_for_different_reports(): void
     {
         $report1 = [
-            'document-uri' => 'https://example.com/page1',
-            'blocked-uri' => 'https://evil.com/script1.js',
+            'document-uri'       => 'https://example.com/page1',
+            'blocked-uri'        => 'https://evil.com/script1.js',
             'violated-directive' => 'script-src',
         ];
 
         $report2 = [
-            'document-uri' => 'https://example.com/page2',
-            'blocked-uri' => 'https://evil.com/script2.js',
+            'document-uri'       => 'https://example.com/page2',
+            'blocked-uri'        => 'https://evil.com/script2.js',
             'violated-directive' => 'script-src',
         ];
 

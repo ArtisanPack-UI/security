@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanPackUI\Security\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
@@ -37,64 +38,64 @@ class TestSecurityHeaders extends Command
      */
     protected array $headerRules = [
         'Strict-Transport-Security' => [
-            'required' => true,
-            'severity' => 'high',
+            'required'    => true,
+            'severity'    => 'high',
             'recommended' => 'max-age=31536000; includeSubDomains',
-            'validate' => 'validateHsts',
+            'validate'    => 'validateHsts',
         ],
         'X-Frame-Options' => [
-            'required' => true,
-            'severity' => 'high',
+            'required'    => true,
+            'severity'    => 'high',
             'recommended' => 'SAMEORIGIN',
-            'validate' => 'validateXFrameOptions',
+            'validate'    => 'validateXFrameOptions',
         ],
         'X-Content-Type-Options' => [
-            'required' => true,
-            'severity' => 'medium',
+            'required'    => true,
+            'severity'    => 'medium',
             'recommended' => 'nosniff',
-            'validate' => 'validateXContentTypeOptions',
+            'validate'    => 'validateXContentTypeOptions',
         ],
         'Content-Security-Policy' => [
-            'required' => true,
-            'severity' => 'high',
+            'required'    => true,
+            'severity'    => 'high',
             'recommended' => null,
-            'validate' => 'validateCsp',
+            'validate'    => 'validateCsp',
         ],
         'X-XSS-Protection' => [
-            'required' => false,
-            'severity' => 'low',
+            'required'    => false,
+            'severity'    => 'low',
             'recommended' => '1; mode=block',
-            'validate' => 'validateXssProtection',
+            'validate'    => 'validateXssProtection',
         ],
         'Referrer-Policy' => [
-            'required' => false,
-            'severity' => 'medium',
+            'required'    => false,
+            'severity'    => 'medium',
             'recommended' => 'strict-origin-when-cross-origin',
-            'validate' => 'validateReferrerPolicy',
+            'validate'    => 'validateReferrerPolicy',
         ],
         'Permissions-Policy' => [
-            'required' => false,
-            'severity' => 'medium',
+            'required'    => false,
+            'severity'    => 'medium',
             'recommended' => null,
-            'validate' => 'validatePermissionsPolicy',
+            'validate'    => 'validatePermissionsPolicy',
         ],
         'Cross-Origin-Opener-Policy' => [
-            'required' => false,
-            'severity' => 'medium',
+            'required'    => false,
+            'severity'    => 'medium',
             'recommended' => 'same-origin',
-            'validate' => 'validateCoop',
+            'validate'    => 'validateCoop',
         ],
         'Cross-Origin-Resource-Policy' => [
-            'required' => false,
-            'severity' => 'medium',
+            'required'    => false,
+            'severity'    => 'medium',
             'recommended' => 'same-origin',
-            'validate' => 'validateCorp',
+            'validate'    => 'validateCorp',
         ],
         'Cross-Origin-Embedder-Policy' => [
-            'required' => false,
-            'severity' => 'low',
+            'required'    => false,
+            'severity'    => 'low',
             'recommended' => 'require-corp',
-            'validate' => 'validateCoep',
+            'validate'    => 'validateCoep',
         ],
     ];
 
@@ -134,7 +135,7 @@ class TestSecurityHeaders extends Command
 
         // Output results
         $format = $this->option('format');
-        if ($format === 'json') {
+        if ('json' === $format) {
             $this->outputJson();
         } else {
             $this->outputTable();
@@ -190,7 +191,7 @@ class TestSecurityHeaders extends Command
             }
 
             $response = Http::withOptions([
-                'verify' => $verifySsl,
+                'verify'  => $verifySsl,
                 'timeout' => 10,
             ])->get($url);
 
@@ -200,7 +201,7 @@ class TestSecurityHeaders extends Command
                 $value = $headers[$header][0] ?? null;
                 $this->validateHeader($header, $value, 'live');
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error("Failed to fetch URL: {$e->getMessage()}");
             $this->warn('Live test skipped. Results show configuration analysis only.');
         }
@@ -218,7 +219,7 @@ class TestSecurityHeaders extends Command
 
         // Check if URL is localhost or loopback
         $parsedUrl = parse_url($url);
-        $host = $parsedUrl['host'] ?? '';
+        $host      = $parsedUrl['host'] ?? '';
 
         $localHosts = ['localhost', '127.0.0.1', '::1', '0.0.0.0'];
 
@@ -235,32 +236,32 @@ class TestSecurityHeaders extends Command
      */
     protected function validateHeader(string $header, ?string $value, string $source): void
     {
-        $rules = $this->headerRules[$header];
+        $rules            = $this->headerRules[$header];
         $validationMethod = $rules['validate'];
 
         $result = [
-            'header' => $header,
-            'value' => $value,
-            'source' => $source,
-            'present' => $value !== null && $value !== '',
+            'header'   => $header,
+            'value'    => $value,
+            'source'   => $source,
+            'present'  => null !== $value && '' !== $value,
             'required' => $rules['required'],
             'severity' => $rules['severity'],
-            'status' => 'unknown',
-            'grade' => 'F',
-            'message' => '',
+            'status'   => 'unknown',
+            'grade'    => 'F',
+            'message'  => '',
         ];
 
         if (! $result['present']) {
-            $result['status'] = $rules['required'] ? 'missing' : 'optional_missing';
-            $result['grade'] = $rules['required'] ? 'F' : 'D';
+            $result['status']  = $rules['required'] ? 'missing' : 'optional_missing';
+            $result['grade']   = $rules['required'] ? 'F' : 'D';
             $result['message'] = $rules['required'] ? 'Required header missing' : 'Recommended header not configured';
         } else {
             // Run specific validation
             $validation = $this->$validationMethod($value);
-            $result = array_merge($result, $validation);
+            $result     = array_merge($result, $validation);
         }
 
-        $key = "{$header}_{$source}";
+        $key                 = "{$header}_{$source}";
         $this->results[$key] = $result;
     }
 
@@ -281,21 +282,21 @@ class TestSecurityHeaders extends Command
         if (preg_match('/max-age=(\d+)/', $value, $matches)) {
             $maxAge = (int) $matches[1];
             if ($maxAge < 31536000) { // Less than 1 year
-                $result['grade'] = 'B';
+                $result['grade']   = 'B';
                 $result['message'] = 'max-age should be at least 31536000 (1 year)';
             }
             if ($maxAge < 86400) { // Less than 1 day
-                $result['grade'] = 'C';
+                $result['grade']   = 'C';
                 $result['message'] = 'max-age is too short';
             }
         } else {
-            $result['grade'] = 'D';
+            $result['grade']   = 'D';
             $result['message'] = 'max-age directive missing';
         }
 
         // Check for includeSubDomains
         if (! str_contains(strtolower($value), 'includesubdomains')) {
-            if ($result['grade'] === 'A') {
+            if ('A' === $result['grade']) {
                 $result['grade'] = 'B';
             }
             $result['message'] = trim($result['message'].' Consider adding includeSubDomains');
@@ -322,11 +323,11 @@ class TestSecurityHeaders extends Command
 
         $value = strtoupper(trim($value));
 
-        if ($value === 'DENY') {
+        if ('DENY' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Blocks all framing'];
         }
 
-        if ($value === 'SAMEORIGIN') {
+        if ('SAMEORIGIN' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Allows same-origin framing'];
         }
 
@@ -348,7 +349,7 @@ class TestSecurityHeaders extends Command
             return ['status' => 'missing', 'grade' => 'F', 'message' => 'X-Content-Type-Options not configured'];
         }
 
-        if (strtolower(trim($value)) === 'nosniff') {
+        if ('nosniff' === strtolower(trim($value))) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Prevents MIME type sniffing'];
         }
 
@@ -373,7 +374,7 @@ class TestSecurityHeaders extends Command
         if (str_contains($value, "'unsafe-inline'") && ! str_contains($value, "'strict-dynamic'")) {
             $hasNonce = (bool) preg_match("/'nonce-/", $value);
             if (! $hasNonce) {
-                $issues[] = "uses 'unsafe-inline'";
+                $issues[]        = "uses 'unsafe-inline'";
                 $result['grade'] = 'C';
             }
         }
@@ -388,7 +389,7 @@ class TestSecurityHeaders extends Command
 
         // Check for wildcards
         if (preg_match('/\s\*\s|^\*\s|\s\*$/', $value)) {
-            $issues[] = 'contains wildcard (*)';
+            $issues[]        = 'contains wildcard (*)';
             $result['grade'] = 'D';
         }
 
@@ -402,7 +403,7 @@ class TestSecurityHeaders extends Command
 
         if (! empty($issues)) {
             $result['message'] = implode(', ', $issues);
-            $result['status'] = 'warn';
+            $result['status']  = 'warn';
         } else {
             $result['message'] = 'Well-configured policy';
         }
@@ -423,15 +424,15 @@ class TestSecurityHeaders extends Command
 
         $value = strtolower(trim($value));
 
-        if ($value === '0') {
+        if ('0' === $value) {
             return ['status' => 'pass', 'grade' => 'B', 'message' => 'Disabled (recommended if CSP is used)'];
         }
 
-        if ($value === '1; mode=block') {
+        if ('1; mode=block' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Enabled with block mode'];
         }
 
-        if ($value === '1') {
+        if ('1' === $value) {
             return ['status' => 'warn', 'grade' => 'B', 'message' => 'Consider adding mode=block'];
         }
 
@@ -463,11 +464,11 @@ class TestSecurityHeaders extends Command
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Secure referrer policy'];
         }
 
-        if ($value === 'origin' || $value === 'origin-when-cross-origin') {
+        if ('origin' === $value || 'origin-when-cross-origin' === $value) {
             return ['status' => 'warn', 'grade' => 'B', 'message' => 'Consider stricter policy'];
         }
 
-        if ($value === 'unsafe-url') {
+        if ('unsafe-url' === $value) {
             return ['status' => 'fail', 'grade' => 'D', 'message' => 'Unsafe: exposes full URL'];
         }
 
@@ -487,7 +488,7 @@ class TestSecurityHeaders extends Command
 
         // Check if it restricts sensitive features
         $sensitiveFeatures = ['camera', 'microphone', 'geolocation', 'payment'];
-        $restrictedCount = 0;
+        $restrictedCount   = 0;
 
         foreach ($sensitiveFeatures as $feature) {
             if (str_contains($value, "{$feature}=()") || str_contains($value, "{$feature}=self")) {
@@ -519,15 +520,15 @@ class TestSecurityHeaders extends Command
 
         $value = strtolower(trim($value));
 
-        if ($value === 'same-origin') {
+        if ('same-origin' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Maximum isolation'];
         }
 
-        if ($value === 'same-origin-allow-popups') {
+        if ('same-origin-allow-popups' === $value) {
             return ['status' => 'pass', 'grade' => 'B', 'message' => 'Allows popups from same origin'];
         }
 
-        if ($value === 'unsafe-none') {
+        if ('unsafe-none' === $value) {
             return ['status' => 'warn', 'grade' => 'D', 'message' => 'No protection'];
         }
 
@@ -547,15 +548,15 @@ class TestSecurityHeaders extends Command
 
         $value = strtolower(trim($value));
 
-        if ($value === 'same-origin') {
+        if ('same-origin' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Strict same-origin policy'];
         }
 
-        if ($value === 'same-site') {
+        if ('same-site' === $value) {
             return ['status' => 'pass', 'grade' => 'B', 'message' => 'Same-site policy'];
         }
 
-        if ($value === 'cross-origin') {
+        if ('cross-origin' === $value) {
             return ['status' => 'warn', 'grade' => 'C', 'message' => 'Allows cross-origin access'];
         }
 
@@ -575,15 +576,15 @@ class TestSecurityHeaders extends Command
 
         $value = strtolower(trim($value));
 
-        if ($value === 'require-corp') {
+        if ('require-corp' === $value) {
             return ['status' => 'pass', 'grade' => 'A', 'message' => 'Requires CORP for subresources'];
         }
 
-        if ($value === 'credentialless') {
+        if ('credentialless' === $value) {
             return ['status' => 'pass', 'grade' => 'B', 'message' => 'Removes credentials from cross-origin requests'];
         }
 
-        if ($value === 'unsafe-none') {
+        if ('unsafe-none' === $value) {
             return ['status' => 'warn', 'grade' => 'D', 'message' => 'No protection'];
         }
 
@@ -597,7 +598,7 @@ class TestSecurityHeaders extends Command
     {
         $this->newLine();
 
-        $rows = [];
+        $rows             = [];
         $processedHeaders = [];
 
         foreach ($this->results as $result) {
@@ -608,19 +609,19 @@ class TestSecurityHeaders extends Command
             $processedHeaders[] = $header;
 
             $statusIcon = match ($result['status']) {
-                'pass' => '<fg=green>PASS</>',
-                'warn' => '<fg=yellow>WARN</>',
-                'missing' => '<fg=red>MISS</>',
+                'pass'             => '<fg=green>PASS</>',
+                'warn'             => '<fg=yellow>WARN</>',
+                'missing'          => '<fg=red>MISS</>',
                 'optional_missing' => '<fg=gray>N/A</>',
-                default => '<fg=gray>UNKN</>',
+                default            => '<fg=gray>UNKN</>',
             };
 
             $gradeColor = match ($result['grade']) {
-                'A' => 'green',
-                'B' => 'cyan',
-                'C' => 'yellow',
-                'D' => 'red',
-                'F' => 'red',
+                'A'     => 'green',
+                'B'     => 'cyan',
+                'C'     => 'yellow',
+                'D'     => 'red',
+                'F'     => 'red',
                 default => 'gray',
             };
 
@@ -646,9 +647,9 @@ class TestSecurityHeaders extends Command
     protected function outputJson(): void
     {
         $output = [
-            'scan_date' => now()->toIso8601String(),
-            'overall_grade' => $this->calculateOverallGrade(),
-            'results' => array_values($this->results),
+            'scan_date'       => now()->toIso8601String(),
+            'overall_grade'   => $this->calculateOverallGrade(),
+            'results'         => array_values($this->results),
             'recommendations' => $this->getRecommendations(),
         ];
 
@@ -667,7 +668,7 @@ class TestSecurityHeaders extends Command
         // Find CSP from results
         $cspValue = null;
         foreach ($this->results as $result) {
-            if ($result['header'] === 'Content-Security-Policy' && ! empty($result['value'])) {
+            if ('Content-Security-Policy' === $result['header'] && ! empty($result['value'])) {
                 $cspValue = $result['value'];
                 break;
             }
@@ -681,7 +682,7 @@ class TestSecurityHeaders extends Command
 
         // Parse directives
         $directives = [];
-        $parts = explode(';', $cspValue);
+        $parts      = explode(';', $cspValue);
 
         foreach ($parts as $part) {
             $part = trim($part);
@@ -689,17 +690,17 @@ class TestSecurityHeaders extends Command
                 continue;
             }
 
-            $tokens = preg_split('/\s+/', $part);
-            $directive = array_shift($tokens);
+            $tokens                 = preg_split('/\s+/', $part);
+            $directive              = array_shift($tokens);
             $directives[$directive] = $tokens;
         }
 
         $rows = [];
         foreach ($directives as $directive => $values) {
-            $status = $this->analyzeCspDirective($directive, $values);
+            $status    = $this->analyzeCspDirective($directive, $values);
             $valuesStr = implode(' ', array_slice($values, 0, 3));
             if (count($values) > 3) {
-                $valuesStr .= ' (+' . (count($values) - 3) . ')';
+                $valuesStr .= ' (+'.(count($values) - 3).')';
             }
             $rows[] = [$directive, $valuesStr, $status];
         }
@@ -742,7 +743,7 @@ class TestSecurityHeaders extends Command
             return '<fg=green>Strict Dynamic</>';
         }
 
-        if (count($values) === 1 && $values[0] === "'self'") {
+        if (1 === count($values) && "'self'" === $values[0]) {
             return '<fg=green>Self only</>';
         }
 
@@ -754,8 +755,8 @@ class TestSecurityHeaders extends Command
      */
     protected function calculateOverallGrade(): string
     {
-        $grades = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
-        $weights = ['A' => 4, 'B' => 3, 'C' => 2, 'D' => 1, 'F' => 0];
+        $grades           = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'F' => 0];
+        $weights          = ['A' => 4, 'B' => 3, 'C' => 2, 'D' => 1, 'F' => 0];
         $requiredFailures = 0;
 
         $processedHeaders = [];
@@ -768,7 +769,7 @@ class TestSecurityHeaders extends Command
             $grade = $result['grade'];
             $grades[$grade]++;
 
-            if ($result['required'] && $grade === 'F') {
+            if ($result['required'] && 'F' === $grade) {
                 $requiredFailures++;
             }
         }
@@ -786,7 +787,7 @@ class TestSecurityHeaders extends Command
             $count += $num;
         }
 
-        if ($count === 0) {
+        if (0 === $count) {
             return 'F';
         }
 
@@ -815,7 +816,7 @@ class TestSecurityHeaders extends Command
      */
     protected function getRecommendations(): array
     {
-        $recommendations = [];
+        $recommendations  = [];
         $processedHeaders = [];
 
         foreach ($this->results as $result) {
@@ -824,11 +825,11 @@ class TestSecurityHeaders extends Command
             }
             $processedHeaders[] = $result['header'];
 
-            if ($result['status'] === 'missing' && $result['required']) {
+            if ('missing' === $result['status'] && $result['required']) {
                 $recommendations[] = "Add required header: {$result['header']}";
-            } elseif ($result['status'] === 'optional_missing') {
+            } elseif ('optional_missing' === $result['status']) {
                 $recommendations[] = "Consider adding: {$result['header']}";
-            } elseif (! empty($result['message']) && $result['status'] === 'warn') {
+            } elseif (! empty($result['message']) && 'warn' === $result['status']) {
                 $recommendations[] = "{$result['header']}: {$result['message']}";
             }
         }
@@ -844,11 +845,11 @@ class TestSecurityHeaders extends Command
         $grade = $this->calculateOverallGrade();
 
         $gradeColor = match ($grade) {
-            'A' => 'green',
-            'B' => 'cyan',
-            'C' => 'yellow',
+            'A'      => 'green',
+            'B'      => 'cyan',
+            'C'      => 'yellow',
             'D', 'F' => 'red',
-            default => 'gray',
+            default  => 'gray',
         };
 
         $this->newLine();

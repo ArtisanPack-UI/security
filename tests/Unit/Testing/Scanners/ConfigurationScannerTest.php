@@ -15,7 +15,7 @@ class ConfigurationScannerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->scanner = new ConfigurationScanner();
+        $this->scanner = new ConfigurationScanner;
     }
 
     public function test_can_instantiate_scanner(): void
@@ -67,7 +67,7 @@ class ConfigurationScannerTest extends TestCase
             $this->assertContains(
                 $finding->severity,
                 $validSeverities,
-                "Invalid severity: {$finding->severity}"
+                "Invalid severity: {$finding->severity}",
             );
         }
     }

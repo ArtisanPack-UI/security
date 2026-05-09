@@ -29,7 +29,7 @@ class ApiSecurity
             if ($token->is_revoked ?? false) {
                 return response()->json([
                     'message' => 'Token has been revoked.',
-                    'error' => 'token_revoked',
+                    'error'   => 'token_revoked',
                 ], 401);
             }
 
@@ -37,7 +37,7 @@ class ApiSecurity
             if ($token->expires_at && $token->expires_at->isPast()) {
                 return response()->json([
                     'message' => 'Token has expired.',
-                    'error' => 'token_expired',
+                    'error'   => 'token_expired',
                 ], 401);
             }
 

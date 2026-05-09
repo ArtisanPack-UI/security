@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
 use ArtisanPackUI\Security\Services\Csp\CspPolicyBuilder;
@@ -11,7 +13,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_a_basic_policy(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'");
 
@@ -23,7 +25,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_multiple_directives(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'")
             ->scriptSrc("'self'", "'unsafe-inline'")
@@ -39,7 +41,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_adds_nonce_to_script_and_style_src(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->scriptSrc("'self'")->withNonce('test-nonce-123');
 
@@ -52,7 +54,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_adds_strict_dynamic_to_script_src(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->scriptSrc("'self'", "'strict-dynamic'");
 
@@ -64,7 +66,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_adds_report_uri(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'")->reportUri('/csp-report');
 
@@ -76,7 +78,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_adds_upgrade_insecure_requests(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'")->upgradeInsecureRequests();
 
@@ -88,7 +90,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_can_append_to_existing_directive(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->scriptSrc("'self'");
         $builder->addDirective('script-src', 'https://cdn.example.com');
@@ -101,7 +103,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_can_be_reset(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'")->scriptSrc("'self'");
         $builder->reset();
@@ -114,7 +116,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_can_check_if_directive_exists(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->defaultSrc("'self'");
 
@@ -125,7 +127,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_frame_ancestors_directive(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->frameAncestors("'self'", 'https://example.com');
 
@@ -137,7 +139,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_base_uri_directive(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->baseUri("'self'");
 
@@ -149,7 +151,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_form_action_directive(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->formAction("'self'");
 
@@ -161,7 +163,7 @@ class CspPolicyBuilderTest extends TestCase
     #[Test]
     public function it_builds_object_src_directive(): void
     {
-        $builder = new CspPolicyBuilder();
+        $builder = new CspPolicyBuilder;
 
         $builder->objectSrc("'none'");
 

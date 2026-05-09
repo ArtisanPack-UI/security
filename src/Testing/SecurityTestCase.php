@@ -12,6 +12,7 @@ use ArtisanPackUI\Security\Testing\Traits\TestsInputValidation;
 use ArtisanPackUI\Security\Testing\Traits\TestsSecurityHeaders;
 use ArtisanPackUI\Security\Testing\Traits\TestsSessionSecurity;
 use Illuminate\Foundation\Testing\TestCase;
+use Throwable;
 
 abstract class SecurityTestCase extends TestCase
 {
@@ -61,13 +62,30 @@ abstract class SecurityTestCase extends TestCase
         if (! $testFailed) {
             try {
                 $this->assertNoSecurityVulnerabilities();
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 parent::tearDown();
                 throw $e;
             }
         }
 
         parent::tearDown();
+    }
+
+    /**
+     * Get findings filtered by severity.
+     *
+     * @return array<SecurityFinding>
+     */
+    public function getFindings(?string $severity = null): array
+    {
+        if (null === $severity) {
+            return $this->securityFindings;
+        }
+
+        return array_filter(
+            $this->securityFindings,
+            fn (SecurityFinding $f) => $f->severity === $severity,
+        );
     }
 
     /**
@@ -91,18 +109,18 @@ abstract class SecurityTestCase extends TestCase
         }
 
         $critical = $this->getFindings(SecurityFinding::SEVERITY_CRITICAL);
-        $high = $this->getFindings(SecurityFinding::SEVERITY_HIGH);
-        $medium = $this->getFindings(SecurityFinding::SEVERITY_MEDIUM);
-        $low = $this->getFindings(SecurityFinding::SEVERITY_LOW);
-        $info = $this->getFindings(SecurityFinding::SEVERITY_INFO);
+        $high     = $this->getFindings(SecurityFinding::SEVERITY_HIGH);
+        $medium   = $this->getFindings(SecurityFinding::SEVERITY_MEDIUM);
+        $low      = $this->getFindings(SecurityFinding::SEVERITY_LOW);
+        $info     = $this->getFindings(SecurityFinding::SEVERITY_INFO);
 
         // Define severity order for comparison
         $severityOrder = [
             SecurityFinding::SEVERITY_CRITICAL => 0,
-            SecurityFinding::SEVERITY_HIGH => 1,
-            SecurityFinding::SEVERITY_MEDIUM => 2,
-            SecurityFinding::SEVERITY_LOW => 3,
-            SecurityFinding::SEVERITY_INFO => 4,
+            SecurityFinding::SEVERITY_HIGH     => 1,
+            SecurityFinding::SEVERITY_MEDIUM   => 2,
+            SecurityFinding::SEVERITY_LOW      => 3,
+            SecurityFinding::SEVERITY_INFO     => 4,
         ];
 
         $thresholdLevel = $severityOrder[$this->severityThreshold] ?? 2; // Default to medium
@@ -110,14 +128,14 @@ abstract class SecurityTestCase extends TestCase
         // Always check critical
         $this->assertEmpty(
             $critical,
-            'Critical security vulnerabilities found: '.$this->formatFindings($critical)
+            'Critical security vulnerabilities found: '.$this->formatFindings($critical),
         );
 
         // Check high if threshold allows (high, medium, low, or info)
         if ($thresholdLevel >= $severityOrder[SecurityFinding::SEVERITY_HIGH]) {
             $this->assertEmpty(
                 $high,
-                'High severity vulnerabilities found: '.$this->formatFindings($high)
+                'High severity vulnerabilities found: '.$this->formatFindings($high),
             );
         }
 
@@ -125,7 +143,7 @@ abstract class SecurityTestCase extends TestCase
         if ($thresholdLevel >= $severityOrder[SecurityFinding::SEVERITY_MEDIUM]) {
             $this->assertEmpty(
                 $medium,
-                'Medium severity vulnerabilities found: '.$this->formatFindings($medium)
+                'Medium severity vulnerabilities found: '.$this->formatFindings($medium),
             );
         }
 
@@ -133,7 +151,7 @@ abstract class SecurityTestCase extends TestCase
         if ($thresholdLevel >= $severityOrder[SecurityFinding::SEVERITY_LOW]) {
             $this->assertEmpty(
                 $low,
-                'Low severity vulnerabilities found: '.$this->formatFindings($low)
+                'Low severity vulnerabilities found: '.$this->formatFindings($low),
             );
         }
 
@@ -141,26 +159,9 @@ abstract class SecurityTestCase extends TestCase
         if ($thresholdLevel >= $severityOrder[SecurityFinding::SEVERITY_INFO]) {
             $this->assertEmpty(
                 $info,
-                'Info level security findings: '.$this->formatFindings($info)
+                'Info level security findings: '.$this->formatFindings($info),
             );
         }
-    }
-
-    /**
-     * Get findings filtered by severity.
-     *
-     * @return array<SecurityFinding>
-     */
-    public function getFindings(?string $severity = null): array
-    {
-        if ($severity === null) {
-            return $this->securityFindings;
-        }
-
-        return array_filter(
-            $this->securityFindings,
-            fn (SecurityFinding $f) => $f->severity === $severity
-        );
     }
 
     /**
@@ -176,7 +177,7 @@ abstract class SecurityTestCase extends TestCase
 
         return implode('; ', array_map(
             fn (SecurityFinding $f) => "[{$f->id}] {$f->title}",
-            $findings
+            $findings,
         ));
     }
 
@@ -209,7 +210,7 @@ abstract class SecurityTestCase extends TestCase
 
         $this->assertTrue(
             in_array($response->status(), [401, 403, 302]),
-            "Endpoint {$method} {$uri} does not require authentication (got status {$response->status()})"
+            "Endpoint {$method} {$uri} does not require authentication (got status {$response->status()})",
         );
     }
 
@@ -222,7 +223,7 @@ abstract class SecurityTestCase extends TestCase
 
         for ($i = 0; $i < $attempts; $i++) {
             $response = $this->$method($uri);
-            if ($response->status() === 429) {
+            if (429 === $response->status()) {
                 $rateLimited = true;
                 break;
             }
@@ -230,7 +231,7 @@ abstract class SecurityTestCase extends TestCase
 
         $this->assertTrue(
             $rateLimited,
-            "Endpoint {$method} {$uri} is not rate limited after {$attempts} attempts"
+            "Endpoint {$method} {$uri} is not rate limited after {$attempts} attempts",
         );
     }
 }

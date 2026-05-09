@@ -10,13 +10,6 @@ namespace ArtisanPackUI\Security\Services\Csp;
 class CspPolicyBuilder
 {
     /**
-     * The CSP directives being built.
-     *
-     * @var array<string, array<string>|bool>
-     */
-    protected array $directives = [];
-
-    /**
      * Valid CSP directives.
      *
      * @var array<string>
@@ -61,17 +54,32 @@ class CspPolicyBuilder
     ];
 
     /**
+     * The CSP directives being built.
+     *
+     * @var array<string, array<string>|bool>
+     */
+    protected array $directives = [];
+
+    /**
+     * Convert to string.
+     */
+    public function __toString(): string
+    {
+        return $this->build();
+    }
+
+    /**
      * Create a new policy builder instance.
      */
     public static function create(): self
     {
-        return new self();
+        return new self;
     }
 
     /**
      * Add values to a directive.
      *
-     * @param  string|array<string>  $values
+     * @param  array<string>|string  $values
      */
     public function addDirective(string $directive, string|array $values): self
     {
@@ -418,7 +426,7 @@ class CspPolicyBuilder
         $parts = [];
 
         foreach ($this->directives as $directive => $values) {
-            if ($values === true) {
+            if (true === $values) {
                 $parts[] = $directive;
             } elseif (is_array($values) && ! empty($values)) {
                 $parts[] = $directive.' '.implode(' ', $values);
@@ -436,13 +444,5 @@ class CspPolicyBuilder
         $this->directives = [];
 
         return $this;
-    }
-
-    /**
-     * Convert to string.
-     */
-    public function __toString(): string
-    {
-        return $this->build();
     }
 }

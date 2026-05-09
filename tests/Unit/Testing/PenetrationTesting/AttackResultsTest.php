@@ -19,7 +19,7 @@ class AttackResultsTest extends TestCase
             vulnerable: true,
             findings: [['payload' => "' OR '1'='1", 'response' => 'Error']],
             severity: 'high',
-            metadata: ['target' => '/api/users']
+            metadata: ['target' => '/api/users'],
         );
 
         $this->assertEquals('SQL Injection', $result->attack);
@@ -36,7 +36,7 @@ class AttackResultsTest extends TestCase
             vulnerable: false,
             findings: [],
             severity: 'none',
-            metadata: []
+            metadata: [],
         );
 
         $array = $result->toArray();
@@ -55,7 +55,7 @@ class AttackResultsTest extends TestCase
             'SQL Injection',
             'critical',
             [['payload' => 'test', 'response' => 'vulnerable']],
-            ['endpoint' => '/api']
+            ['endpoint' => '/api'],
         );
 
         $this->assertTrue($result->vulnerable);
@@ -75,7 +75,7 @@ class AttackResultsTest extends TestCase
     public function test_is_critical(): void
     {
         $critical = AttackResult::vulnerable('Test', 'critical');
-        $high = AttackResult::vulnerable('Test', 'high');
+        $high     = AttackResult::vulnerable('Test', 'high');
 
         $this->assertTrue($critical->isCritical());
         $this->assertFalse($high->isCritical());
@@ -83,7 +83,7 @@ class AttackResultsTest extends TestCase
 
     public function test_is_high(): void
     {
-        $high = AttackResult::vulnerable('Test', 'high');
+        $high   = AttackResult::vulnerable('Test', 'high');
         $medium = AttackResult::vulnerable('Test', 'medium');
 
         $this->assertTrue($high->isHigh());
@@ -93,9 +93,9 @@ class AttackResultsTest extends TestCase
     public function test_is_blocking(): void
     {
         $critical = AttackResult::vulnerable('Test', 'critical');
-        $high = AttackResult::vulnerable('Test', 'high');
-        $medium = AttackResult::vulnerable('Test', 'medium');
-        $notVuln = AttackResult::notVulnerable('Test');
+        $high     = AttackResult::vulnerable('Test', 'high');
+        $medium   = AttackResult::vulnerable('Test', 'medium');
+        $notVuln  = AttackResult::notVulnerable('Test');
 
         $this->assertTrue($critical->isBlocking());
         $this->assertTrue($high->isBlocking());
@@ -113,7 +113,7 @@ class AttackResultsTest extends TestCase
                 ['payload' => '2'],
                 ['payload' => '3'],
             ],
-            severity: 'high'
+            severity: 'high',
         );
 
         $this->assertEquals(3, $result->getFindingCount());
@@ -123,15 +123,15 @@ class AttackResultsTest extends TestCase
 
     public function test_can_create_attack_results_collection(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
 
         $this->assertInstanceOf(AttackResults::class, $results);
     }
 
     public function test_can_add_result(): void
     {
-        $results = new AttackResults();
-        $result = AttackResult::notVulnerable('XSS');
+        $results = new AttackResults;
+        $result  = AttackResult::notVulnerable('XSS');
 
         $results->add($result);
 
@@ -140,7 +140,7 @@ class AttackResultsTest extends TestCase
 
     public function test_can_add_multiple_results(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
 
         $results->add(AttackResult::notVulnerable('Type1'));
         $results->add(AttackResult::vulnerable('Type2', 'high'));
@@ -151,10 +151,10 @@ class AttackResultsTest extends TestCase
 
     public function test_has_vulnerabilities(): void
     {
-        $resultsWithVulns = new AttackResults();
+        $resultsWithVulns = new AttackResults;
         $resultsWithVulns->add(AttackResult::vulnerable('Test', 'high'));
 
-        $resultsWithoutVulns = new AttackResults();
+        $resultsWithoutVulns = new AttackResults;
         $resultsWithoutVulns->add(AttackResult::notVulnerable('Test'));
 
         $this->assertTrue($resultsWithVulns->hasVulnerabilities());
@@ -163,7 +163,7 @@ class AttackResultsTest extends TestCase
 
     public function test_get_vulnerable(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
         $results->add(AttackResult::vulnerable('SQLi', 'high'));
         $results->add(AttackResult::notVulnerable('XSS'));
         $results->add(AttackResult::vulnerable('CSRF', 'medium'));
@@ -175,7 +175,7 @@ class AttackResultsTest extends TestCase
 
     public function test_get_by_severity(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
         $results->add(AttackResult::vulnerable('T1', 'critical'));
         $results->add(AttackResult::vulnerable('T2', 'high'));
         $results->add(AttackResult::vulnerable('T3', 'high'));
@@ -188,7 +188,7 @@ class AttackResultsTest extends TestCase
 
     public function test_to_array(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
         $results->add(AttackResult::vulnerable('Test', 'high'));
 
         $array = $results->toArray();
@@ -200,7 +200,7 @@ class AttackResultsTest extends TestCase
 
     public function test_get_summary(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
         $results->add(AttackResult::vulnerable('SQLi', 'critical'));
         $results->add(AttackResult::vulnerable('XSS', 'high'));
         $results->add(AttackResult::notVulnerable('CSRF'));
@@ -217,10 +217,10 @@ class AttackResultsTest extends TestCase
 
     public function test_has_critical(): void
     {
-        $resultsWithCritical = new AttackResults();
+        $resultsWithCritical = new AttackResults;
         $resultsWithCritical->add(AttackResult::vulnerable('Test', 'critical'));
 
-        $resultsWithoutCritical = new AttackResults();
+        $resultsWithoutCritical = new AttackResults;
         $resultsWithoutCritical->add(AttackResult::vulnerable('Test', 'high'));
 
         $this->assertTrue($resultsWithCritical->hasCritical());
@@ -229,10 +229,10 @@ class AttackResultsTest extends TestCase
 
     public function test_has_blocking(): void
     {
-        $resultsWithBlocking = new AttackResults();
+        $resultsWithBlocking = new AttackResults;
         $resultsWithBlocking->add(AttackResult::vulnerable('Test', 'high'));
 
-        $resultsWithoutBlocking = new AttackResults();
+        $resultsWithoutBlocking = new AttackResults;
         $resultsWithoutBlocking->add(AttackResult::vulnerable('Test', 'medium'));
 
         $this->assertTrue($resultsWithBlocking->hasBlocking());
@@ -241,14 +241,14 @@ class AttackResultsTest extends TestCase
 
     public function test_get_total_vulnerabilities(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
 
         // Result with 2 findings
         $results->add(new AttackResult(
             attack: 'SQLi',
             vulnerable: true,
             findings: [['p' => '1'], ['p' => '2']],
-            severity: 'high'
+            severity: 'high',
         ));
 
         // Result with 1 finding (implicit)
@@ -262,7 +262,7 @@ class AttackResultsTest extends TestCase
 
     public function test_fluent_add(): void
     {
-        $results = (new AttackResults())
+        $results = (new AttackResults)
             ->add(AttackResult::notVulnerable('T1'))
             ->add(AttackResult::notVulnerable('T2'));
 
@@ -271,7 +271,7 @@ class AttackResultsTest extends TestCase
 
     public function test_all_method(): void
     {
-        $results = new AttackResults();
+        $results = new AttackResults;
         $results->add(AttackResult::notVulnerable('Test1'));
         $results->add(AttackResult::notVulnerable('Test2'));
 

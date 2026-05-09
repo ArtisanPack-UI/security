@@ -31,16 +31,16 @@ class ReportFormatsTest extends TestCase
         ];
 
         $this->sampleSummary = [
-            'total' => 3,
+            'total'      => 3,
             'bySeverity' => [
                 'critical' => 1,
-                'high' => 1,
-                'medium' => 1,
-                'low' => 0,
-                'info' => 0,
+                'high'     => 1,
+                'medium'   => 1,
+                'low'      => 0,
+                'info'     => 0,
             ],
             'byCategory' => [
-                'A03:2021-Injection' => 2,
+                'A03:2021-Injection'                 => 2,
                 'A05:2021-Security Misconfiguration' => 1,
             ],
         ];
@@ -48,7 +48,7 @@ class ReportFormatsTest extends TestCase
         $this->sampleMetadata = [
             'generatedAt' => now()->toIso8601String(),
             'projectName' => 'Test Project',
-            'version' => '1.0.0',
+            'version'     => '1.0.0',
         ];
     }
 
@@ -56,7 +56,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_returns_valid_json(): void
     {
-        $format = new JsonReportFormat();
+        $format = new JsonReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertJson($output);
@@ -64,8 +64,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_findings(): void
     {
-        $format = new JsonReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new JsonReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('findings', $decoded);
@@ -74,8 +74,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_summary(): void
     {
-        $format = new JsonReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new JsonReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('summary', $decoded);
@@ -84,8 +84,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_metadata(): void
     {
-        $format = new JsonReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new JsonReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('metadata', $decoded);
@@ -93,21 +93,21 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_extension(): void
     {
-        $format = new JsonReportFormat();
+        $format = new JsonReportFormat;
 
         $this->assertEquals('json', $format->getExtension());
     }
 
     public function test_json_format_name(): void
     {
-        $format = new JsonReportFormat();
+        $format = new JsonReportFormat;
 
         $this->assertEquals('JSON', $format->getName());
     }
 
     public function test_json_format_mime_type(): void
     {
-        $format = new JsonReportFormat();
+        $format = new JsonReportFormat;
 
         $this->assertEquals('application/json', $format->getMimeType());
     }
@@ -116,7 +116,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_html_format_returns_valid_html(): void
     {
-        $format = new HtmlReportFormat();
+        $format = new HtmlReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('<!DOCTYPE html>', $output);
@@ -125,7 +125,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_html_format_contains_title(): void
     {
-        $format = new HtmlReportFormat();
+        $format = new HtmlReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('<title>', $output);
@@ -133,7 +133,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_html_format_contains_findings(): void
     {
-        $format = new HtmlReportFormat();
+        $format = new HtmlReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('SQL Injection', $output);
@@ -142,7 +142,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_html_format_extension(): void
     {
-        $format = new HtmlReportFormat();
+        $format = new HtmlReportFormat;
 
         $this->assertEquals('html', $format->getExtension());
     }
@@ -151,7 +151,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_junit_format_returns_valid_xml(): void
     {
-        $format = new JunitReportFormat();
+        $format = new JunitReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('<?xml version="1.0"', $output);
@@ -160,7 +160,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_junit_format_contains_test_cases(): void
     {
-        $format = new JunitReportFormat();
+        $format = new JunitReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('<testcase', $output);
@@ -168,7 +168,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_junit_format_extension(): void
     {
-        $format = new JunitReportFormat();
+        $format = new JunitReportFormat;
 
         $this->assertEquals('xml', $format->getExtension());
     }
@@ -177,7 +177,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_returns_valid_json(): void
     {
-        $format = new SarifReportFormat();
+        $format = new SarifReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertJson($output);
@@ -185,8 +185,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_has_correct_version(): void
     {
-        $format = new SarifReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new SarifReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertEquals('2.1.0', $decoded['version']);
@@ -195,8 +195,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_contains_runs(): void
     {
-        $format = new SarifReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new SarifReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('runs', $decoded);
@@ -205,8 +205,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_contains_results(): void
     {
-        $format = new SarifReportFormat();
-        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format  = new SarifReportFormat;
+        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $results = $decoded['runs'][0]['results'] ?? [];
@@ -215,7 +215,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_extension(): void
     {
-        $format = new SarifReportFormat();
+        $format = new SarifReportFormat;
 
         $this->assertEquals('sarif', $format->getExtension());
     }
@@ -224,7 +224,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_markdown_format_contains_header(): void
     {
-        $format = new MarkdownReportFormat();
+        $format = new MarkdownReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('# Security Report', $output);
@@ -232,7 +232,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_markdown_format_contains_findings(): void
     {
-        $format = new MarkdownReportFormat();
+        $format = new MarkdownReportFormat;
         $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
 
         $this->assertStringContainsString('SQL Injection', $output);
@@ -241,7 +241,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_markdown_format_extension(): void
     {
-        $format = new MarkdownReportFormat();
+        $format = new MarkdownReportFormat;
 
         $this->assertEquals('md', $format->getExtension());
     }
@@ -250,7 +250,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_handles_empty_findings(): void
     {
-        $format = new JsonReportFormat();
+        $format = new JsonReportFormat;
         $output = $format->format([], $this->sampleMetadata, ['total' => 0, 'bySeverity' => []]);
 
         $decoded = json_decode($output, true);
@@ -259,7 +259,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_html_format_handles_empty_findings(): void
     {
-        $format = new HtmlReportFormat();
+        $format = new HtmlReportFormat;
         $output = $format->format([], $this->sampleMetadata, ['total' => 0, 'bySeverity' => []]);
 
         $this->assertStringContainsString('<!DOCTYPE html>', $output);
@@ -267,7 +267,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_junit_format_handles_empty_findings(): void
     {
-        $format = new JunitReportFormat();
+        $format = new JunitReportFormat;
         $output = $format->format([], $this->sampleMetadata, ['total' => 0, 'bySeverity' => []]);
 
         $this->assertStringContainsString('tests="0"', $output);
@@ -275,7 +275,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_handles_empty_findings(): void
     {
-        $format = new SarifReportFormat();
+        $format = new SarifReportFormat;
         $output = $format->format([], $this->sampleMetadata, ['total' => 0, 'bySeverity' => []]);
 
         $decoded = json_decode($output, true);
@@ -284,7 +284,7 @@ class ReportFormatsTest extends TestCase
 
     public function test_markdown_format_handles_empty_findings(): void
     {
-        $format = new MarkdownReportFormat();
+        $format = new MarkdownReportFormat;
         $output = $format->format([], $this->sampleMetadata, ['total' => 0, 'bySeverity' => []]);
 
         $this->assertStringContainsString('# Security Report', $output);

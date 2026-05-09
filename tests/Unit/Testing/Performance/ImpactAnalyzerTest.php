@@ -10,26 +10,6 @@ use Tests\TestCase;
 
 class ImpactAnalyzerTest extends TestCase
 {
-    protected function createAcceptableResult(string $name): BenchmarkResult
-    {
-        return new BenchmarkResult(
-            name: $name,
-            withSecurity: ['mean' => 10.5, 'min' => 10.0, 'max' => 11.0, 'stddev' => 0.25],
-            withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
-        );
-    }
-
-    protected function createUnacceptableResult(string $name): BenchmarkResult
-    {
-        return new BenchmarkResult(
-            name: $name,
-            withSecurity: ['mean' => 25.0, 'min' => 20.0, 'max' => 30.0, 'stddev' => 2.5],
-            withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
-        );
-    }
-
     public function test_can_create_analyzer_with_results(): void
     {
         $results = [
@@ -77,7 +57,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         $this->assertEquals(3, $summary['total_benchmarks']);
         $this->assertEquals(2, $summary['acceptable']);
@@ -93,7 +73,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         // 2 out of 3 pass = 66.67%
         $this->assertEqualsWithDelta(66.67, $summary['pass_rate'], 0.01);
@@ -106,7 +86,7 @@ class ImpactAnalyzerTest extends TestCase
             name: 'Acceptable',
             withSecurity: ['mean' => 10.5],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         // 150% overhead
@@ -114,11 +94,11 @@ class ImpactAnalyzerTest extends TestCase
             name: 'Unacceptable',
             withSecurity: ['mean' => 25.0],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $analyzer = new ImpactAnalyzer([$acceptable, $unacceptable]);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         // Average of 5% and 150% = 77.5%
         $this->assertEqualsWithDelta(77.5, $summary['average_overhead'], 0.1);
@@ -131,7 +111,7 @@ class ImpactAnalyzerTest extends TestCase
             $this->createUnacceptableResult('Hashing'),
         ];
 
-        $analyzer = new ImpactAnalyzer($results);
+        $analyzer        = new ImpactAnalyzer($results);
         $recommendations = $analyzer->getRecommendations();
 
         $this->assertArrayHasKey('Hashing', $recommendations);
@@ -145,7 +125,7 @@ class ImpactAnalyzerTest extends TestCase
             $this->createAcceptableResult('Test 2'),
         ];
 
-        $analyzer = new ImpactAnalyzer($results);
+        $analyzer        = new ImpactAnalyzer($results);
         $recommendations = $analyzer->getRecommendations();
 
         $this->assertEmpty($recommendations);
@@ -154,7 +134,7 @@ class ImpactAnalyzerTest extends TestCase
     public function test_handles_empty_results(): void
     {
         $analyzer = new ImpactAnalyzer([]);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         $this->assertEquals(0, $summary['total_benchmarks']);
         $this->assertEquals(0, $summary['acceptable']);
@@ -170,7 +150,7 @@ class ImpactAnalyzerTest extends TestCase
                 name: 'Encryption Test',
                 withSecurity: ['mean' => 20.0],
                 withoutSecurity: ['mean' => 10.0],
-                iterations: 100
+                iterations: 100,
             ),
         ];
 
@@ -194,7 +174,7 @@ class ImpactAnalyzerTest extends TestCase
 
     public function test_add_results_method(): void
     {
-        $analyzer = new ImpactAnalyzer();
+        $analyzer = new ImpactAnalyzer;
         $analyzer->addResults([
             $this->createAcceptableResult('Test 1'),
             $this->createAcceptableResult('Test 2'),
@@ -213,7 +193,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         $this->assertEquals(100.0, $summary['pass_rate']);
     }
@@ -238,7 +218,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $export = $analyzer->toArray();
+        $export   = $analyzer->toArray();
 
         $this->assertArrayHasKey('summary', $export);
         $this->assertArrayHasKey('recommendations', $export);
@@ -251,12 +231,32 @@ class ImpactAnalyzerTest extends TestCase
             name: 'Middleware Test',
             withSecurity: ['mean' => 10.6], // 6% overhead
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         // Default middleware threshold is 5%, so 6% should fail
         $analyzer = new ImpactAnalyzer([$middlewareResult]);
 
         $this->assertFalse($analyzer->isAcceptable());
+    }
+
+    protected function createAcceptableResult(string $name): BenchmarkResult
+    {
+        return new BenchmarkResult(
+            name: $name,
+            withSecurity: ['mean' => 10.5, 'min' => 10.0, 'max' => 11.0, 'stddev' => 0.25],
+            withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
+            iterations: 100,
+        );
+    }
+
+    protected function createUnacceptableResult(string $name): BenchmarkResult
+    {
+        return new BenchmarkResult(
+            name: $name,
+            withSecurity: ['mean' => 25.0, 'min' => 20.0, 'max' => 30.0, 'stddev' => 2.5],
+            withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
+            iterations: 100,
+        );
     }
 }

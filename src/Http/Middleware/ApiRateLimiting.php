@@ -25,40 +25,40 @@ class ApiRateLimiting
             return $next($request);
         }
 
-        $user = $request->user();
+        $user  = $request->user();
         $token = $user?->currentAccessToken();
 
         if ($user && $token) {
             // Authenticated request - use higher limits
             $config = config('artisanpack.security.api.rate_limiting.authenticated', [
-                'max_attempts' => 60,
+                'max_attempts'  => 60,
                 'decay_minutes' => 1,
             ]);
-            $key = 'api_auth_' . $user->id . '_' . $token->id;
+            $key = 'api_auth_'.$user->id.'_'.$token->id;
         } else {
             // Guest request - use lower limits
             $config = config('artisanpack.security.api.rate_limiting.guest', [
-                'max_attempts' => 30,
+                'max_attempts'  => 30,
                 'decay_minutes' => 1,
             ]);
-            $key = 'api_guest_' . $request->ip();
+            $key = 'api_guest_'.$request->ip();
         }
 
-        $maxAttempts = $config['max_attempts'] ?? 60;
+        $maxAttempts  = $config['max_attempts'] ?? 60;
         $decayMinutes = $config['decay_minutes'] ?? 1;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $retryAfter = RateLimiter::availableIn($key);
 
             return response()->json([
-                'message' => 'Too many requests. Please try again later.',
-                'error' => 'rate_limit_exceeded',
+                'message'     => 'Too many requests. Please try again later.',
+                'error'       => 'rate_limit_exceeded',
                 'retry_after' => $retryAfter,
             ], 429)->withHeaders([
-                'Retry-After' => $retryAfter,
-                'X-RateLimit-Limit' => $maxAttempts,
+                'Retry-After'           => $retryAfter,
+                'X-RateLimit-Limit'     => $maxAttempts,
                 'X-RateLimit-Remaining' => 0,
-                'X-RateLimit-Reset' => now()->addSeconds($retryAfter)->timestamp,
+                'X-RateLimit-Reset'     => now()->addSeconds($retryAfter)->timestamp,
             ]);
         }
 

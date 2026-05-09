@@ -36,7 +36,7 @@ class SecurityFinding
         string $description,
         string $category,
         ?string $location = null,
-        ?string $remediation = null
+        ?string $remediation = null,
     ): self {
         return new self(
             id: self::generateId(),
@@ -45,7 +45,7 @@ class SecurityFinding
             severity: self::SEVERITY_CRITICAL,
             category: $category,
             location: $location,
-            remediation: $remediation
+            remediation: $remediation,
         );
     }
 
@@ -57,7 +57,7 @@ class SecurityFinding
         string $description,
         string $category,
         ?string $location = null,
-        ?string $remediation = null
+        ?string $remediation = null,
     ): self {
         return new self(
             id: self::generateId(),
@@ -66,7 +66,7 @@ class SecurityFinding
             severity: self::SEVERITY_HIGH,
             category: $category,
             location: $location,
-            remediation: $remediation
+            remediation: $remediation,
         );
     }
 
@@ -78,7 +78,7 @@ class SecurityFinding
         string $description,
         string $category,
         ?string $location = null,
-        ?string $remediation = null
+        ?string $remediation = null,
     ): self {
         return new self(
             id: self::generateId(),
@@ -87,7 +87,7 @@ class SecurityFinding
             severity: self::SEVERITY_MEDIUM,
             category: $category,
             location: $location,
-            remediation: $remediation
+            remediation: $remediation,
         );
     }
 
@@ -99,7 +99,7 @@ class SecurityFinding
         string $description,
         string $category,
         ?string $location = null,
-        ?string $remediation = null
+        ?string $remediation = null,
     ): self {
         return new self(
             id: self::generateId(),
@@ -108,7 +108,7 @@ class SecurityFinding
             severity: self::SEVERITY_LOW,
             category: $category,
             location: $location,
-            remediation: $remediation
+            remediation: $remediation,
         );
     }
 
@@ -120,7 +120,7 @@ class SecurityFinding
         string $description,
         string $category,
         ?string $location = null,
-        ?string $remediation = null
+        ?string $remediation = null,
     ): self {
         return new self(
             id: self::generateId(),
@@ -129,7 +129,7 @@ class SecurityFinding
             severity: self::SEVERITY_INFO,
             category: $category,
             location: $location,
-            remediation: $remediation
+            remediation: $remediation,
         );
     }
 
@@ -154,19 +154,11 @@ class SecurityFinding
     }
 
     /**
-     * Generate a unique finding ID.
-     */
-    protected static function generateId(): string
-    {
-        return 'SEC-'.strtoupper(bin2hex(random_bytes(4)));
-    }
-
-    /**
      * Check if this is a critical finding.
      */
     public function isCritical(): bool
     {
-        return $this->severity === self::SEVERITY_CRITICAL;
+        return self::SEVERITY_CRITICAL === $this->severity;
     }
 
     /**
@@ -174,7 +166,7 @@ class SecurityFinding
      */
     public function isHigh(): bool
     {
-        return $this->severity === self::SEVERITY_HIGH;
+        return self::SEVERITY_HIGH === $this->severity;
     }
 
     /**
@@ -192,11 +184,11 @@ class SecurityFinding
     {
         return match ($this->severity) {
             self::SEVERITY_CRITICAL => 0,
-            self::SEVERITY_HIGH => 1,
-            self::SEVERITY_MEDIUM => 2,
-            self::SEVERITY_LOW => 3,
-            self::SEVERITY_INFO => 4,
-            default => 5,
+            self::SEVERITY_HIGH     => 1,
+            self::SEVERITY_MEDIUM   => 2,
+            self::SEVERITY_LOW      => 3,
+            self::SEVERITY_INFO     => 4,
+            default                 => 5,
         };
     }
 
@@ -208,15 +200,23 @@ class SecurityFinding
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
-            'title' => $this->title,
+            'id'          => $this->id,
+            'title'       => $this->title,
             'description' => $this->description,
-            'severity' => $this->severity,
-            'category' => $this->category,
-            'location' => $this->location,
-            'evidence' => $this->evidence,
+            'severity'    => $this->severity,
+            'category'    => $this->category,
+            'location'    => $this->location,
+            'evidence'    => $this->evidence,
             'remediation' => $this->remediation,
-            'metadata' => $this->metadata,
+            'metadata'    => $this->metadata,
         ];
+    }
+
+    /**
+     * Generate a unique finding ID.
+     */
+    protected static function generateId(): string
+    {
+        return 'SEC-'.strtoupper(bin2hex(random_bytes(4)));
     }
 }

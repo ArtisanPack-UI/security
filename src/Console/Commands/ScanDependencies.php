@@ -6,6 +6,7 @@ namespace ArtisanPackUI\Security\Console\Commands;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
 use ArtisanPackUI\Security\Testing\Scanners\DependencyScanner;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -39,10 +40,10 @@ class ScanDependencies extends Command
      * @var array<string, int>
      */
     protected array $severityLevels = [
-        'info' => 0,
-        'low' => 1,
-        'medium' => 2,
-        'high' => 3,
+        'info'     => 0,
+        'low'      => 1,
+        'medium'   => 2,
+        'high'     => 3,
         'critical' => 4,
     ];
 
@@ -55,16 +56,16 @@ class ScanDependencies extends Command
         $this->newLine();
 
         $scanComposer = ! $this->option('npm');
-        $scanNpm = ! $this->option('composer');
+        $scanNpm      = ! $this->option('composer');
 
         // If both flags are set, scan both
         if ($this->option('composer') && $this->option('npm')) {
             $scanComposer = true;
-            $scanNpm = true;
+            $scanNpm      = true;
         }
 
         $composerLock = $scanComposer ? base_path('composer.lock') : null;
-        $packageLock = $scanNpm ? base_path('package-lock.json') : null;
+        $packageLock  = $scanNpm ? base_path('package-lock.json') : null;
 
         // Check if files exist
         if ($scanComposer && ! File::exists(base_path('composer.lock'))) {
@@ -77,7 +78,7 @@ class ScanDependencies extends Command
             $packageLock = null;
         }
 
-        if ($composerLock === null && $packageLock === null) {
+        if (null === $composerLock && null === $packageLock) {
             $this->error('No lock files found to scan.');
 
             return self::FAILURE;
@@ -85,7 +86,7 @@ class ScanDependencies extends Command
 
         $scanner = new DependencyScanner(
             $composerLock ?? 'composer.lock',
-            $packageLock ?? 'package-lock.json'
+            $packageLock ?? 'package-lock.json',
         );
 
         // Use local advisories if provided
@@ -144,7 +145,7 @@ class ScanDependencies extends Command
         try {
             $result = $task();
             $this->output->writeln($result ? '<fg=green>DONE</>' : '<fg=yellow>SKIPPED</>');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->output->writeln('<fg=red>FAILED</>');
             $this->error("    Error: {$e->getMessage()}");
         }
@@ -154,6 +155,7 @@ class ScanDependencies extends Command
      * Filter findings by minimum severity.
      *
      * @param  array<SecurityFinding>  $findings
+     *
      * @return array<SecurityFinding>
      */
     protected function filterBySeverity(array $findings): array
@@ -167,7 +169,7 @@ class ScanDependencies extends Command
 
         return array_filter($findings, function ($finding) use ($minLevel) {
             $findingSeverity = strtolower($finding->severity ?? 'info');
-            $findingLevel = $this->severityLevels[$findingSeverity] ?? 0;
+            $findingLevel    = $this->severityLevels[$findingSeverity] ?? 0;
 
             return $findingLevel >= $minLevel;
         });
@@ -181,7 +183,7 @@ class ScanDependencies extends Command
     protected function formatOutput(array $findings, string $format): string
     {
         return match ($format) {
-            'json' => $this->formatAsJson($findings),
+            'json'  => $this->formatAsJson($findings),
             'sarif' => $this->formatAsSarif($findings),
             default => $this->formatAsText($findings),
         };
@@ -195,16 +197,16 @@ class ScanDependencies extends Command
     protected function formatAsJson(array $findings): string
     {
         $data = [
-            'scan_date' => now()->toIso8601String(),
+            'scan_date'      => now()->toIso8601String(),
             'total_findings' => count($findings),
-            'summary' => $this->getSummary($findings),
-            'findings' => array_map(fn ($f) => [
-                'id' => $f->id ?? null,
-                'title' => $f->title ?? '',
+            'summary'        => $this->getSummary($findings),
+            'findings'       => array_map(fn ($f) => [
+                'id'          => $f->id ?? null,
+                'title'       => $f->title ?? '',
                 'description' => $f->description ?? '',
-                'severity' => $f->severity ?? 'unknown',
-                'category' => $f->category ?? '',
-                'location' => $f->location ?? '',
+                'severity'    => $f->severity ?? 'unknown',
+                'category'    => $f->category ?? '',
+                'location'    => $f->location ?? '',
                 'remediation' => $f->remediation ?? '',
             ], $findings),
         ];
@@ -223,8 +225,8 @@ class ScanDependencies extends Command
 
         foreach ($findings as $finding) {
             $results[] = [
-                'ruleId' => $finding->id ?? 'UNKNOWN',
-                'level' => $this->sarifLevel($finding->severity ?? 'info'),
+                'ruleId'  => $finding->id ?? 'UNKNOWN',
+                'level'   => $this->sarifLevel($finding->severity ?? 'info'),
                 'message' => [
                     'text' => ($finding->title ?? '').' - '.($finding->description ?? ''),
                 ],
@@ -243,11 +245,11 @@ class ScanDependencies extends Command
         $sarif = [
             '$schema' => 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
             'version' => '2.1.0',
-            'runs' => [
+            'runs'    => [
                 [
                     'tool' => [
                         'driver' => [
-                            'name' => 'ArtisanPackUI Security - Dependency Scanner',
+                            'name'    => 'ArtisanPackUI Security - Dependency Scanner',
                             'version' => '2.0.0',
                         ],
                     ],
@@ -266,8 +268,8 @@ class ScanDependencies extends Command
     {
         return match (strtolower($severity)) {
             'critical', 'high' => 'error',
-            'medium' => 'warning',
-            default => 'note',
+            'medium'           => 'warning',
+            default            => 'note',
         };
     }
 
@@ -290,7 +292,7 @@ class ScanDependencies extends Command
 
         // Group by source type
         $composer = [];
-        $npm = [];
+        $npm      = [];
 
         foreach ($findings as $finding) {
             $location = $finding->location ?? '';
@@ -337,7 +339,7 @@ class ScanDependencies extends Command
     protected function formatFindingText(SecurityFinding $finding): string
     {
         $severity = strtoupper($finding->severity ?? 'UNKNOWN');
-        $output = " x {$finding->location}\n";
+        $output   = " x {$finding->location}\n";
         $output .= "   {$finding->id} ({$severity}): {$finding->title}\n";
         if ($finding->remediation) {
             $output .= "   Fix: {$finding->remediation}\n";
@@ -369,7 +371,7 @@ class ScanDependencies extends Command
                 ['<fg=cyan>Low</>', $summary['low']],
                 ['<fg=gray>Info</>', $summary['info']],
                 ['<fg=white;options=bold>Total</>', '<fg=white;options=bold>'.$summary['total'].'</>'],
-            ]
+            ],
         );
 
         if (empty($findings)) {
@@ -385,7 +387,7 @@ class ScanDependencies extends Command
 
         // Group findings
         $composerFindings = [];
-        $npmFindings = [];
+        $npmFindings      = [];
 
         foreach ($findings as $finding) {
             $location = $finding->location ?? '';
@@ -419,10 +421,10 @@ class ScanDependencies extends Command
         foreach ($findings as $finding) {
             $severityColor = match (strtolower($finding->severity ?? 'info')) {
                 'critical' => 'red',
-                'high' => 'yellow',
-                'medium' => 'blue',
-                'low' => 'cyan',
-                default => 'gray',
+                'high'     => 'yellow',
+                'medium'   => 'blue',
+                'low'      => 'cyan',
+                default    => 'gray',
             };
 
             $rows[] = [
@@ -441,17 +443,18 @@ class ScanDependencies extends Command
      * Get summary counts.
      *
      * @param  array<SecurityFinding>  $findings
+     *
      * @return array<string, int>
      */
     protected function getSummary(array $findings): array
     {
         $summary = [
             'critical' => 0,
-            'high' => 0,
-            'medium' => 0,
-            'low' => 0,
-            'info' => 0,
-            'total' => count($findings),
+            'high'     => 0,
+            'medium'   => 0,
+            'low'      => 0,
+            'info'     => 0,
+            'total'    => count($findings),
         ];
 
         foreach ($findings as $finding) {
@@ -487,7 +490,7 @@ class ScanDependencies extends Command
     {
         $failOn = $this->option('fail-on');
 
-        if ($failOn === 'none') {
+        if ('none' === $failOn) {
             return self::SUCCESS;
         }
 
@@ -495,7 +498,7 @@ class ScanDependencies extends Command
 
         foreach ($findings as $finding) {
             $findingSeverity = strtolower($finding->severity ?? 'info');
-            $findingLevel = $this->severityLevels[$findingSeverity] ?? 0;
+            $findingLevel    = $this->severityLevels[$findingSeverity] ?? 0;
 
             if ($findingLevel >= $failLevel) {
                 $this->newLine();

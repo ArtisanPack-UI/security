@@ -19,7 +19,7 @@ class CspNonce extends Component
      */
     public function __construct(?CspPolicyInterface $csp = null)
     {
-        $csp = $csp ?? app(CspPolicyInterface::class);
+        $csp         = $csp ?? app(CspPolicyInterface::class);
         $this->nonce = $csp->getNonce();
     }
 

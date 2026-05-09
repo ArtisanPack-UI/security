@@ -10,6 +10,7 @@ use ArtisanPackUI\Security\Testing\Reporting\Formats\JsonReportFormat;
 use ArtisanPackUI\Security\Testing\Reporting\Formats\JunitReportFormat;
 use ArtisanPackUI\Security\Testing\Reporting\Formats\MarkdownReportFormat;
 use ArtisanPackUI\Security\Testing\Reporting\Formats\SarifReportFormat;
+use InvalidArgumentException;
 
 class SecurityReportGenerator implements SecurityReportInterface
 {
@@ -31,10 +32,10 @@ class SecurityReportGenerator implements SecurityReportInterface
         protected ?string $version = null,
     ) {
         $this->metadata = [
-            'generatedAt' => now()->toIso8601String(),
-            'projectName' => $projectName,
-            'version' => $version,
-            'generator' => 'ArtisanPack Security Testing Framework',
+            'generatedAt'      => now()->toIso8601String(),
+            'projectName'      => $projectName,
+            'version'          => $version,
+            'generator'        => 'ArtisanPack Security Testing Framework',
             'generatorVersion' => '2.0.0',
         ];
     }
@@ -77,13 +78,89 @@ class SecurityReportGenerator implements SecurityReportInterface
     public function generate(string $format = 'json'): string
     {
         return match ($format) {
-            'json' => $this->generateJson(),
-            'html' => $this->generateHtml(),
-            'junit' => $this->generateJunit(),
-            'sarif' => $this->generateSarif(),
+            'json'           => $this->generateJson(),
+            'html'           => $this->generateHtml(),
+            'junit'          => $this->generateJunit(),
+            'sarif'          => $this->generateSarif(),
             'markdown', 'md' => $this->generateMarkdown(),
-            default => throw new \InvalidArgumentException("Unknown format: {$format}"),
+            default          => throw new InvalidArgumentException("Unknown format: {$format}"),
         };
+    }
+
+    /**
+     * Get a summary of the findings.
+     *
+     * @return array<string, mixed>
+     */
+    public function getSummary(): array
+    {
+        return [
+            'total'      => count($this->findings),
+            'bySeverity' => [
+                'critical' => $this->countBySeverity([SecurityFinding::SEVERITY_CRITICAL]),
+                'high'     => $this->countBySeverity([SecurityFinding::SEVERITY_HIGH]),
+                'medium'   => $this->countBySeverity([SecurityFinding::SEVERITY_MEDIUM]),
+                'low'      => $this->countBySeverity([SecurityFinding::SEVERITY_LOW]),
+                'info'     => $this->countBySeverity([SecurityFinding::SEVERITY_INFO]),
+            ],
+            'byCategory'  => $this->groupByCategory(),
+            'hasBlocking' => $this->hasBlockingFindings(),
+        ];
+    }
+
+    /**
+     * Get findings filtered by severity.
+     *
+     * @return array<SecurityFinding>
+     */
+    public function getFindingsBySeverity(string $severity): array
+    {
+        return array_filter(
+            $this->findings,
+            fn (SecurityFinding $f) => $f->severity === $severity,
+        );
+    }
+
+    /**
+     * Sort findings by severity (most critical first).
+     */
+    public function sortBySeverity(): self
+    {
+        usort($this->findings, fn (SecurityFinding $a, SecurityFinding $b) => $a->getSeverityOrder() <=> $b->getSeverityOrder());
+
+        return $this;
+    }
+
+    /**
+     * Save report to a file.
+     */
+    public function saveToFile(string $path, string $format = 'json'): bool
+    {
+        $content = $this->generate($format);
+
+        return false !== file_put_contents($path, $content);
+    }
+
+    /**
+     * Add custom metadata.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public function withMetadata(array $metadata): self
+    {
+        $this->metadata = array_merge($this->metadata, $metadata);
+
+        return $this;
+    }
+
+    /**
+     * Clear all findings.
+     */
+    public function clear(): self
+    {
+        $this->findings = [];
+
+        return $this;
     }
 
     /**
@@ -137,27 +214,6 @@ class SecurityReportGenerator implements SecurityReportInterface
     }
 
     /**
-     * Get a summary of the findings.
-     *
-     * @return array<string, mixed>
-     */
-    public function getSummary(): array
-    {
-        return [
-            'total' => count($this->findings),
-            'bySeverity' => [
-                'critical' => $this->countBySeverity([SecurityFinding::SEVERITY_CRITICAL]),
-                'high' => $this->countBySeverity([SecurityFinding::SEVERITY_HIGH]),
-                'medium' => $this->countBySeverity([SecurityFinding::SEVERITY_MEDIUM]),
-                'low' => $this->countBySeverity([SecurityFinding::SEVERITY_LOW]),
-                'info' => $this->countBySeverity([SecurityFinding::SEVERITY_INFO]),
-            ],
-            'byCategory' => $this->groupByCategory(),
-            'hasBlocking' => $this->hasBlockingFindings(),
-        ];
-    }
-
-    /**
      * Count findings by severity.
      *
      * @param  array<string>  $severities
@@ -166,7 +222,7 @@ class SecurityReportGenerator implements SecurityReportInterface
     {
         return count(array_filter(
             $this->findings,
-            fn (SecurityFinding $f) => in_array($f->severity, $severities)
+            fn (SecurityFinding $f) => in_array($f->severity, $severities),
         ));
     }
 
@@ -200,60 +256,5 @@ class SecurityReportGenerator implements SecurityReportInterface
         }
 
         return false;
-    }
-
-    /**
-     * Get findings filtered by severity.
-     *
-     * @return array<SecurityFinding>
-     */
-    public function getFindingsBySeverity(string $severity): array
-    {
-        return array_filter(
-            $this->findings,
-            fn (SecurityFinding $f) => $f->severity === $severity
-        );
-    }
-
-    /**
-     * Sort findings by severity (most critical first).
-     */
-    public function sortBySeverity(): self
-    {
-        usort($this->findings, fn (SecurityFinding $a, SecurityFinding $b) => $a->getSeverityOrder() <=> $b->getSeverityOrder());
-
-        return $this;
-    }
-
-    /**
-     * Save report to a file.
-     */
-    public function saveToFile(string $path, string $format = 'json'): bool
-    {
-        $content = $this->generate($format);
-
-        return file_put_contents($path, $content) !== false;
-    }
-
-    /**
-     * Add custom metadata.
-     *
-     * @param  array<string, mixed>  $metadata
-     */
-    public function withMetadata(array $metadata): self
-    {
-        $this->metadata = array_merge($this->metadata, $metadata);
-
-        return $this;
-    }
-
-    /**
-     * Clear all findings.
-     */
-    public function clear(): self
-    {
-        $this->findings = [];
-
-        return $this;
     }
 }

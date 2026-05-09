@@ -12,16 +12,16 @@ class BenchmarkResultTest extends TestCase
     public function test_can_create_benchmark_result(): void
     {
         $withSecurity = [
-            'mean' => 10.5,
-            'min' => 8.0,
-            'max' => 15.0,
+            'mean'   => 10.5,
+            'min'    => 8.0,
+            'max'    => 15.0,
             'stddev' => 2.5,
         ];
 
         $withoutSecurity = [
-            'mean' => 5.0,
-            'min' => 4.0,
-            'max' => 7.0,
+            'mean'   => 5.0,
+            'min'    => 4.0,
+            'max'    => 7.0,
             'stddev' => 1.0,
         ];
 
@@ -29,7 +29,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Test Benchmark',
             withSecurity: $withSecurity,
             withoutSecurity: $withoutSecurity,
-            iterations: 1000
+            iterations: 1000,
         );
 
         $this->assertEquals('Test Benchmark', $result->name);
@@ -44,7 +44,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Overhead Test',
             withSecurity: ['mean' => 12.0, 'min' => 10.0, 'max' => 14.0, 'stddev' => 1.0],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
+            iterations: 100,
         );
 
         // Overhead = ((12.0 - 10.0) / 10.0) * 100 = 20%
@@ -57,7 +57,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Zero Baseline',
             withSecurity: ['mean' => 5.0, 'min' => 4.0, 'max' => 6.0, 'stddev' => 0.5],
             withoutSecurity: ['mean' => 0.0, 'min' => 0.0, 'max' => 0.0, 'stddev' => 0.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $this->assertEquals(0.0, $result->getOverhead());
@@ -69,7 +69,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Acceptable Test',
             withSecurity: ['mean' => 11.0, 'min' => 10.0, 'max' => 12.0, 'stddev' => 0.5],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
+            iterations: 100,
         );
 
         // Overhead = 10%, threshold = 15%
@@ -82,7 +82,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Not Acceptable Test',
             withSecurity: ['mean' => 12.0, 'min' => 10.0, 'max' => 14.0, 'stddev' => 1.0],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
+            iterations: 100,
         );
 
         // Overhead = 20%, threshold = 15%
@@ -95,7 +95,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Equal Threshold Test',
             withSecurity: ['mean' => 11.5, 'min' => 10.0, 'max' => 13.0, 'stddev' => 0.75],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
+            iterations: 100,
         );
 
         // Overhead = 15%, threshold = 15%
@@ -108,7 +108,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Array Test',
             withSecurity: ['mean' => 12.0, 'min' => 10.0, 'max' => 14.0, 'stddev' => 1.0],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 500
+            iterations: 500,
         );
 
         $array = $result->toArray();
@@ -131,7 +131,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Absolute Test',
             withSecurity: ['mean' => 15.0, 'min' => 12.0, 'max' => 18.0, 'stddev' => 1.5],
             withoutSecurity: ['mean' => 10.0, 'min' => 8.0, 'max' => 12.0, 'stddev' => 1.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $array = $result->toArray();
@@ -149,7 +149,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Negative Overhead',
             withSecurity: ['mean' => 8.0, 'min' => 7.0, 'max' => 9.0, 'stddev' => 0.5],
             withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-            iterations: 100
+            iterations: 100,
         );
 
         // Overhead = ((8.0 - 10.0) / 10.0) * 100 = -20%
@@ -163,7 +163,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Absolute Test',
             withSecurity: ['mean' => 15.0],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $this->assertEquals(5.0, $result->getAbsoluteOverhead());
@@ -175,7 +175,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Summary Test',
             withSecurity: ['mean' => 12.0],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $summary = $result->getSummary();
@@ -191,7 +191,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Comparison Test',
             withSecurity: ['mean' => 15.0, 'p95' => 20.0, 'p99' => 25.0],
             withoutSecurity: ['mean' => 10.0, 'p95' => 15.0, 'p99' => 18.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $comparison = $result->getComparison();
@@ -207,7 +207,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Table Test',
             withSecurity: ['mean' => 12.0],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         $row = $result->toTableRow();
@@ -225,7 +225,7 @@ class BenchmarkResultTest extends TestCase
             name: 'Default Threshold Test',
             withSecurity: ['mean' => 11.0],
             withoutSecurity: ['mean' => 10.0],
-            iterations: 100
+            iterations: 100,
         );
 
         // Default threshold is 10%

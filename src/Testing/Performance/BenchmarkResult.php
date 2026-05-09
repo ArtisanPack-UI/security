@@ -28,7 +28,7 @@ class BenchmarkResult
     {
         $withoutMean = $this->withoutSecurity['mean'] ?? 0;
 
-        if ($withoutMean == 0) {
+        if (0 == $withoutMean) {
             return 0;
         }
 
@@ -58,14 +58,14 @@ class BenchmarkResult
      */
     public function getSummary(): string
     {
-        $overhead = $this->getOverhead();
+        $overhead   = $this->getOverhead();
         $absoluteMs = $this->getAbsoluteOverhead();
 
         return sprintf(
             '%s: %.2f%% overhead (%.3fms per operation)',
             $this->name,
             $overhead,
-            $absoluteMs
+            $absoluteMs,
         );
     }
 
@@ -77,12 +77,12 @@ class BenchmarkResult
     public function getComparison(): array
     {
         return [
-            'with_security' => $this->withSecurity,
+            'with_security'    => $this->withSecurity,
             'without_security' => $this->withoutSecurity,
-            'difference' => [
+            'difference'       => [
                 'mean' => ($this->withSecurity['mean'] ?? 0) - ($this->withoutSecurity['mean'] ?? 0),
-                'p95' => ($this->withSecurity['p95'] ?? 0) - ($this->withoutSecurity['p95'] ?? 0),
-                'p99' => ($this->withSecurity['p99'] ?? 0) - ($this->withoutSecurity['p99'] ?? 0),
+                'p95'  => ($this->withSecurity['p95'] ?? 0) - ($this->withoutSecurity['p95'] ?? 0),
+                'p99'  => ($this->withSecurity['p99'] ?? 0) - ($this->withoutSecurity['p99'] ?? 0),
             ],
         ];
     }
@@ -95,12 +95,12 @@ class BenchmarkResult
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'iterations' => $this->iterations,
-            'withSecurity' => $this->withSecurity,
+            'name'            => $this->name,
+            'iterations'      => $this->iterations,
+            'withSecurity'    => $this->withSecurity,
             'withoutSecurity' => $this->withoutSecurity,
-            'overhead' => [
-                'percent' => $this->getOverhead(),
+            'overhead'        => [
+                'percent'     => $this->getOverhead(),
                 'absolute_ms' => $this->getAbsoluteOverhead(),
             ],
             'acceptable' => $this->isAcceptable(),

@@ -38,7 +38,7 @@ class CspNonceGenerator
      */
     public function generate(): string
     {
-        if ($this->nonce === null) {
+        if (null === $this->nonce) {
             $this->nonce = base64_encode(random_bytes($this->length));
         }
 
@@ -58,7 +58,7 @@ class CspNonceGenerator
      */
     public function hasNonce(): bool
     {
-        return $this->nonce !== null;
+        return null !== $this->nonce;
     }
 
     /**

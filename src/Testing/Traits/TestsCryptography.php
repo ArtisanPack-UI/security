@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Testing\Traits;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
+use Exception;
+use PDO;
 
 trait TestsCryptography
 {
@@ -21,7 +23,7 @@ trait TestsCryptography
                 'APP_KEY is not configured',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Run: php artisan key:generate'
+                'Run: php artisan key:generate',
             ));
 
             $this->fail('APP_KEY is not configured');
@@ -35,7 +37,7 @@ trait TestsCryptography
                 'APP_KEY is shorter than recommended 256 bits',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Regenerate key with: php artisan key:generate'
+                'Regenerate key with: php artisan key:generate',
             ));
         }
     }
@@ -55,12 +57,12 @@ trait TestsCryptography
                 "Password hashing driver '{$hashDriver}' is not secure",
                 'A02:2021-Cryptographic Failures',
                 'config/hashing.php',
-                'Use bcrypt, argon, or argon2id for password hashing'
+                'Use bcrypt, argon, or argon2id for password hashing',
             ));
         }
 
         // Check bcrypt cost factor
-        if ($hashDriver === 'bcrypt') {
+        if ('bcrypt' === $hashDriver) {
             $rounds = config('hashing.bcrypt.rounds', 10);
             if ($rounds < 10) {
                 $this->recordFinding(SecurityFinding::medium(
@@ -68,7 +70,7 @@ trait TestsCryptography
                     "Bcrypt rounds ({$rounds}) is below recommended minimum (10)",
                     'A02:2021-Cryptographic Failures',
                     'config/hashing.php',
-                    'Increase bcrypt rounds to at least 10'
+                    'Increase bcrypt rounds to at least 10',
                 ));
             }
         }
@@ -88,7 +90,7 @@ trait TestsCryptography
                     'Application URL does not use HTTPS in production',
                     'A02:2021-Cryptographic Failures',
                     '.env',
-                    'Set APP_URL to use https:// in production'
+                    'Set APP_URL to use https:// in production',
                 ));
             }
         }
@@ -105,13 +107,13 @@ trait TestsCryptography
         foreach ($sensitiveFields as $field) {
             $cast = $casts[$field] ?? null;
 
-            if ($cast !== 'encrypted' && $cast !== 'encrypted:array' && $cast !== 'encrypted:collection') {
+            if ('encrypted' !== $cast && 'encrypted:array' !== $cast && 'encrypted:collection' !== $cast) {
                 $this->recordFinding(SecurityFinding::medium(
                     'Sensitive Data Not Encrypted',
                     "Field '{$field}' in {$modelClass} is not encrypted at rest",
                     'A02:2021-Cryptographic Failures',
                     $modelClass,
-                    "Add '{$field}' => 'encrypted' to the model's \$casts property"
+                    "Add '{$field}' => 'encrypted' to the model's \$casts property",
                 ));
             }
         }
@@ -126,13 +128,13 @@ trait TestsCryptography
         try {
             $bytes = random_bytes(32);
             $this->assertEquals(32, strlen($bytes));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->recordFinding(SecurityFinding::critical(
                 'Insecure Random Generation',
                 'Cryptographically secure random number generation is not available',
                 'A02:2021-Cryptographic Failures',
                 null,
-                'Ensure the system has a proper entropy source'
+                'Ensure the system has a proper entropy source',
             ));
 
             $this->fail('Secure random generation not available');
@@ -144,14 +146,14 @@ trait TestsCryptography
      */
     protected function assertDatabaseConnectionEncrypted(): void
     {
-        $connections = config('database.connections', []);
+        $connections       = config('database.connections', []);
         $defaultConnection = config('database.default');
 
         $connection = $connections[$defaultConnection] ?? [];
 
         // Check for SSL configuration
         if (in_array($connection['driver'] ?? '', ['mysql', 'pgsql', 'sqlsrv'])) {
-            $sslMode = $connection['sslmode'] ?? $connection['options'][\PDO::MYSQL_ATTR_SSL_CA] ?? null;
+            $sslMode = $connection['sslmode'] ?? $connection['options'][PDO::MYSQL_ATTR_SSL_CA] ?? null;
 
             if (app()->environment('production') && ! $sslMode) {
                 $this->recordFinding(SecurityFinding::medium(
@@ -159,7 +161,7 @@ trait TestsCryptography
                     "Database connection '{$defaultConnection}' may not be using SSL/TLS",
                     'A02:2021-Cryptographic Failures',
                     'config/database.php',
-                    'Configure SSL for database connections in production'
+                    'Configure SSL for database connections in production',
                 ));
             }
         }
@@ -175,13 +177,13 @@ trait TestsCryptography
         $weakCiphers = ['DES', 'RC4', 'MD5', 'SHA1'];
 
         foreach ($weakCiphers as $weak) {
-            if (stripos($cipher, $weak) !== false) {
+            if (false !== stripos($cipher, $weak)) {
                 $this->recordFinding(SecurityFinding::critical(
                     'Weak Cipher Configured',
                     "Cipher '{$cipher}' contains weak algorithm",
                     'A02:2021-Cryptographic Failures',
                     'config/app.php',
-                    'Use AES-256-CBC or AES-256-GCM'
+                    'Use AES-256-CBC or AES-256-GCM',
                 ));
 
                 $this->fail("Weak cipher configured: {$cipher}");
@@ -207,14 +209,14 @@ trait TestsCryptography
                 "Token has approximately {$estimatedBits} bits of entropy, minimum {$minBits} recommended",
                 'A02:2021-Cryptographic Failures',
                 'Token Generation',
-                'Use longer tokens with cryptographically secure random generation'
+                'Use longer tokens with cryptographically secure random generation',
             ));
         }
 
         $this->assertGreaterThanOrEqual(
             $minBits,
             $estimatedBits,
-            "Token should have at least {$minBits} bits of entropy"
+            "Token should have at least {$minBits} bits of entropy",
         );
     }
 
