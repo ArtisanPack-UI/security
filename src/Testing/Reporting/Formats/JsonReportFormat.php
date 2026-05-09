@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Testing\Reporting\Formats;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
+use RuntimeException;
 
 class JsonReportFormat implements ReportFormatInterface
 {
@@ -12,12 +13,12 @@ class JsonReportFormat implements ReportFormatInterface
     {
         $json = json_encode([
             'metadata' => $metadata,
-            'summary' => $summary,
+            'summary'  => $summary,
             'findings' => array_map(fn (SecurityFinding $f) => $f->toArray(), $findings),
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        if ($json === false) {
-            throw new \RuntimeException('Failed to encode security report as JSON: ' . json_last_error_msg());
+        if (false === $json) {
+            throw new RuntimeException('Failed to encode security report as JSON: '.json_last_error_msg());
         }
 
         return $json;

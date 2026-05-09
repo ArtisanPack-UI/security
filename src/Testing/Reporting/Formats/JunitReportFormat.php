@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Testing\Reporting\Formats;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
+use DOMDocument;
 
 class JunitReportFormat implements ReportFormatInterface
 {
     public function format(array $findings, array $metadata, array $summary): string
     {
-        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom               = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
         // Create root testsuites element
@@ -63,10 +64,10 @@ class JunitReportFormat implements ReportFormatInterface
                     $testcase->appendChild($failure);
                 }
                 // Medium are warnings (system-out)
-                elseif ($finding->severity === 'medium') {
+                elseif ('medium' === $finding->severity) {
                     $systemOut = $dom->createElement('system-out');
                     $systemOut->appendChild($dom->createCDATASection(
-                        "Warning: {$finding->description}\nLocation: {$finding->location}"
+                        "Warning: {$finding->description}\nLocation: {$finding->location}",
                     ));
                     $testcase->appendChild($systemOut);
                 }
@@ -85,6 +86,21 @@ class JunitReportFormat implements ReportFormatInterface
         return $dom->saveXML();
     }
 
+    public function getName(): string
+    {
+        return 'JUnit XML';
+    }
+
+    public function getExtension(): string
+    {
+        return 'xml';
+    }
+
+    public function getMimeType(): string
+    {
+        return 'application/xml';
+    }
+
     /**
      * Count failures (critical and high severity findings).
      *
@@ -94,7 +110,7 @@ class JunitReportFormat implements ReportFormatInterface
     {
         return count(array_filter(
             $findings,
-            fn (SecurityFinding $f) => in_array($f->severity, ['critical', 'high'])
+            fn (SecurityFinding $f) => in_array($f->severity, ['critical', 'high']),
         ));
     }
 
@@ -102,6 +118,7 @@ class JunitReportFormat implements ReportFormatInterface
      * Group findings by category.
      *
      * @param  array<SecurityFinding>  $findings
+     *
      * @return array<string, array<SecurityFinding>>
      */
     protected function groupByCategory(array $findings): array
@@ -122,7 +139,7 @@ class JunitReportFormat implements ReportFormatInterface
     {
         // Remove special characters and convert to PascalCase
         $cleaned = preg_replace('/[^a-zA-Z0-9\s]/', '', $category);
-        $words = explode(' ', $cleaned);
+        $words   = explode(' ', $cleaned);
 
         return implode('', array_map('ucfirst', array_map('strtolower', $words)));
     }
@@ -149,20 +166,5 @@ class JunitReportFormat implements ReportFormatInterface
         }
 
         return $text;
-    }
-
-    public function getName(): string
-    {
-        return 'JUnit XML';
-    }
-
-    public function getExtension(): string
-    {
-        return 'xml';
-    }
-
-    public function getMimeType(): string
-    {
-        return 'application/xml';
     }
 }

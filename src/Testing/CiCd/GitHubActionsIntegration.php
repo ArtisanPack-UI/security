@@ -18,8 +18,8 @@ class GitHubActionsIntegration
         foreach ($findings as $finding) {
             $level = match ($finding->severity) {
                 'critical', 'high' => 'error',
-                'medium' => 'warning',
-                default => 'notice',
+                'medium'           => 'warning',
+                default            => 'notice',
             };
 
             $file = '';
@@ -100,15 +100,15 @@ class GitHubActionsIntegration
         foreach ($summary['bySeverity'] ?? [] as $severity => $count) {
             $icon = match ($severity) {
                 'critical' => ':red_circle:',
-                'high' => ':orange_circle:',
-                'medium' => ':yellow_circle:',
-                'low' => ':large_blue_circle:',
-                'info' => ':white_circle:',
-                default => '',
+                'high'     => ':orange_circle:',
+                'medium'   => ':yellow_circle:',
+                'low'      => ':large_blue_circle:',
+                'info'     => ':white_circle:',
+                default    => '',
             };
             $md .= "| {$icon} ".ucfirst($severity)." | {$count} |\n";
         }
-        $md .= "| **Total** | **".($summary['total'] ?? 0)."** |\n\n";
+        $md .= '| **Total** | **'.($summary['total'] ?? 0)."** |\n\n";
 
         // Status badge
         if (($summary['bySeverity']['critical'] ?? 0) > 0) {
@@ -127,9 +127,9 @@ class GitHubActionsIntegration
             foreach ($topFindings as $finding) {
                 $icon = match ($finding->severity) {
                     'critical' => ':red_circle:',
-                    'high' => ':orange_circle:',
-                    'medium' => ':yellow_circle:',
-                    default => ':white_circle:',
+                    'high'     => ':orange_circle:',
+                    'medium'   => ':yellow_circle:',
+                    default    => ':white_circle:',
                 };
                 $md .= "- {$icon} **{$finding->title}** ({$finding->severity})\n";
             }
@@ -249,7 +249,7 @@ YAML;
      */
     public static function isGitHubActions(): bool
     {
-        return getenv('GITHUB_ACTIONS') === 'true';
+        return 'true' === getenv('GITHUB_ACTIONS');
     }
 
     /**

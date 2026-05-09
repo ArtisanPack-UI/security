@@ -19,7 +19,7 @@ class XssPayloads
             self::getEventHandlers(),
             self::getPolyglots(),
             self::getSvg(),
-            self::getDomBased()
+            self::getDomBased(),
         );
     }
 

@@ -50,16 +50,16 @@ class OwaspScanner implements ScannerInterface
 
         foreach ($this->categories as $category) {
             match ($category) {
-                'A01' => $this->scanBrokenAccessControl(),
-                'A02' => $this->scanCryptographicFailures(),
-                'A03' => $this->scanInjection(),
-                'A04' => $this->scanInsecureDesign(),
-                'A05' => $this->scanSecurityMisconfiguration(),
-                'A06' => $this->scanVulnerableComponents(),
-                'A07' => $this->scanAuthenticationFailures(),
-                'A08' => $this->scanIntegrityFailures(),
-                'A09' => $this->scanLoggingFailures(),
-                'A10' => $this->scanSsrf(),
+                'A01'   => $this->scanBrokenAccessControl(),
+                'A02'   => $this->scanCryptographicFailures(),
+                'A03'   => $this->scanInjection(),
+                'A04'   => $this->scanInsecureDesign(),
+                'A05'   => $this->scanSecurityMisconfiguration(),
+                'A06'   => $this->scanVulnerableComponents(),
+                'A07'   => $this->scanAuthenticationFailures(),
+                'A08'   => $this->scanIntegrityFailures(),
+                'A09'   => $this->scanLoggingFailures(),
+                'A10'   => $this->scanSsrf(),
                 default => null,
             };
         }
@@ -87,7 +87,7 @@ class OwaspScanner implements ScannerInterface
 
         foreach ($routes as $route) {
             $middleware = $route->middleware();
-            $uri = $route->uri();
+            $uri        = $route->uri();
 
             // Skip API routes that might use token auth
             if (str_starts_with($uri, 'api/')) {
@@ -104,7 +104,7 @@ class OwaspScanner implements ScannerInterface
                         "Route '{$uri}' appears to be sensitive but has no authentication middleware",
                         'A01:2021-Broken Access Control',
                         $uri,
-                        'Add auth middleware to protect sensitive routes'
+                        'Add auth middleware to protect sensitive routes',
                     );
                 }
             }
@@ -118,7 +118,7 @@ class OwaspScanner implements ScannerInterface
                 'CORS allows all origins (*)',
                 'A01:2021-Broken Access Control',
                 'config/cors.php',
-                'Restrict allowed origins to trusted domains'
+                'Restrict allowed origins to trusted domains',
             );
         }
     }
@@ -136,7 +136,7 @@ class OwaspScanner implements ScannerInterface
                 'APP_KEY is not configured',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Run: php artisan key:generate'
+                'Run: php artisan key:generate',
             );
         }
 
@@ -147,19 +147,19 @@ class OwaspScanner implements ScannerInterface
                 'Session cookie Secure flag is not enabled in production',
                 'A02:2021-Cryptographic Failures',
                 'config/session.php',
-                'Set SESSION_SECURE_COOKIE=true in production'
+                'Set SESSION_SECURE_COOKIE=true in production',
             );
         }
 
         // Check password hashing
         $hashDriver = config('hashing.driver', 'bcrypt');
-        if ($hashDriver === 'md5' || $hashDriver === 'sha1') {
+        if ('md5' === $hashDriver || 'sha1' === $hashDriver) {
             $this->findings[] = SecurityFinding::critical(
                 'Weak Password Hashing',
                 "Password hashing driver '{$hashDriver}' is cryptographically weak",
                 'A02:2021-Cryptographic Failures',
                 'config/hashing.php',
-                'Use bcrypt or argon2id for password hashing'
+                'Use bcrypt or argon2id for password hashing',
             );
         }
 
@@ -171,7 +171,7 @@ class OwaspScanner implements ScannerInterface
                 'Application URL uses HTTP instead of HTTPS in production',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Change APP_URL to use https://'
+                'Change APP_URL to use https://',
             );
         }
     }
@@ -183,15 +183,15 @@ class OwaspScanner implements ScannerInterface
     {
         // Scan for raw SQL queries in codebase
         $this->scanFilesForPatterns([
-            '/DB::raw\s*\(\s*["\'].*\$/' => 'Potential SQL injection via DB::raw with variable',
-            '/->whereRaw\s*\(\s*["\'].*\$/' => 'Potential SQL injection via whereRaw with variable',
+            '/DB::raw\s*\(\s*["\'].*\$/'     => 'Potential SQL injection via DB::raw with variable',
+            '/->whereRaw\s*\(\s*["\'].*\$/'  => 'Potential SQL injection via whereRaw with variable',
             '/->selectRaw\s*\(\s*["\'].*\$/' => 'Potential SQL injection via selectRaw with variable',
-            '/eval\s*\(/' => 'Use of eval() function',
-            '/exec\s*\(.*\$/' => 'Command execution with variable input',
-            '/shell_exec\s*\(.*\$/' => 'Shell execution with variable input',
-            '/system\s*\(.*\$/' => 'System command with variable input',
-            '/passthru\s*\(.*\$/' => 'Passthru command with variable input',
-            '/`.*\$.*`/' => 'Backtick shell execution with variable',
+            '/eval\s*\(/'                    => 'Use of eval() function',
+            '/exec\s*\(.*\$/'                => 'Command execution with variable input',
+            '/shell_exec\s*\(.*\$/'          => 'Shell execution with variable input',
+            '/system\s*\(.*\$/'              => 'System command with variable input',
+            '/passthru\s*\(.*\$/'            => 'Passthru command with variable input',
+            '/`.*\$.*`/'                     => 'Backtick shell execution with variable',
         ], 'A03:2021-Injection');
     }
 
@@ -207,7 +207,7 @@ class OwaspScanner implements ScannerInterface
                 'Rate limiting is not enabled',
                 'A04:2021-Insecure Design',
                 'config/artisanpack/security.php',
-                'Enable rate limiting to prevent abuse'
+                'Enable rate limiting to prevent abuse',
             );
         }
 
@@ -218,7 +218,7 @@ class OwaspScanner implements ScannerInterface
                 'APP_DEBUG is true in production environment',
                 'A04:2021-Insecure Design',
                 '.env',
-                'Set APP_DEBUG=false in production'
+                'Set APP_DEBUG=false in production',
             );
         }
     }
@@ -235,7 +235,7 @@ class OwaspScanner implements ScannerInterface
                 'Security headers middleware is not enabled',
                 'A05:2021-Security Misconfiguration',
                 'config/artisanpack/security.php',
-                'Enable security headers middleware'
+                'Enable security headers middleware',
             );
         }
 
@@ -246,7 +246,7 @@ class OwaspScanner implements ScannerInterface
                 'Content Security Policy is not enabled',
                 'A05:2021-Security Misconfiguration',
                 'config/artisanpack/security.php',
-                'Enable Content Security Policy'
+                'Enable Content Security Policy',
             );
         }
 
@@ -267,7 +267,7 @@ class OwaspScanner implements ScannerInterface
                 'composer.lock file not found - dependency versions may not be locked',
                 'A06:2021-Vulnerable and Outdated Components',
                 base_path(),
-                'Run composer install to generate composer.lock'
+                'Run composer install to generate composer.lock',
             );
         }
     }
@@ -286,7 +286,7 @@ class OwaspScanner implements ScannerInterface
                 'Password validation rules are not configured',
                 'A07:2021-Identification and Authentication Failures',
                 'config/artisanpack/security.php',
-                'Configure password policy with minimum length and complexity requirements'
+                'Configure password policy with minimum length and complexity requirements',
             );
         }
 
@@ -298,7 +298,7 @@ class OwaspScanner implements ScannerInterface
                 "Session lifetime ({$sessionLifetime} minutes) is very long",
                 'A07:2021-Identification and Authentication Failures',
                 'config/session.php',
-                'Consider reducing session lifetime for sensitive applications'
+                'Consider reducing session lifetime for sensitive applications',
             );
         }
     }
@@ -310,8 +310,8 @@ class OwaspScanner implements ScannerInterface
     {
         // Check for unverified redirects
         $this->scanFilesForPatterns([
-            '/redirect\s*\(\s*\$_GET/' => 'Unvalidated redirect from GET parameter',
-            '/redirect\s*\(\s*\$_POST/' => 'Unvalidated redirect from POST parameter',
+            '/redirect\s*\(\s*\$_GET/'                           => 'Unvalidated redirect from GET parameter',
+            '/redirect\s*\(\s*\$_POST/'                          => 'Unvalidated redirect from POST parameter',
             '/redirect\s*\(\s*request\s*\(\s*[\'"].*[\'"]\s*\)/' => 'Potential unvalidated redirect',
         ], 'A08:2021-Software and Data Integrity Failures');
 
@@ -322,7 +322,7 @@ class OwaspScanner implements ScannerInterface
                 'Session data is not encrypted',
                 'A08:2021-Software and Data Integrity Failures',
                 'config/session.php',
-                'Consider enabling session encryption for sensitive data'
+                'Consider enabling session encryption for sensitive data',
             );
         }
     }
@@ -339,19 +339,19 @@ class OwaspScanner implements ScannerInterface
                 'Security event logging is not enabled',
                 'A09:2021-Security Logging and Monitoring Failures',
                 'config/artisanpack/security.php',
-                'Enable security event logging to track security-relevant events'
+                'Enable security event logging to track security-relevant events',
             );
         }
 
         // Check log channel configuration
         $logChannel = config('logging.default');
-        if ($logChannel === 'null' && app()->environment('production')) {
+        if ('null' === $logChannel && app()->environment('production')) {
             $this->findings[] = SecurityFinding::high(
                 'Logging Disabled in Production',
                 'Log channel is set to null in production',
                 'A09:2021-Security Logging and Monitoring Failures',
                 'config/logging.php',
-                'Configure a proper logging channel for production'
+                'Configure a proper logging channel for production',
             );
         }
     }
@@ -362,9 +362,9 @@ class OwaspScanner implements ScannerInterface
     protected function scanSsrf(): void
     {
         $this->scanFilesForPatterns([
-            '/file_get_contents\s*\(\s*\$/' => 'Potential SSRF via file_get_contents with variable URL',
-            '/curl_setopt.*CURLOPT_URL.*\$/' => 'Potential SSRF via cURL with variable URL',
-            '/Http::get\s*\(\s*\$/' => 'Potential SSRF via HTTP client with variable URL',
+            '/file_get_contents\s*\(\s*\$/'       => 'Potential SSRF via file_get_contents with variable URL',
+            '/curl_setopt.*CURLOPT_URL.*\$/'      => 'Potential SSRF via cURL with variable URL',
+            '/Http::get\s*\(\s*\$/'               => 'Potential SSRF via HTTP client with variable URL',
             '/fopen\s*\(\s*[\'"]https?:\/\/.*\$/' => 'Potential SSRF via fopen with variable URL',
         ], 'A10:2021-Server-Side Request Forgery');
     }
@@ -385,12 +385,12 @@ class OwaspScanner implements ScannerInterface
         $files = File::allFiles($appPath);
 
         foreach ($files as $file) {
-            if ($file->getExtension() !== 'php') {
+            if ('php' !== $file->getExtension()) {
                 continue;
             }
 
             $content = File::get($file->getPathname());
-            $lines = explode("\n", $content);
+            $lines   = explode("\n", $content);
 
             foreach ($patterns as $pattern => $description) {
                 foreach ($lines as $lineNumber => $line) {
@@ -400,7 +400,7 @@ class OwaspScanner implements ScannerInterface
                             $description,
                             $category,
                             $file->getPathname().':'.($lineNumber + 1),
-                            'Review and sanitize user input before use'
+                            'Review and sanitize user input before use',
                         );
                     }
                 }
@@ -424,7 +424,7 @@ class OwaspScanner implements ScannerInterface
                     'Database is using a common/default password',
                     'A05:2021-Security Misconfiguration',
                     '.env',
-                    'Change the database password to a strong, unique value'
+                    'Change the database password to a strong, unique value',
                 );
                 break;
             }

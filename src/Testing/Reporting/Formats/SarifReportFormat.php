@@ -10,27 +10,27 @@ class SarifReportFormat implements ReportFormatInterface
 {
     public function format(array $findings, array $metadata, array $summary): string
     {
-        $rules = $this->generateRules($findings);
+        $rules   = $this->generateRules($findings);
         $results = $this->generateResults($findings);
 
         $sarif = [
             '$schema' => 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
             'version' => '2.1.0',
-            'runs' => [
+            'runs'    => [
                 [
                     'tool' => [
                         'driver' => [
-                            'name' => 'ArtisanPack Security Scanner',
+                            'name'           => 'ArtisanPack Security Scanner',
                             'informationUri' => 'https://github.com/artisanpack/security',
-                            'version' => $metadata['generatorVersion'] ?? '2.0.0',
-                            'rules' => $rules,
+                            'version'        => $metadata['generatorVersion'] ?? '2.0.0',
+                            'rules'          => $rules,
                         ],
                     ],
-                    'results' => $results,
+                    'results'     => $results,
                     'invocations' => [
                         [
                             'executionSuccessful' => true,
-                            'endTimeUtc' => $metadata['generatedAt'] ?? date('c'),
+                            'endTimeUtc'          => $metadata['generatedAt'] ?? date('c'),
                         ],
                     ],
                 ],
@@ -40,15 +40,31 @@ class SarifReportFormat implements ReportFormatInterface
         return json_encode($sarif, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
+    public function getName(): string
+    {
+        return 'SARIF';
+    }
+
+    public function getExtension(): string
+    {
+        return 'sarif';
+    }
+
+    public function getMimeType(): string
+    {
+        return 'application/sarif+json';
+    }
+
     /**
      * Generate SARIF rules from findings.
      *
      * @param  array<SecurityFinding>  $findings
+     *
      * @return array<array<string, mixed>>
      */
     protected function generateRules(array $findings): array
     {
-        $rules = [];
+        $rules          = [];
         $seenCategories = [];
 
         foreach ($findings as $finding) {
@@ -61,8 +77,8 @@ class SarifReportFormat implements ReportFormatInterface
             $seenCategories[$ruleId] = true;
 
             $rules[] = [
-                'id' => $ruleId,
-                'name' => $this->sanitizeRuleName($finding->category),
+                'id'               => $ruleId,
+                'name'             => $this->sanitizeRuleName($finding->category),
                 'shortDescription' => [
                     'text' => $finding->category,
                 ],
@@ -74,7 +90,7 @@ class SarifReportFormat implements ReportFormatInterface
                 ],
                 'properties' => [
                     'security-severity' => $this->severityToScore($finding->severity),
-                    'tags' => ['security', $this->getOwaspTag($finding->category)],
+                    'tags'              => ['security', $this->getOwaspTag($finding->category)],
                 ],
             ];
         }
@@ -86,6 +102,7 @@ class SarifReportFormat implements ReportFormatInterface
      * Generate SARIF results from findings.
      *
      * @param  array<SecurityFinding>  $findings
+     *
      * @return array<array<string, mixed>>
      */
     protected function generateResults(array $findings): array
@@ -94,20 +111,20 @@ class SarifReportFormat implements ReportFormatInterface
 
         foreach ($findings as $finding) {
             $result = [
-                'ruleId' => $this->generateRuleId($finding->category),
-                'level' => $this->severityToLevel($finding->severity),
+                'ruleId'  => $this->generateRuleId($finding->category),
+                'level'   => $this->severityToLevel($finding->severity),
                 'message' => [
                     'text' => $finding->description,
                 ],
                 'properties' => [
-                    'id' => $finding->id,
+                    'id'       => $finding->id,
                     'severity' => $finding->severity,
                 ],
             ];
 
             // Add location if available
             if ($finding->location) {
-                $location = $this->parseLocation($finding->location);
+                $location            = $this->parseLocation($finding->location);
                 $result['locations'] = [
                     [
                         'physicalLocation' => $location,
@@ -191,8 +208,8 @@ class SarifReportFormat implements ReportFormatInterface
     {
         return match ($severity) {
             'critical', 'high' => 'error',
-            'medium' => 'warning',
-            default => 'note',
+            'medium'           => 'warning',
+            default            => 'note',
         };
     }
 
@@ -203,10 +220,10 @@ class SarifReportFormat implements ReportFormatInterface
     {
         return match ($severity) {
             'critical' => '9.0',
-            'high' => '7.0',
-            'medium' => '5.0',
-            'low' => '3.0',
-            default => '1.0',
+            'high'     => '7.0',
+            'medium'   => '5.0',
+            'low'      => '3.0',
+            default    => '1.0',
         };
     }
 
@@ -238,7 +255,7 @@ class SarifReportFormat implements ReportFormatInterface
         // Check if location includes line number (e.g., "file.php:123")
         if (preg_match('/^(.+):(\d+)(?::(\d+))?$/', $location, $matches)) {
             $result['artifactLocation']['uri'] = $matches[1];
-            $result['region'] = [
+            $result['region']                  = [
                 'startLine' => (int) $matches[2],
             ];
 
@@ -248,20 +265,5 @@ class SarifReportFormat implements ReportFormatInterface
         }
 
         return $result;
-    }
-
-    public function getName(): string
-    {
-        return 'SARIF';
-    }
-
-    public function getExtension(): string
-    {
-        return 'sarif';
-    }
-
-    public function getMimeType(): string
-    {
-        return 'application/sarif+json';
     }
 }

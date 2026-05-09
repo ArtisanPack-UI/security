@@ -46,7 +46,7 @@ trait CspAssertions
         $this->assertStringContainsString(
             $directive,
             $csp,
-            "CSP header does not contain directive: {$directive}"
+            "CSP header does not contain directive: {$directive}",
         );
     }
 
@@ -66,13 +66,13 @@ trait CspAssertions
         $this->assertArrayHasKey(
             $directive,
             $directives,
-            "CSP header does not contain directive: {$directive}"
+            "CSP header does not contain directive: {$directive}",
         );
 
         $this->assertStringContainsString(
             $value,
             $directives[$directive],
-            "Directive {$directive} does not contain: {$value}"
+            "Directive {$directive} does not contain: {$value}",
         );
     }
 
@@ -88,7 +88,7 @@ trait CspAssertions
         $this->assertMatchesRegularExpression(
             "/'nonce-[A-Za-z0-9+\/=]+'/",
             $csp,
-            'CSP header does not contain a nonce'
+            'CSP header does not contain a nonce',
         );
     }
 
@@ -104,7 +104,7 @@ trait CspAssertions
         $this->assertStringContainsString(
             "'strict-dynamic'",
             $csp,
-            'CSP header does not use strict-dynamic'
+            'CSP header does not use strict-dynamic',
         );
     }
 
@@ -122,13 +122,13 @@ trait CspAssertions
 
         if (isset($directives['script-src'])) {
             // Allow unsafe-inline only when combined with nonce or strict-dynamic
-            $hasNonce = preg_match("/'nonce-[A-Za-z0-9+\/=]+'/", $directives['script-src']);
+            $hasNonce         = preg_match("/'nonce-[A-Za-z0-9+\/=]+'/", $directives['script-src']);
             $hasStrictDynamic = str_contains($directives['script-src'], "'strict-dynamic'");
 
             if (str_contains($directives['script-src'], "'unsafe-inline'")) {
                 $this->assertTrue(
                     $hasNonce || $hasStrictDynamic,
-                    'script-src contains unsafe-inline without nonce or strict-dynamic'
+                    'script-src contains unsafe-inline without nonce or strict-dynamic',
                 );
             }
         }
@@ -146,7 +146,7 @@ trait CspAssertions
         $this->assertStringNotContainsString(
             "'unsafe-eval'",
             $csp,
-            'CSP header contains unsafe-eval'
+            'CSP header contains unsafe-eval',
         );
     }
 
@@ -162,14 +162,14 @@ trait CspAssertions
         $this->assertStringContainsString(
             'report-uri',
             $csp,
-            'CSP header does not have report-uri'
+            'CSP header does not have report-uri',
         );
 
-        if ($uri !== null) {
+        if (null !== $uri) {
             $this->assertStringContainsString(
                 $uri,
                 $csp,
-                "CSP report-uri does not contain: {$uri}"
+                "CSP report-uri does not contain: {$uri}",
             );
         }
     }
@@ -182,7 +182,7 @@ trait CspAssertions
         $csp = $response->headers->get('Content-Security-Policy')
             ?? $response->headers->get('Content-Security-Policy-Report-Only');
 
-        if ($csp === null) {
+        if (null === $csp) {
             return null;
         }
 
@@ -210,14 +210,14 @@ trait CspAssertions
         $this->assertMatchesRegularExpression(
             '/^[A-Za-z0-9+\/=]+$/',
             $nonce,
-            'Nonce is not valid base64'
+            'Nonce is not valid base64',
         );
 
         // Verify minimum length (16 bytes = ~22 base64 chars)
         $this->assertGreaterThanOrEqual(
             22,
             strlen($nonce),
-            'Nonce is too short (should be at least 16 bytes)'
+            'Nonce is too short (should be at least 16 bytes)',
         );
     }
 
@@ -230,14 +230,14 @@ trait CspAssertions
     {
         return array_merge([
             'csp-report' => [
-                'document-uri' => 'https://example.com/page',
-                'blocked-uri' => 'https://evil.com/script.js',
-                'violated-directive' => 'script-src',
+                'document-uri'        => 'https://example.com/page',
+                'blocked-uri'         => 'https://evil.com/script.js',
+                'violated-directive'  => 'script-src',
                 'effective-directive' => 'script-src',
-                'original-policy' => "default-src 'self'; script-src 'self'",
-                'disposition' => 'enforce',
-                'referrer' => '',
-                'status-code' => 200,
+                'original-policy'     => "default-src 'self'; script-src 'self'",
+                'disposition'         => 'enforce',
+                'referrer'            => '',
+                'status-code'         => 200,
             ],
         ], $overrides);
     }
@@ -252,7 +252,7 @@ trait CspAssertions
         return $this->postJson(
             config('artisanpack.security.csp.reporting.uri', '/csp-violation'),
             $violation,
-            ['Content-Type' => 'application/csp-report']
+            ['Content-Type' => 'application/csp-report'],
         );
     }
 
@@ -264,7 +264,7 @@ trait CspAssertions
     protected function parseCspDirectives(string $policy): array
     {
         $directives = [];
-        $parts = explode(';', $policy);
+        $parts      = explode(';', $policy);
 
         foreach ($parts as $part) {
             $part = trim($part);
@@ -273,11 +273,11 @@ trait CspAssertions
             }
 
             $spacePos = strpos($part, ' ');
-            if ($spacePos !== false) {
-                $name = substr($part, 0, $spacePos);
+            if (false !== $spacePos) {
+                $name  = substr($part, 0, $spacePos);
                 $value = substr($part, $spacePos + 1);
             } else {
-                $name = $part;
+                $name  = $part;
                 $value = '';
             }
 

@@ -6,6 +6,7 @@ namespace ArtisanPackUI\Security\Console\Commands;
 
 use ArtisanPackUI\Security\Testing\Performance\ImpactAnalyzer;
 use ArtisanPackUI\Security\Testing\Performance\SecurityBenchmark;
+use Exception;
 use Illuminate\Console\Command;
 
 class SecurityBenchmarkCommand extends Command
@@ -21,7 +22,7 @@ class SecurityBenchmarkCommand extends Command
     public function handle(): int
     {
         $iterations = (int) $this->option('iterations');
-        $threshold = (float) $this->option('threshold');
+        $threshold  = (float) $this->option('threshold');
 
         $this->info('Running security performance benchmarks...');
         $this->line("Iterations: {$iterations}");
@@ -31,20 +32,20 @@ class SecurityBenchmarkCommand extends Command
         $benchmark = new SecurityBenchmark;
 
         // Run benchmarks with progress
-        $this->task('Encryption/Decryption', function () use ($benchmark, $iterations) {
+        $this->task('Encryption/Decryption', function () use ($benchmark, $iterations): void {
             $benchmark->benchmarkEncryption('Test data for encryption benchmark', $iterations);
         });
 
-        $this->task('Password Hashing', function () use ($benchmark) {
+        $this->task('Password Hashing', function () use ($benchmark): void {
             // Fewer iterations for hashing as it's intentionally slow
             $benchmark->benchmarkHashing('SecurePassword123!', 50);
         });
 
-        $this->task('Nonce Generation', function () use ($benchmark, $iterations) {
+        $this->task('Nonce Generation', function () use ($benchmark, $iterations): void {
             $benchmark->benchmarkNonceGeneration($iterations);
         });
 
-        $this->task('Validation Rules', function () use ($benchmark, $iterations) {
+        $this->task('Validation Rules', function () use ($benchmark, $iterations): void {
             $benchmark->benchmarkValidation('required|string|min:8', 'test-value-here', $iterations);
         });
 
@@ -57,7 +58,7 @@ class SecurityBenchmarkCommand extends Command
         foreach ($middlewareClasses as $middlewareClass) {
             if (class_exists($middlewareClass)) {
                 $shortName = class_basename($middlewareClass);
-                $this->task("Middleware: {$shortName}", function () use ($benchmark, $middlewareClass, $iterations) {
+                $this->task("Middleware: {$shortName}", function () use ($benchmark, $middlewareClass, $iterations): void {
                     $benchmark->benchmarkMiddleware($middlewareClass, null, $iterations);
                 });
             }
@@ -67,15 +68,15 @@ class SecurityBenchmarkCommand extends Command
 
         // Analyze results
         $analyzer = new ImpactAnalyzer($results, ['default' => $threshold]);
-        $summary = $analyzer->getSummary();
+        $summary  = $analyzer->getSummary();
 
         // Output results
         $format = $this->option('format');
 
-        if ($format === 'json') {
+        if ('json' === $format) {
             $output = json_encode([
-                'results' => $benchmark->generateReport(),
-                'summary' => $summary,
+                'results'         => $benchmark->generateReport(),
+                'summary'         => $summary,
                 'recommendations' => $analyzer->getRecommendations(),
             ], JSON_PRETTY_PRINT);
 
@@ -122,7 +123,7 @@ class SecurityBenchmarkCommand extends Command
         try {
             $task();
             $this->output->writeln('<fg=green>DONE</>');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->output->writeln('<fg=red>FAILED</>');
         }
     }
@@ -153,21 +154,21 @@ class SecurityBenchmarkCommand extends Command
 
         $this->table(
             ['Benchmark', 'With Security', 'Without', 'Overhead', 'Status'],
-            $rows
+            $rows,
         );
 
         $this->newLine();
         $this->line(sprintf(
             'Pass rate: <fg=%s>%.1f%%</> (%d/%d)',
-            $summary['pass_rate'] === 100 ? 'green' : 'yellow',
+            100 === $summary['pass_rate'] ? 'green' : 'yellow',
             $summary['pass_rate'],
             $summary['acceptable'],
-            $summary['total_benchmarks']
+            $summary['total_benchmarks'],
         ));
 
         $this->line(sprintf(
             'Average overhead: %.2f%%',
-            $summary['average_overhead']
+            $summary['average_overhead'],
         ));
     }
 }

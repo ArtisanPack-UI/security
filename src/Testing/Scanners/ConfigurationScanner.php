@@ -6,6 +6,7 @@ namespace ArtisanPackUI\Security\Testing\Scanners;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
 use Illuminate\Support\Facades\File;
+use PDO;
 
 class ConfigurationScanner implements ScannerInterface
 {
@@ -52,7 +53,7 @@ class ConfigurationScanner implements ScannerInterface
                 'APP_DEBUG is enabled in production environment',
                 'A05:2021-Security Misconfiguration',
                 '.env',
-                'Set APP_DEBUG=false in production'
+                'Set APP_DEBUG=false in production',
             );
         }
 
@@ -64,13 +65,13 @@ class ConfigurationScanner implements ScannerInterface
                 'APP_KEY is not set',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Run: php artisan key:generate'
+                'Run: php artisan key:generate',
             );
         }
 
         // Check for non-production environment name in production-like URLs
-        $appUrl = config('app.url', '');
-        $appEnv = config('app.env', 'production');
+        $appUrl          = config('app.url', '');
+        $appEnv          = config('app.env', 'production');
         $isProductionUrl = str_contains($appUrl, 'prod') ||
                            str_contains($appUrl, '.com') ||
                            str_contains($appUrl, '.io') ||
@@ -82,7 +83,7 @@ class ConfigurationScanner implements ScannerInterface
                 "APP_ENV is '{$appEnv}' but URL suggests production environment",
                 'A05:2021-Security Misconfiguration',
                 '.env',
-                'Ensure APP_ENV matches the actual environment'
+                'Ensure APP_ENV matches the actual environment',
             );
         }
     }
@@ -93,7 +94,7 @@ class ConfigurationScanner implements ScannerInterface
     protected function scanDatabaseConfig(): void
     {
         $connection = config('database.default');
-        $dbConfig = config("database.connections.{$connection}", []);
+        $dbConfig   = config("database.connections.{$connection}", []);
 
         // Check for default/empty passwords
         $password = $dbConfig['password'] ?? '';
@@ -103,7 +104,7 @@ class ConfigurationScanner implements ScannerInterface
                 'Database password is empty in production',
                 'A07:2021-Identification and Authentication Failures',
                 '.env',
-                'Set a strong database password'
+                'Set a strong database password',
             );
         }
 
@@ -115,18 +116,18 @@ class ConfigurationScanner implements ScannerInterface
                 'Database is using a common/weak password',
                 'A07:2021-Identification and Authentication Failures',
                 '.env',
-                'Use a strong, unique database password'
+                'Use a strong, unique database password',
             );
         }
 
         // Check for SSL in production
         if (app()->environment('production')) {
-            $driver = $dbConfig['driver'] ?? '';
+            $driver     = $dbConfig['driver'] ?? '';
             $sslEnabled = false;
 
-            if ($driver === 'mysql') {
-                $sslEnabled = isset($dbConfig['options'][\PDO::MYSQL_ATTR_SSL_CA]);
-            } elseif ($driver === 'pgsql') {
+            if ('mysql' === $driver) {
+                $sslEnabled = isset($dbConfig['options'][PDO::MYSQL_ATTR_SSL_CA]);
+            } elseif ('pgsql' === $driver) {
                 $sslEnabled = ($dbConfig['sslmode'] ?? 'prefer') === 'require';
             }
 
@@ -136,7 +137,7 @@ class ConfigurationScanner implements ScannerInterface
                     'Database connection may not be using SSL/TLS',
                     'A02:2021-Cryptographic Failures',
                     'config/database.php',
-                    'Configure SSL for database connections in production'
+                    'Configure SSL for database connections in production',
                 );
             }
         }
@@ -154,7 +155,7 @@ class ConfigurationScanner implements ScannerInterface
                 'Session cookie Secure flag is not enabled',
                 'A02:2021-Cryptographic Failures',
                 '.env',
-                'Set SESSION_SECURE_COOKIE=true'
+                'Set SESSION_SECURE_COOKIE=true',
             );
         }
 
@@ -165,19 +166,19 @@ class ConfigurationScanner implements ScannerInterface
                 'Session cookie HttpOnly flag is disabled',
                 'A05:2021-Security Misconfiguration',
                 'config/session.php',
-                'Set http_only to true'
+                'Set http_only to true',
             );
         }
 
         // SameSite attribute
         $sameSite = config('session.same_site', 'lax');
-        if ($sameSite === 'none' || $sameSite === null) {
+        if ('none' === $sameSite || null === $sameSite) {
             $this->findings[] = SecurityFinding::medium(
                 'Weak SameSite Cookie Attribute',
                 "Session cookie SameSite is set to '{$sameSite}'",
                 'A01:2021-Broken Access Control',
                 'config/session.php',
-                'Set same_site to "lax" or "strict"'
+                'Set same_site to "lax" or "strict"',
             );
         }
 
@@ -189,19 +190,19 @@ class ConfigurationScanner implements ScannerInterface
                 "Session lifetime ({$lifetime} minutes) exceeds 24 hours",
                 'A07:2021-Identification and Authentication Failures',
                 'config/session.php',
-                'Consider reducing session lifetime'
+                'Consider reducing session lifetime',
             );
         }
 
         // Session driver
         $driver = config('session.driver', 'file');
-        if ($driver === 'cookie') {
+        if ('cookie' === $driver) {
             $this->findings[] = SecurityFinding::medium(
                 'Cookie Session Driver',
                 'Using cookie driver exposes session data to clients',
                 'A02:2021-Cryptographic Failures',
                 'config/session.php',
-                'Use file, database, or redis session driver'
+                'Use file, database, or redis session driver',
             );
         }
     }
@@ -214,7 +215,7 @@ class ConfigurationScanner implements ScannerInterface
         $cacheDriver = config('cache.default', 'file');
 
         // File cache in shared hosting
-        if ($cacheDriver === 'file') {
+        if ('file' === $cacheDriver) {
             $cachePath = config('cache.stores.file.path', storage_path('framework/cache'));
 
             if (! File::exists($cachePath)) {
@@ -223,13 +224,13 @@ class ConfigurationScanner implements ScannerInterface
 
             // Check permissions (should not be world-readable)
             $perms = fileperms($cachePath);
-            if ($perms !== false && ($perms & 0x0004)) {
+            if (false !== $perms && ($perms & 0x0004)) {
                 $this->findings[] = SecurityFinding::low(
                     'Cache Directory World-Readable',
                     'Cache directory may be accessible to other users',
                     'A05:2021-Security Misconfiguration',
                     $cachePath,
-                    'Set restrictive permissions on cache directory'
+                    'Set restrictive permissions on cache directory',
                 );
             }
         }
@@ -240,11 +241,11 @@ class ConfigurationScanner implements ScannerInterface
      */
     protected function scanMailConfig(): void
     {
-        $mailer = config('mail.default', 'smtp');
+        $mailer       = config('mail.default', 'smtp');
         $mailerConfig = config("mail.mailers.{$mailer}", []);
 
         // Check for unencrypted SMTP
-        if ($mailer === 'smtp') {
+        if ('smtp' === $mailer) {
             $encryption = $mailerConfig['encryption'] ?? null;
 
             if (app()->environment('production') && ! in_array($encryption, ['tls', 'ssl'])) {
@@ -253,7 +254,7 @@ class ConfigurationScanner implements ScannerInterface
                     'SMTP mail transport is not using TLS/SSL',
                     'A02:2021-Cryptographic Failures',
                     'config/mail.php',
-                    'Set MAIL_ENCRYPTION=tls'
+                    'Set MAIL_ENCRYPTION=tls',
                 );
             }
         }
@@ -265,17 +266,17 @@ class ConfigurationScanner implements ScannerInterface
     protected function scanFilesystemConfig(): void
     {
         $defaultDisk = config('filesystems.default', 'local');
-        $disks = config('filesystems.disks', []);
+        $disks       = config('filesystems.disks', []);
 
         foreach ($disks as $name => $disk) {
             // Check for public visibility on sensitive disks
-            if (($disk['visibility'] ?? 'private') === 'public' && $name !== 'public') {
+            if (($disk['visibility'] ?? 'private') === 'public' && 'public' !== $name) {
                 $this->findings[] = SecurityFinding::medium(
                     'Public Disk Visibility',
                     "Disk '{$name}' has public visibility by default",
                     'A01:2021-Broken Access Control',
                     'config/filesystems.php',
-                    "Set visibility to 'private' for disk '{$name}'"
+                    "Set visibility to 'private' for disk '{$name}'",
                 );
             }
 
@@ -286,7 +287,7 @@ class ConfigurationScanner implements ScannerInterface
                     "S3 disk '{$name}' has public visibility",
                     'A01:2021-Broken Access Control',
                     'config/filesystems.php',
-                    'Review S3 bucket permissions'
+                    'Review S3 bucket permissions',
                 );
             }
         }
@@ -309,7 +310,7 @@ class ConfigurationScanner implements ScannerInterface
                 'Rate limiting is disabled in security config',
                 'A04:2021-Insecure Design',
                 'config/artisanpack/security.php',
-                'Enable rate limiting'
+                'Enable rate limiting',
             );
         }
 
@@ -320,7 +321,7 @@ class ConfigurationScanner implements ScannerInterface
                 'Security headers are disabled',
                 'A05:2021-Security Misconfiguration',
                 'config/artisanpack/security.php',
-                'Enable security headers'
+                'Enable security headers',
             );
         }
 
@@ -332,7 +333,7 @@ class ConfigurationScanner implements ScannerInterface
                 'Minimum password length is less than 8 characters',
                 'A07:2021-Identification and Authentication Failures',
                 'config/artisanpack/security.php',
-                'Set minimum password length to at least 8'
+                'Set minimum password length to at least 8',
             );
         }
     }
@@ -350,13 +351,13 @@ class ConfigurationScanner implements ScannerInterface
 
         // Check .env file permissions
         $perms = fileperms($envPath);
-        if ($perms !== false && ($perms & 0x0004)) {
+        if (false !== $perms && ($perms & 0x0004)) {
             $this->findings[] = SecurityFinding::high(
                 '.env File World-Readable',
                 '.env file may be readable by other system users',
                 'A05:2021-Security Misconfiguration',
                 $envPath,
-                'Set .env file permissions to 600'
+                'Set .env file permissions to 600',
             );
         }
 
@@ -368,7 +369,7 @@ class ConfigurationScanner implements ScannerInterface
                 '.env file exists in public directory and may be web-accessible',
                 'A05:2021-Security Misconfiguration',
                 $publicEnv,
-                'Remove .env from public directory immediately'
+                'Remove .env from public directory immediately',
             );
         }
 
@@ -384,7 +385,7 @@ class ConfigurationScanner implements ScannerInterface
                     '.env.example may contain real credentials',
                     'A05:2021-Security Misconfiguration',
                     $envExamplePath,
-                    'Remove real credentials from .env.example'
+                    'Remove real credentials from .env.example',
                 );
             }
         }

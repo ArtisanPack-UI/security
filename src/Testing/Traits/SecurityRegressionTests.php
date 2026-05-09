@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Testing\Traits;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
+use Throwable;
 
 trait SecurityRegressionTests
 {
@@ -44,7 +45,7 @@ trait SecurityRegressionTests
     protected function registerSecurityRegression(string $id, callable $test, ?string $description = null): void
     {
         $this->securityRegressions[$id] = [
-            'test' => $test,
+            'test'        => $test,
             'description' => $description,
         ];
     }
@@ -59,21 +60,21 @@ trait SecurityRegressionTests
         $this->regressionResults = [];
 
         foreach ($this->securityRegressions as $id => $config) {
-            $test = $config['test'];
+            $test        = $config['test'];
             $description = $config['description'] ?? $id;
 
             try {
                 $test();
                 $this->regressionResults[$id] = [
-                    'status' => 'passed',
+                    'status'      => 'passed',
                     'description' => $description,
                 ];
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->regressionResults[$id] = [
-                    'status' => 'failed',
+                    'status'      => 'failed',
                     'description' => $description,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
+                    'error'       => $e->getMessage(),
+                    'trace'       => $e->getTraceAsString(),
                 ];
 
                 $this->recordFinding(SecurityFinding::critical(
@@ -81,7 +82,7 @@ trait SecurityRegressionTests
                     "Previously fixed vulnerability has regressed: {$description}. Error: {$e->getMessage()}",
                     'Security Regression',
                     null,
-                    'Review the fix for this vulnerability and ensure it is still in place'
+                    'Review the fix for this vulnerability and ensure it is still in place',
                 ));
             }
         }
@@ -99,7 +100,7 @@ trait SecurityRegressionTests
     {
         try {
             $test();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->fail("Security regression: {$id} has regressed. {$e->getMessage()}");
         }
     }
@@ -111,14 +112,14 @@ trait SecurityRegressionTests
      * @param  string  $method  HTTP method
      * @param  string  $uri  Target URI
      * @param  array<string, mixed>  $maliciousPayload  Payload that should be blocked
-     * @param  int|array<int>  $expectedStatus  Expected status code(s) indicating blocked attack
+     * @param  array<int>|int  $expectedStatus  Expected status code(s) indicating blocked attack
      */
     protected function assertSecurityFixEffective(
         string $id,
         string $method,
         string $uri,
         array $maliciousPayload,
-        int|array $expectedStatus = [400, 403, 422]
+        int|array $expectedStatus = [400, 403, 422],
     ): void {
         $expectedStatuses = is_array($expectedStatus) ? $expectedStatus : [$expectedStatus];
 
@@ -127,10 +128,10 @@ trait SecurityRegressionTests
         if (! in_array($response->status(), $expectedStatuses)) {
             $this->recordFinding(SecurityFinding::critical(
                 "Security Fix Regression: {$id}",
-                "Security fix no longer effective. Expected status ".implode('/', $expectedStatuses).", got {$response->status()}",
+                'Security fix no longer effective. Expected status '.implode('/', $expectedStatuses).", got {$response->status()}",
                 'Security Regression',
                 "{$method} {$uri}",
-                'Review and restore the security fix'
+                'Review and restore the security fix',
             ));
 
             $this->fail("Security fix {$id} has regressed. Expected status ".implode('/', $expectedStatuses).", got {$response->status()}");
@@ -149,19 +150,19 @@ trait SecurityRegressionTests
         string $id,
         callable $sanitizer,
         string $maliciousInput,
-        callable $assertSanitized
+        callable $assertSanitized,
     ): void {
         $sanitizedOutput = $sanitizer($maliciousInput);
 
         try {
             $assertSanitized($sanitizedOutput);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->recordFinding(SecurityFinding::high(
                 "Sanitization Regression: {$id}",
                 "Input sanitization no longer effective: {$e->getMessage()}",
                 'Security Regression',
                 null,
-                'Review and restore the sanitization logic'
+                'Review and restore the sanitization logic',
             ));
 
             $this->fail("Sanitization {$id} has regressed: {$e->getMessage()}");
@@ -188,7 +189,7 @@ trait SecurityRegressionTests
                 "Access control no longer enforced on {$method} {$uri}",
                 'Security Regression',
                 "{$method} {$uri}",
-                'Restore authentication/authorization middleware'
+                'Restore authentication/authorization middleware',
             ));
 
             $this->fail("Access control {$id} has regressed. Endpoint accessible without authentication.");
@@ -213,7 +214,7 @@ trait SecurityRegressionTests
                 $this->registerSecurityRegression(
                     $id,
                     $testConfig['test'],
-                    $testConfig['description'] ?? null
+                    $testConfig['description'] ?? null,
                 );
             }
         }
@@ -230,7 +231,7 @@ trait SecurityRegressionTests
         $failed = 0;
 
         foreach ($this->regressionResults as $result) {
-            if ($result['status'] === 'passed') {
+            if ('passed' === $result['status']) {
                 $passed++;
             } else {
                 $failed++;
@@ -238,7 +239,7 @@ trait SecurityRegressionTests
         }
 
         return [
-            'total' => count($this->regressionResults),
+            'total'  => count($this->regressionResults),
             'passed' => $passed,
             'failed' => $failed,
         ];
@@ -250,7 +251,7 @@ trait SecurityRegressionTests
     protected function allRegressionsPassing(): bool
     {
         foreach ($this->regressionResults as $result) {
-            if ($result['status'] !== 'passed') {
+            if ('passed' !== $result['status']) {
                 return false;
             }
         }

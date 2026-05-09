@@ -24,13 +24,13 @@ trait TestsAuthentication
                 "Endpoint {$method} {$uri} does not require authentication",
                 'A07:2021-Identification and Authentication Failures',
                 "{$method} {$uri}",
-                'Add authentication middleware to this route'
+                'Add authentication middleware to this route',
             ));
         }
 
         $this->assertTrue(
             in_array($response->status(), $validStatuses),
-            "Expected authentication required, got status {$response->status()}"
+            "Expected authentication required, got status {$response->status()}",
         );
     }
 
@@ -41,19 +41,19 @@ trait TestsAuthentication
     {
         // Test with invalid token
         $response = $this->post($uri, [
-            'token' => 'invalid-token',
-            'email' => 'test@example.com',
-            'password' => 'NewPassword123!',
+            'token'                 => 'invalid-token',
+            'email'                 => 'test@example.com',
+            'password'              => 'NewPassword123!',
             'password_confirmation' => 'NewPassword123!',
         ]);
 
-        if ($response->status() === 200) {
+        if (200 === $response->status()) {
             $this->recordFinding(SecurityFinding::critical(
                 'Password Reset Token Not Validated',
                 'Password reset endpoint accepts invalid tokens',
                 'A07:2021-Identification and Authentication Failures',
                 $uri,
-                'Validate password reset tokens before allowing password changes'
+                'Validate password reset tokens before allowing password changes',
             ));
         }
 
@@ -77,14 +77,14 @@ trait TestsAuthentication
                 'Session ID not regenerated after login',
                 'A07:2021-Identification and Authentication Failures',
                 $loginUri,
-                'Regenerate session ID after successful authentication'
+                'Regenerate session ID after successful authentication',
             ));
         }
 
         $this->assertNotEquals(
             $sessionIdBefore,
             $sessionIdAfter,
-            'Session should be regenerated after login'
+            'Session should be regenerated after login',
         );
     }
 
@@ -95,18 +95,18 @@ trait TestsAuthentication
     {
         // Test with invalid user
         $invalidUserResponse = $this->post($loginUri, [
-            $emailField => 'nonexistent@example.com',
+            $emailField    => 'nonexistent@example.com',
             $passwordField => 'SomePassword123!',
         ]);
 
         // Test with valid user but wrong password (requires a real user in test)
         $invalidPasswordResponse = $this->post($loginUri, [
-            $emailField => 'test@example.com',
+            $emailField    => 'test@example.com',
             $passwordField => 'WrongPassword123!',
         ]);
 
         // Both should return the same error structure
-        $invalidUserErrors = $invalidUserResponse->json('errors') ?? $invalidUserResponse->json('message');
+        $invalidUserErrors     = $invalidUserResponse->json('errors') ?? $invalidUserResponse->json('message');
         $invalidPasswordErrors = $invalidPasswordResponse->json('errors') ?? $invalidPasswordResponse->json('message');
 
         // Check if error messages are the same (preventing enumeration)
@@ -116,12 +116,12 @@ trait TestsAuthentication
                 'Different error messages for invalid user vs invalid password allow user enumeration',
                 'A07:2021-Identification and Authentication Failures',
                 $loginUri,
-                'Use generic error messages like "Invalid credentials" for all authentication failures'
+                'Use generic error messages like "Invalid credentials" for all authentication failures',
             ));
 
             $this->fail(
                 "User enumeration vulnerability detected at {$loginUri}: ".
-                'Different error responses for invalid user vs invalid password.'
+                'Different error responses for invalid user vs invalid password.',
             );
         }
     }
@@ -145,7 +145,7 @@ trait TestsAuthentication
         $this->assertNotEquals(
             $sessionIdBefore,
             $sessionIdAfter,
-            'Session ID should be regenerated or invalidated on logout'
+            'Session ID should be regenerated or invalidated on logout',
         );
     }
 
@@ -155,24 +155,24 @@ trait TestsAuthentication
     protected function assertBruteForceProtection(
         string $loginUri,
         array $credentials,
-        int $maxAttempts = 5
+        int $maxAttempts = 5,
     ): TestResponse {
         $lastResponse = null;
 
         for ($i = 0; $i < $maxAttempts + 2; $i++) {
             $lastResponse = $this->post($loginUri, $credentials);
 
-            if ($lastResponse->status() === 429) {
+            if (429 === $lastResponse->status()) {
                 return $lastResponse;
             }
         }
 
         $this->recordFinding(SecurityFinding::high(
             'Missing Brute Force Protection',
-            "Login endpoint allows unlimited attempts without rate limiting",
+            'Login endpoint allows unlimited attempts without rate limiting',
             'A07:2021-Identification and Authentication Failures',
             $loginUri,
-            'Implement rate limiting or account lockout after failed attempts'
+            'Implement rate limiting or account lockout after failed attempts',
         ));
 
         $this->fail("Expected rate limiting after {$maxAttempts} attempts");

@@ -18,16 +18,16 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $parameters,
-        string $vulnerableParam
+        string $vulnerableParam,
     ): void {
         $payloads = SqlPayloads::getErrorBased();
 
         foreach ($payloads as $payload) {
-            $testParams = $parameters;
+            $testParams                   = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content = $response->getContent();
+            $content  = $response->getContent();
 
             if ($this->hasSqlError($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -35,7 +35,7 @@ trait TestsInputValidation
                     "Parameter '{$vulnerableParam}' is vulnerable to SQL injection",
                     'A03:2021-Injection',
                     "{$method} {$uri}",
-                    'Use parameterized queries or an ORM to prevent SQL injection'
+                    'Use parameterized queries or an ORM to prevent SQL injection',
                 ));
 
                 $this->fail("SQL injection detected in parameter: {$vulnerableParam}");
@@ -50,16 +50,16 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $parameters,
-        string $vulnerableParam
+        string $vulnerableParam,
     ): void {
         $payloads = XssPayloads::getBasic();
 
         foreach ($payloads as $payload) {
-            $testParams = $parameters;
+            $testParams                   = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content = $response->getContent();
+            $content  = $response->getContent();
 
             // Check if payload is reflected unescaped
             if ($this->isXssPayloadReflected($content, $payload)) {
@@ -68,7 +68,7 @@ trait TestsInputValidation
                     "Parameter '{$vulnerableParam}' reflects unescaped user input",
                     'A03:2021-Injection',
                     "{$method} {$uri}",
-                    'Escape all user input before rendering in HTML'
+                    'Escape all user input before rendering in HTML',
                 ));
 
                 $this->fail("XSS vulnerability detected in parameter: {$vulnerableParam}");
@@ -83,16 +83,16 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $parameters,
-        string $vulnerableParam
+        string $vulnerableParam,
     ): void {
         $payloads = InjectionPayloads::getCommandInjection();
 
         foreach ($payloads as $payload) {
-            $testParams = $parameters;
+            $testParams                   = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content = $response->getContent();
+            $content  = $response->getContent();
 
             if ($this->hasCommandExecutionIndicator($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -100,7 +100,7 @@ trait TestsInputValidation
                     "Parameter '{$vulnerableParam}' is vulnerable to command injection",
                     'A03:2021-Injection',
                     "{$method} {$uri}",
-                    'Never pass user input directly to shell commands. Use escapeshellarg() or avoid shell commands entirely.'
+                    'Never pass user input directly to shell commands. Use escapeshellarg() or avoid shell commands entirely.',
                 ));
 
                 $this->fail("Command injection detected in parameter: {$vulnerableParam}");
@@ -115,7 +115,7 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $parameters,
-        string $vulnerableParam
+        string $vulnerableParam,
     ): void {
         $payloads = [
             '../../../etc/passwd',
@@ -128,11 +128,11 @@ trait TestsInputValidation
         ];
 
         foreach ($payloads as $payload) {
-            $testParams = $parameters;
+            $testParams                   = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content = $response->getContent();
+            $content  = $response->getContent();
 
             if ($this->hasSensitiveFileContent($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -140,7 +140,7 @@ trait TestsInputValidation
                     "Parameter '{$vulnerableParam}' allows path traversal",
                     'A01:2021-Broken Access Control',
                     "{$method} {$uri}",
-                    'Validate and sanitize file paths. Use a whitelist of allowed files or directories.'
+                    'Validate and sanitize file paths. Use a whitelist of allowed files or directories.',
                 ));
 
                 $this->fail("Path traversal detected in parameter: {$vulnerableParam}");
@@ -155,26 +155,26 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $parameters,
-        string $vulnerableParam
+        string $vulnerableParam,
     ): void {
-        $payloads = InjectionPayloads::getLdapInjection();
+        $payloads           = InjectionPayloads::getLdapInjection();
         $vulnerabilityFound = false;
 
         foreach ($payloads as $payload) {
-            $testParams = $parameters;
+            $testParams                   = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
 
             // LDAP injection might result in unexpected success or error patterns
             // Check for wildcard injection (returns all results)
-            if ($response->status() === 200 && str_contains($payload, '*')) {
+            if (200 === $response->status() && str_contains($payload, '*')) {
                 $this->recordFinding(SecurityFinding::high(
                     'Potential LDAP Injection',
                     "Parameter '{$vulnerableParam}' may be vulnerable to LDAP injection with wildcard payload",
                     'A03:2021-Injection',
                     "{$method} {$uri}",
-                    'Escape special LDAP characters in user input'
+                    'Escape special LDAP characters in user input',
                 ));
                 $vulnerabilityFound = true;
                 break;
@@ -188,7 +188,7 @@ trait TestsInputValidation
                     "Parameter '{$vulnerableParam}' causes LDAP errors, indicating potential injection",
                     'A03:2021-Injection',
                     "{$method} {$uri}",
-                    'Escape special LDAP characters in user input'
+                    'Escape special LDAP characters in user input',
                 ));
                 $vulnerabilityFound = true;
                 break;
@@ -332,13 +332,13 @@ trait TestsInputValidation
         string $method,
         string $uri,
         array $invalidData,
-        string $expectedField
+        string $expectedField,
     ): void {
         $response = $this->$method($uri, $invalidData);
 
         $this->assertTrue(
-            $response->status() === 422 || $response->status() === 400,
-            "Expected validation error (422/400) for invalid input, got {$response->status()}"
+            422 === $response->status() || 400 === $response->status(),
+            "Expected validation error (422/400) for invalid input, got {$response->status()}",
         );
     }
 

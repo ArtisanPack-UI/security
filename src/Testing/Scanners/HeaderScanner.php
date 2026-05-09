@@ -6,7 +6,6 @@ namespace ArtisanPackUI\Security\Testing\Scanners;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
 class HeaderScanner implements ScannerInterface
 {
@@ -72,38 +71,38 @@ class HeaderScanner implements ScannerInterface
     {
         $requiredHeaders = [
             'X-Frame-Options' => [
-                'severity' => 'medium',
-                'title' => 'Missing X-Frame-Options',
+                'severity'    => 'medium',
+                'title'       => 'Missing X-Frame-Options',
                 'description' => 'X-Frame-Options header is not set, allowing clickjacking',
                 'remediation' => 'Add X-Frame-Options: DENY or SAMEORIGIN',
             ],
             'X-Content-Type-Options' => [
-                'severity' => 'medium',
-                'title' => 'Missing X-Content-Type-Options',
+                'severity'    => 'medium',
+                'title'       => 'Missing X-Content-Type-Options',
                 'description' => 'X-Content-Type-Options header is not set',
                 'remediation' => 'Add X-Content-Type-Options: nosniff',
             ],
             'Strict-Transport-Security' => [
-                'severity' => 'high',
-                'title' => 'Missing HSTS Header',
+                'severity'    => 'high',
+                'title'       => 'Missing HSTS Header',
                 'description' => 'Strict-Transport-Security header is not set',
                 'remediation' => 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains',
             ],
             'Content-Security-Policy' => [
-                'severity' => 'high',
-                'title' => 'Missing Content-Security-Policy',
+                'severity'    => 'high',
+                'title'       => 'Missing Content-Security-Policy',
                 'description' => 'No Content-Security-Policy header to prevent XSS',
                 'remediation' => 'Implement a Content-Security-Policy',
             ],
             'Referrer-Policy' => [
-                'severity' => 'low',
-                'title' => 'Missing Referrer-Policy',
+                'severity'    => 'low',
+                'title'       => 'Missing Referrer-Policy',
                 'description' => 'Referrer-Policy header is not set',
                 'remediation' => 'Add Referrer-Policy: strict-origin-when-cross-origin',
             ],
             'Permissions-Policy' => [
-                'severity' => 'low',
-                'title' => 'Missing Permissions-Policy',
+                'severity'    => 'low',
+                'title'       => 'Missing Permissions-Policy',
                 'description' => 'Permissions-Policy header is not set',
                 'remediation' => 'Add Permissions-Policy to restrict browser features',
             ],
@@ -117,7 +116,7 @@ class HeaderScanner implements ScannerInterface
                     description: $config['description'],
                     severity: $config['severity'],
                     category: 'A05:2021-Security Misconfiguration',
-                    remediation: $config['remediation']
+                    remediation: $config['remediation'],
                 );
             }
         }
@@ -135,13 +134,13 @@ class HeaderScanner implements ScannerInterface
     protected function scanInformationDisclosure(): void
     {
         $disclosureHeaders = [
-            'Server' => 'Server version information exposed',
-            'X-Powered-By' => 'Technology stack information exposed',
-            'X-AspNet-Version' => 'ASP.NET version information exposed',
+            'Server'              => 'Server version information exposed',
+            'X-Powered-By'        => 'Technology stack information exposed',
+            'X-AspNet-Version'    => 'ASP.NET version information exposed',
             'X-AspNetMvc-Version' => 'ASP.NET MVC version exposed',
-            'X-Generator' => 'Generator information exposed',
-            'X-Drupal-Cache' => 'Drupal cache information exposed',
-            'X-Varnish' => 'Varnish cache information exposed',
+            'X-Generator'         => 'Generator information exposed',
+            'X-Drupal-Cache'      => 'Drupal cache information exposed',
+            'X-Varnish'           => 'Varnish cache information exposed',
         ];
 
         foreach ($disclosureHeaders as $header => $description) {
@@ -151,7 +150,7 @@ class HeaderScanner implements ScannerInterface
                     $description,
                     'A05:2021-Security Misconfiguration',
                     "Header: {$header}",
-                    "Remove or mask the {$header} header"
+                    "Remove or mask the {$header} header",
                 );
             }
         }
@@ -178,7 +177,7 @@ class HeaderScanner implements ScannerInterface
                     "Cookie '{$cookieName}' is not marked as Secure",
                     'A02:2021-Cryptographic Failures',
                     "Set-Cookie: {$cookieName}",
-                    'Add Secure flag to cookie'
+                    'Add Secure flag to cookie',
                 );
             }
 
@@ -193,7 +192,7 @@ class HeaderScanner implements ScannerInterface
                             "Sensitive cookie '{$cookieName}' is not HttpOnly",
                             'A05:2021-Security Misconfiguration',
                             "Set-Cookie: {$cookieName}",
-                            'Add HttpOnly flag to sensitive cookies'
+                            'Add HttpOnly flag to sensitive cookies',
                         );
                         break;
                     }
@@ -207,7 +206,7 @@ class HeaderScanner implements ScannerInterface
                     "Cookie '{$cookieName}' has no SameSite attribute",
                     'A01:2021-Broken Access Control',
                     "Set-Cookie: {$cookieName}",
-                    'Add SameSite=Lax or SameSite=Strict'
+                    'Add SameSite=Lax or SameSite=Strict',
                 );
             }
         }
@@ -234,7 +233,7 @@ class HeaderScanner implements ScannerInterface
                 'CSP uses unsafe-inline without nonce or strict-dynamic',
                 'A05:2021-Security Misconfiguration',
                 'Content-Security-Policy header',
-                'Use nonces or hashes instead of unsafe-inline'
+                'Use nonces or hashes instead of unsafe-inline',
             );
         }
 
@@ -244,7 +243,7 @@ class HeaderScanner implements ScannerInterface
                 'CSP allows unsafe-eval which enables code injection',
                 'A05:2021-Security Misconfiguration',
                 'Content-Security-Policy header',
-                'Remove unsafe-eval and refactor to avoid eval()'
+                'Remove unsafe-eval and refactor to avoid eval()',
             );
         }
 
@@ -255,7 +254,7 @@ class HeaderScanner implements ScannerInterface
                 'CSP contains wildcard (*) source which is too permissive',
                 'A05:2021-Security Misconfiguration',
                 'Content-Security-Policy header',
-                'Replace wildcards with specific trusted domains'
+                'Replace wildcards with specific trusted domains',
             );
         }
     }
@@ -281,7 +280,7 @@ class HeaderScanner implements ScannerInterface
                     "HSTS max-age ({$maxAge}s) is less than 1 year",
                     'A05:2021-Security Misconfiguration',
                     'Strict-Transport-Security header',
-                    'Increase max-age to at least 31536000 (1 year)'
+                    'Increase max-age to at least 31536000 (1 year)',
                 );
             }
         }
@@ -293,7 +292,7 @@ class HeaderScanner implements ScannerInterface
                 'HSTS does not include subdomains',
                 'A05:2021-Security Misconfiguration',
                 'Strict-Transport-Security header',
-                'Consider adding includeSubDomains directive'
+                'Consider adding includeSubDomains directive',
             );
         }
     }
@@ -335,7 +334,7 @@ class HeaderScanner implements ScannerInterface
             ?? $this->responseHeaders[$name]
             ?? null;
 
-        if ($value === null) {
+        if (null === $value) {
             return [];
         }
 

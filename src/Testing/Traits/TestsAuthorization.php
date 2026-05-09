@@ -16,24 +16,24 @@ trait TestsAuthorization
         Authenticatable $user,
         string $method,
         string $uri,
-        array $data = []
+        array $data = [],
     ): void {
         $response = $this->actingAs($user)->$method($uri, $data);
 
-        if ($response->status() !== 403) {
+        if (403 !== $response->status()) {
             $this->recordFinding(SecurityFinding::high(
                 'Missing Authorization Check',
                 "User without permission can access {$method} {$uri}",
                 'A01:2021-Broken Access Control',
                 "{$method} {$uri}",
-                'Add proper authorization checks to this endpoint'
+                'Add proper authorization checks to this endpoint',
             ));
         }
 
         $this->assertEquals(
             403,
             $response->status(),
-            "Expected 403 Forbidden, got {$response->status()}"
+            "Expected 403 Forbidden, got {$response->status()}",
         );
     }
 
@@ -46,7 +46,7 @@ trait TestsAuthorization
         string $uri,
         string $resourceParam,
         mixed $otherUsersResourceId,
-        array $additionalData = []
+        array $additionalData = [],
     ): void {
         $testUri = str_replace("{{$resourceParam}}", (string) $otherUsersResourceId, $uri);
 
@@ -58,13 +58,13 @@ trait TestsAuthorization
                 "User can access/modify another user's resource at {$method} {$uri}",
                 'A01:2021-Broken Access Control',
                 "{$method} {$uri}",
-                'Verify that the authenticated user owns or has permission to access the requested resource'
+                'Verify that the authenticated user owns or has permission to access the requested resource',
             ));
         }
 
         $this->assertTrue(
             in_array($response->status(), [403, 404]),
-            "Expected 403 or 404, got {$response->status()} for IDOR test"
+            "Expected 403 or 404, got {$response->status()} for IDOR test",
         );
     }
 
@@ -75,7 +75,7 @@ trait TestsAuthorization
         Authenticatable $regularUser,
         string $method,
         string $adminUri,
-        array $data = []
+        array $data = [],
     ): void {
         $response = $this->actingAs($regularUser)->$method($adminUri, $data);
 
@@ -85,13 +85,13 @@ trait TestsAuthorization
                 "Regular user can access admin endpoint {$method} {$adminUri}",
                 'A01:2021-Broken Access Control',
                 "{$method} {$adminUri}",
-                'Implement proper role-based access control'
+                'Implement proper role-based access control',
             ));
         }
 
         $this->assertTrue(
             in_array($response->status(), [401, 403]),
-            "Expected 401 or 403 for privilege escalation test, got {$response->status()}"
+            "Expected 401 or 403 for privilege escalation test, got {$response->status()}",
         );
     }
 
@@ -104,7 +104,7 @@ trait TestsAuthorization
         string $method,
         string $uri,
         string $resourceParam,
-        mixed $userBResourceId
+        mixed $userBResourceId,
     ): void {
         $testUri = str_replace("{{$resourceParam}}", (string) $userBResourceId, $uri);
 
@@ -116,13 +116,13 @@ trait TestsAuthorization
                 "User A can access User B's resource at {$method} {$uri}",
                 'A01:2021-Broken Access Control',
                 "{$method} {$uri}",
-                'Ensure users can only access their own resources'
+                'Ensure users can only access their own resources',
             ));
         }
 
         $this->assertTrue(
             in_array($response->status(), [403, 404]),
-            "Expected 403 or 404 for horizontal privilege escalation test"
+            'Expected 403 or 404 for horizontal privilege escalation test',
         );
     }
 
@@ -133,7 +133,7 @@ trait TestsAuthorization
         Authenticatable $user,
         string $uri,
         string $roleField = 'role',
-        string $privilegedRole = 'admin'
+        string $privilegedRole = 'admin',
     ): void {
         $response = $this->actingAs($user)->put($uri, [
             $roleField => $privilegedRole,
@@ -149,13 +149,13 @@ trait TestsAuthorization
         } else {
             // For non-Eloquent implementations, we cannot verify the change
             // but we can check the response status
-            if ($response->status() === 200 || $response->status() === 204) {
+            if (200 === $response->status() || 204 === $response->status()) {
                 $this->recordFinding(SecurityFinding::medium(
                     'Potential Mass Assignment - Role Escalation',
                     "Role change request accepted (status {$response->status()}). Manual verification needed.",
                     'A01:2021-Broken Access Control',
                     $uri,
-                    'Protect role field from mass assignment and add authorization checks'
+                    'Protect role field from mass assignment and add authorization checks',
                 ));
             }
 
@@ -170,7 +170,7 @@ trait TestsAuthorization
                 "User can change their own role to {$privilegedRole}",
                 'A01:2021-Broken Access Control',
                 $uri,
-                'Protect role field from mass assignment and add authorization checks'
+                'Protect role field from mass assignment and add authorization checks',
             ));
         }
     }
@@ -186,13 +186,13 @@ trait TestsAuthorization
 
         $allowedOrigin = $response->headers->get('Access-Control-Allow-Origin');
 
-        if ($allowedOrigin === '*' || $allowedOrigin === $maliciousOrigin) {
+        if ('*' === $allowedOrigin || $allowedOrigin === $maliciousOrigin) {
             $this->recordFinding(SecurityFinding::medium(
                 'Permissive CORS Configuration',
                 "Endpoint allows requests from {$maliciousOrigin}",
                 'A01:2021-Broken Access Control',
                 $uri,
-                'Configure CORS to only allow trusted origins'
+                'Configure CORS to only allow trusted origins',
             ));
         }
     }

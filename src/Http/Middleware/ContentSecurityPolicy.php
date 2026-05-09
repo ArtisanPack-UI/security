@@ -22,7 +22,7 @@ class ContentSecurityPolicy
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, ?string $preset = null): Response
     {
@@ -35,7 +35,7 @@ class ContentSecurityPolicy
         $this->csp->forRequest($request);
 
         // Apply preset if specified via middleware parameter
-        if ($preset !== null) {
+        if (null !== $preset) {
             $this->csp->usePreset($preset);
         }
 
@@ -64,7 +64,7 @@ class ContentSecurityPolicy
         // Dispatch policy applied event
         event(new CspPolicyApplied(
             $this->csp->getPolicy(),
-            $this->csp->getNonce()
+            $this->csp->getNonce(),
         ));
 
         return $response;

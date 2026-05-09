@@ -6,19 +6,20 @@ namespace ArtisanPackUI\Security\Testing\PenetrationTesting\Attacks;
 
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackInterface;
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackResult;
+use Exception;
 
 class CsrfAttack implements AttackInterface
 {
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method = strtolower($options['method'] ?? 'post');
+        $method          = strtolower($options['method'] ?? 'post');
 
         // Only test state-changing methods
         if (! in_array($method, ['post', 'put', 'patch', 'delete'])) {
             return AttackResult::notVulnerable(
                 attack: $this->getName(),
-                metadata: ['uri' => $uri, 'reason' => 'GET requests do not require CSRF protection']
+                metadata: ['uri' => $uri, 'reason' => 'GET requests do not require CSRF protection'],
             );
         }
 
@@ -32,15 +33,15 @@ class CsrfAttack implements AttackInterface
 
             // If request succeeds with an invalid token (not 419 Token Mismatch), it's vulnerable
             if ($response->status() < 400) {
-                $csrfVulnerable = true;
+                $csrfVulnerable    = true;
                 $vulnerabilities[] = [
-                    'type' => 'csrf-missing',
+                    'type'        => 'csrf-missing',
                     'description' => 'Endpoint accepts requests with invalid CSRF token',
-                    'method' => strtoupper($method),
+                    'method'      => strtoupper($method),
                     'status_code' => $response->status(),
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // CSRF validation likely active - this is expected
         }
 
@@ -49,25 +50,25 @@ class CsrfAttack implements AttackInterface
             try {
                 $response = $testCase->$method($uri, $data);
 
-                if ($response->status() < 400 && $response->status() !== 419) {
+                if ($response->status() < 400 && 419 !== $response->status()) {
                     $vulnerabilities[] = [
-                        'type' => 'csrf-bypass',
+                        'type'        => 'csrf-bypass',
                         'description' => 'Endpoint accepts requests without CSRF token',
-                        'method' => strtoupper($method),
+                        'method'      => strtoupper($method),
                         'status_code' => $response->status(),
                     ];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Expected behavior - CSRF validation failed
             }
         }
 
         // Test 3: Check for SameSite cookie protection
         $sameSite = config('session.same_site', 'lax');
-        if ($sameSite === 'none' || $sameSite === null) {
+        if ('none' === $sameSite || null === $sameSite) {
             $vulnerabilities[] = [
-                'type' => 'weak-samesite',
-                'description' => 'Session cookie SameSite attribute is not protective',
+                'type'          => 'weak-samesite',
+                'description'   => 'Session cookie SameSite attribute is not protective',
                 'current_value' => $sameSite ?? 'not set',
             ];
         }
@@ -77,13 +78,13 @@ class CsrfAttack implements AttackInterface
                 attack: $this->getName(),
                 severity: 'high',
                 findings: $vulnerabilities,
-                metadata: ['uri' => $uri, 'method' => strtoupper($method)]
+                metadata: ['uri' => $uri, 'method' => strtoupper($method)],
             );
         }
 
         return AttackResult::notVulnerable(
             attack: $this->getName(),
-            metadata: ['uri' => $uri, 'method' => strtoupper($method)]
+            metadata: ['uri' => $uri, 'method' => strtoupper($method)],
         );
     }
 

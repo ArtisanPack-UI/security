@@ -20,7 +20,7 @@ class SecurityFindingTest extends TestCase
             location: 'app/Test.php:10',
             evidence: 'Found vulnerable code',
             remediation: 'Fix the issue',
-            metadata: ['key' => 'value']
+            metadata: ['key' => 'value'],
         );
 
         $this->assertEquals('test-001', $finding->id);
@@ -39,7 +39,7 @@ class SecurityFindingTest extends TestCase
         $finding = SecurityFinding::critical(
             'Critical Issue',
             'Critical description',
-            'critical-category'
+            'critical-category',
         );
 
         $this->assertEquals(SecurityFinding::SEVERITY_CRITICAL, $finding->severity);
@@ -53,7 +53,7 @@ class SecurityFindingTest extends TestCase
         $finding = SecurityFinding::high(
             'High Issue',
             'High description',
-            'high-category'
+            'high-category',
         );
 
         $this->assertEquals(SecurityFinding::SEVERITY_HIGH, $finding->severity);
@@ -65,7 +65,7 @@ class SecurityFindingTest extends TestCase
         $finding = SecurityFinding::medium(
             'Medium Issue',
             'Medium description',
-            'medium-category'
+            'medium-category',
         );
 
         $this->assertEquals(SecurityFinding::SEVERITY_MEDIUM, $finding->severity);
@@ -77,7 +77,7 @@ class SecurityFindingTest extends TestCase
         $finding = SecurityFinding::low(
             'Low Issue',
             'Low description',
-            'low-category'
+            'low-category',
         );
 
         $this->assertEquals(SecurityFinding::SEVERITY_LOW, $finding->severity);
@@ -89,7 +89,7 @@ class SecurityFindingTest extends TestCase
         $finding = SecurityFinding::info(
             'Info Issue',
             'Info description',
-            'info-category'
+            'info-category',
         );
 
         $this->assertEquals(SecurityFinding::SEVERITY_INFO, $finding->severity);
@@ -103,7 +103,7 @@ class SecurityFindingTest extends TestCase
             'Test description',
             'test-category',
             'app/Test.php:10',
-            'Fix it'
+            'Fix it',
         );
 
         $array = $finding->toArray();
@@ -124,15 +124,15 @@ class SecurityFindingTest extends TestCase
     public function test_creates_from_vulnerability_array(): void
     {
         $data = [
-            'id' => 'from-array-001',
-            'title' => 'From Array',
+            'id'          => 'from-array-001',
+            'title'       => 'From Array',
             'description' => 'Created from array',
-            'severity' => SecurityFinding::SEVERITY_LOW,
-            'category' => 'array-category',
-            'location' => 'test/location.php',
+            'severity'    => SecurityFinding::SEVERITY_LOW,
+            'category'    => 'array-category',
+            'location'    => 'test/location.php',
             'remediation' => 'Array recommendation',
-            'evidence' => 'Some evidence',
-            'metadata' => ['source' => 'array'],
+            'evidence'    => 'Some evidence',
+            'metadata'    => ['source' => 'array'],
         ];
 
         $finding = SecurityFinding::fromVulnerability($data);
@@ -156,7 +156,7 @@ class SecurityFindingTest extends TestCase
     public function test_is_critical(): void
     {
         $critical = SecurityFinding::critical('Test', 'Desc', 'cat');
-        $high = SecurityFinding::high('Test', 'Desc', 'cat');
+        $high     = SecurityFinding::high('Test', 'Desc', 'cat');
 
         $this->assertTrue($critical->isCritical());
         $this->assertFalse($high->isCritical());
@@ -164,7 +164,7 @@ class SecurityFindingTest extends TestCase
 
     public function test_is_high(): void
     {
-        $high = SecurityFinding::high('Test', 'Desc', 'cat');
+        $high   = SecurityFinding::high('Test', 'Desc', 'cat');
         $medium = SecurityFinding::medium('Test', 'Desc', 'cat');
 
         $this->assertTrue($high->isHigh());
@@ -174,8 +174,8 @@ class SecurityFindingTest extends TestCase
     public function test_is_blocking(): void
     {
         $critical = SecurityFinding::critical('Test', 'Desc', 'cat');
-        $high = SecurityFinding::high('Test', 'Desc', 'cat');
-        $medium = SecurityFinding::medium('Test', 'Desc', 'cat');
+        $high     = SecurityFinding::high('Test', 'Desc', 'cat');
+        $medium   = SecurityFinding::medium('Test', 'Desc', 'cat');
 
         $this->assertTrue($critical->isBlocking());
         $this->assertTrue($high->isBlocking());
@@ -185,10 +185,10 @@ class SecurityFindingTest extends TestCase
     public function test_severity_order(): void
     {
         $critical = SecurityFinding::critical('Test', 'Desc', 'cat');
-        $high = SecurityFinding::high('Test', 'Desc', 'cat');
-        $medium = SecurityFinding::medium('Test', 'Desc', 'cat');
-        $low = SecurityFinding::low('Test', 'Desc', 'cat');
-        $info = SecurityFinding::info('Test', 'Desc', 'cat');
+        $high     = SecurityFinding::high('Test', 'Desc', 'cat');
+        $medium   = SecurityFinding::medium('Test', 'Desc', 'cat');
+        $low      = SecurityFinding::low('Test', 'Desc', 'cat');
+        $info     = SecurityFinding::info('Test', 'Desc', 'cat');
 
         $this->assertEquals(0, $critical->getSeverityOrder());
         $this->assertEquals(1, $high->getSeverityOrder());
@@ -204,7 +204,7 @@ class SecurityFindingTest extends TestCase
             'Description',
             'Category',
             'src/File.php:42',
-            'Fix the vulnerability'
+            'Fix the vulnerability',
         );
 
         $this->assertEquals('src/File.php:42', $finding->location);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use ArtisanPackUI\Security\Http\Controllers\CspViolationController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,5 +16,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::post(
     config('artisanpack.security.csp.reporting.uri', '/csp-violation'),
-    [CspViolationController::class, 'report']
+    [CspViolationController::class, 'report'],
 )->name('csp.violation.report');

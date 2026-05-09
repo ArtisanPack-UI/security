@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanPackUI\Security\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
@@ -11,15 +13,16 @@ class SecureUrl implements Rule
      *
      * @param  string  $attribute
      * @param  mixed  $value
+     *
      * @return bool
      */
     public function passes($attribute, $value)
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return false;
         }
 
-        if (filter_var($value, FILTER_VALIDATE_URL) === false) {
+        if (false === filter_var($value, FILTER_VALIDATE_URL)) {
             return false;
         }
 

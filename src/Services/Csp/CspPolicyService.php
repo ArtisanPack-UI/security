@@ -47,20 +47,8 @@ class CspPolicyService implements CspPolicyInterface
         protected CspNonceGenerator $nonceGenerator,
         protected ?SecurityEventLoggerInterface $logger = null,
     ) {
-        $this->builder = new CspPolicyBuilder();
+        $this->builder = new CspPolicyBuilder;
         $this->registerDefaultPresets();
-    }
-
-    /**
-     * Register the default presets.
-     */
-    protected function registerDefaultPresets(): void
-    {
-        $this->presets = [
-            'livewire' => new LivewirePreset(),
-            'strict' => new StrictPreset(),
-            'relaxed' => new RelaxedPreset(),
-        ];
     }
 
     /**
@@ -84,7 +72,7 @@ class CspPolicyService implements CspPolicyInterface
     /**
      * Add a value to a CSP directive.
      *
-     * @param  string|array<string>  $values
+     * @param  array<string>|string  $values
      */
     public function addDirective(string $directive, string|array $values): self
     {
@@ -159,75 +147,6 @@ class CspPolicyService implements CspPolicyInterface
     }
 
     /**
-     * Determine which preset to use for the request.
-     */
-    protected function determinePreset(Request $request): string
-    {
-        $routePolicies = config('artisanpack.security.csp.routePolicies', []);
-        $path = $request->path();
-
-        foreach ($routePolicies as $pattern => $preset) {
-            if ($this->matchesPattern($path, $pattern)) {
-                return $preset;
-            }
-        }
-
-        return config('artisanpack.security.csp.preset', 'livewire');
-    }
-
-    /**
-     * Check if a path matches a pattern.
-     */
-    protected function matchesPattern(string $path, string $pattern): bool
-    {
-        $pattern = str_replace('*', '.*', $pattern);
-
-        return (bool) preg_match('#^'.$pattern.'$#', $path);
-    }
-
-    /**
-     * Check if the route is excluded from CSP.
-     */
-    protected function isExcludedRoute(Request $request): bool
-    {
-        $excludedRoutes = config('artisanpack.security.csp.excludedRoutes', []);
-        $path = $request->path();
-
-        foreach ($excludedRoutes as $pattern) {
-            if ($this->matchesPattern($path, $pattern)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Apply additional sources from configuration.
-     */
-    protected function applyAdditionalSources(): void
-    {
-        $additionalSources = config('artisanpack.security.csp.additionalSources', []);
-
-        foreach ($additionalSources as $directive => $sources) {
-            if (! empty($sources)) {
-                $this->builder->addDirective($directive, $sources);
-            }
-        }
-    }
-
-    /**
-     * Apply reporting configuration.
-     */
-    protected function applyReportingConfig(): void
-    {
-        if (config('artisanpack.security.csp.reporting.enabled', true)) {
-            $reportUri = config('artisanpack.security.csp.reporting.uri', '/csp-violation');
-            $this->builder->reportUri(url($reportUri));
-        }
-    }
-
-    /**
      * Get the full CSP policy string.
      */
     public function getPolicy(): string
@@ -250,7 +169,7 @@ class CspPolicyService implements CspPolicyInterface
      */
     public function toHeader(): array
     {
-        $policy = $this->getPolicy();
+        $policy  = $this->getPolicy();
         $headers = [];
 
         if (empty($policy)) {
@@ -292,7 +211,7 @@ class CspPolicyService implements CspPolicyInterface
     {
         $this->builder->reset();
         $this->nonceGenerator->reset();
-        $this->isBuilt = false;
+        $this->isBuilt       = false;
         $this->currentPreset = null;
 
         return $this;
@@ -338,5 +257,86 @@ class CspPolicyService implements CspPolicyInterface
     public function isReportOnly(): bool
     {
         return config('artisanpack.security.csp.reportOnly', false);
+    }
+
+    /**
+     * Register the default presets.
+     */
+    protected function registerDefaultPresets(): void
+    {
+        $this->presets = [
+            'livewire' => new LivewirePreset,
+            'strict'   => new StrictPreset,
+            'relaxed'  => new RelaxedPreset,
+        ];
+    }
+
+    /**
+     * Determine which preset to use for the request.
+     */
+    protected function determinePreset(Request $request): string
+    {
+        $routePolicies = config('artisanpack.security.csp.routePolicies', []);
+        $path          = $request->path();
+
+        foreach ($routePolicies as $pattern => $preset) {
+            if ($this->matchesPattern($path, $pattern)) {
+                return $preset;
+            }
+        }
+
+        return config('artisanpack.security.csp.preset', 'livewire');
+    }
+
+    /**
+     * Check if a path matches a pattern.
+     */
+    protected function matchesPattern(string $path, string $pattern): bool
+    {
+        $pattern = str_replace('*', '.*', $pattern);
+
+        return (bool) preg_match('#^'.$pattern.'$#', $path);
+    }
+
+    /**
+     * Check if the route is excluded from CSP.
+     */
+    protected function isExcludedRoute(Request $request): bool
+    {
+        $excludedRoutes = config('artisanpack.security.csp.excludedRoutes', []);
+        $path           = $request->path();
+
+        foreach ($excludedRoutes as $pattern) {
+            if ($this->matchesPattern($path, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Apply additional sources from configuration.
+     */
+    protected function applyAdditionalSources(): void
+    {
+        $additionalSources = config('artisanpack.security.csp.additionalSources', []);
+
+        foreach ($additionalSources as $directive => $sources) {
+            if (! empty($sources)) {
+                $this->builder->addDirective($directive, $sources);
+            }
+        }
+    }
+
+    /**
+     * Apply reporting configuration.
+     */
+    protected function applyReportingConfig(): void
+    {
+        if (config('artisanpack.security.csp.reporting.enabled', true)) {
+            $reportUri = config('artisanpack.security.csp.reporting.uri', '/csp-violation');
+            $this->builder->reportUri(url($reportUri));
+        }
     }
 }

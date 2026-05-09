@@ -47,8 +47,8 @@ class SecurityGate
 
         // Check severity thresholds
         $critical = $this->countBySeverity($findings, SecurityFinding::SEVERITY_CRITICAL);
-        $high = $this->countBySeverity($findings, SecurityFinding::SEVERITY_HIGH);
-        $medium = $this->countBySeverity($findings, SecurityFinding::SEVERITY_MEDIUM);
+        $high     = $this->countBySeverity($findings, SecurityFinding::SEVERITY_HIGH);
+        $medium   = $this->countBySeverity($findings, SecurityFinding::SEVERITY_MEDIUM);
 
         if ($critical > $this->maxCritical) {
             $failures[] = "Critical findings ({$critical}) exceed threshold ({$this->maxCritical})";
@@ -78,7 +78,7 @@ class SecurityGate
                         'Performance overhead for %s (%.1f%%) exceeds threshold (%.1f%%)',
                         $name,
                         $overhead,
-                        $this->maxOverheadPercent
+                        $this->maxOverheadPercent,
                     );
                 }
             }
@@ -88,7 +88,7 @@ class SecurityGate
         foreach ($this->rules as $name => $check) {
             $result = $check($findings, $benchmarks);
 
-            if ($result !== true) {
+            if (true !== $result) {
                 $failures[] = "Rule '{$name}' failed: {$result}";
             }
         }
@@ -98,20 +98,10 @@ class SecurityGate
             failures: $failures,
             summary: [
                 'critical' => $critical,
-                'high' => $high,
-                'medium' => $medium,
-            ]
+                'high'     => $high,
+                'medium'   => $medium,
+            ],
         );
-    }
-
-    /**
-     * Count findings by severity.
-     *
-     * @param  array<SecurityFinding>  $findings
-     */
-    protected function countBySeverity(array $findings, string $severity): int
-    {
-        return count(array_filter($findings, fn ($f) => $f->severity === $severity));
     }
 
     /**
@@ -123,7 +113,7 @@ class SecurityGate
             maxCritical: 0,
             maxHigh: 0,
             maxMedium: 5,
-            maxOverheadPercent: 10.0
+            maxOverheadPercent: 10.0,
         );
     }
 
@@ -136,8 +126,18 @@ class SecurityGate
             maxCritical: 0,
             maxHigh: 10,
             maxMedium: 50,
-            maxOverheadPercent: 25.0
+            maxOverheadPercent: 25.0,
         );
+    }
+
+    /**
+     * Count findings by severity.
+     *
+     * @param  array<SecurityFinding>  $findings
+     */
+    protected function countBySeverity(array $findings, string $severity): int
+    {
+        return count(array_filter($findings, fn ($f) => $f->severity === $severity));
     }
 }
 
@@ -177,9 +177,9 @@ class GateResult
     public function toArray(): array
     {
         return [
-            'passed' => $this->passed,
+            'passed'   => $this->passed,
             'failures' => $this->failures,
-            'summary' => $this->summary,
+            'summary'  => $this->summary,
         ];
     }
 }

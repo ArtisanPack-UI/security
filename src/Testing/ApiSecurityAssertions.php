@@ -15,12 +15,13 @@ trait ApiSecurityAssertions
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
      * @param  int|null  $expiresInMinutes  Token expiration
+     *
      * @return string The plain text token
      */
     protected function createTestApiToken(
         $user,
         array $abilities = ['*'],
-        ?int $expiresInMinutes = null
+        ?int $expiresInMinutes = null,
     ): string {
         if (method_exists($user, 'createApiToken')) {
             return $user->createApiToken('test-token', $abilities, $expiresInMinutes)->plainTextToken;
@@ -34,6 +35,7 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
+     *
      * @return string The plain text token
      */
     protected function createExpiredTestApiToken($user, array $abilities = ['*']): string
@@ -57,6 +59,7 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
+     *
      * @return string The plain text token
      */
     protected function createRevokedTestApiToken($user, array $abilities = ['*']): string
@@ -90,7 +93,7 @@ trait ApiSecurityAssertions
     {
         $response->assertStatus(403);
 
-        if ($ability !== null) {
+        if (null !== $ability) {
             $response->assertJson([
                 'error' => 'insufficient_ability',
             ]);
@@ -134,7 +137,7 @@ trait ApiSecurityAssertions
         foreach ($abilities as $ability) {
             $this->assertTrue(
                 $accessToken->hasAbility($ability),
-                "Token does not have ability: {$ability}"
+                "Token does not have ability: {$ability}",
             );
         }
     }
@@ -170,13 +173,14 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
+     *
      * @return $this
      */
     protected function actingAsApiUser($user, array $abilities = ['*']): self
     {
         $token = $this->createTestApiToken($user, $abilities);
 
-        return $this->withHeader('Authorization', 'Bearer ' . $token);
+        return $this->withHeader('Authorization', 'Bearer '.$token);
     }
 
     /**
@@ -187,13 +191,12 @@ trait ApiSecurityAssertions
      * @param  string  $uri  Request URI
      * @param  array  $data  Request data
      * @param  array  $abilities  Token abilities
-     * @return TestResponse
      */
     protected function apiAs($user, string $method, string $uri, array $data = [], array $abilities = ['*']): TestResponse
     {
         $token = $this->createTestApiToken($user, $abilities);
 
-        return $this->withHeader('Authorization', 'Bearer ' . $token)
+        return $this->withHeader('Authorization', 'Bearer '.$token)
             ->json($method, $uri, $data);
     }
 
@@ -204,11 +207,10 @@ trait ApiSecurityAssertions
      * @param  string  $method  HTTP method
      * @param  string  $uri  Request URI
      * @param  array  $data  Request data
-     * @return TestResponse
      */
     protected function apiWithToken(string $token, string $method, string $uri, array $data = []): TestResponse
     {
-        return $this->withHeader('Authorization', 'Bearer ' . $token)
+        return $this->withHeader('Authorization', 'Bearer '.$token)
             ->json($method, $uri, $data);
     }
 }

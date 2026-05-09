@@ -144,6 +144,21 @@ class HtmlReportFormat implements ReportFormatInterface
 HTML;
     }
 
+    public function getName(): string
+    {
+        return 'HTML';
+    }
+
+    public function getExtension(): string
+    {
+        return 'html';
+    }
+
+    public function getMimeType(): string
+    {
+        return 'text/html';
+    }
+
     /**
      * Render summary cards.
      *
@@ -152,7 +167,7 @@ HTML;
     protected function renderSummaryCards(array $summary): string
     {
         $severities = $summary['bySeverity'] ?? [];
-        $cards = '';
+        $cards      = '';
 
         foreach ($severities as $severity => $count) {
             $cards .= <<<HTML
@@ -185,10 +200,10 @@ HTML;
         $html = '';
 
         foreach ($findings as $finding) {
-            $title = htmlspecialchars($finding->title);
+            $title       = htmlspecialchars($finding->title);
             $description = htmlspecialchars($finding->description);
-            $category = htmlspecialchars($finding->category);
-            $location = $finding->location ? htmlspecialchars($finding->location) : 'N/A';
+            $category    = htmlspecialchars($finding->category);
+            $location    = $finding->location ? htmlspecialchars($finding->location) : 'N/A';
             $remediation = $finding->remediation ? htmlspecialchars($finding->remediation) : null;
 
             $remediationHtml = $remediation
@@ -215,20 +230,5 @@ HTML;
         }
 
         return $html;
-    }
-
-    public function getName(): string
-    {
-        return 'HTML';
-    }
-
-    public function getExtension(): string
-    {
-        return 'html';
-    }
-
-    public function getMimeType(): string
-    {
-        return 'text/html';
     }
 }

@@ -26,7 +26,7 @@ class InjectionPayloads
             '|| cat /etc/passwd',
             '& cat /etc/passwd',
             '&& cat /etc/passwd',
-            "`cat /etc/passwd`",
+            '`cat /etc/passwd`',
             '$(cat /etc/passwd)',
             '; ls -la',
             '| ls -la',
@@ -133,9 +133,9 @@ class InjectionPayloads
             "test\r\nHeader: Injected",
             "test\nHeader: Injected",
             "test\r\n\r\n<html>Injected</html>",
-            "%0d%0aHeader:%20Injected",
-            "%0aHeader:%20Injected",
-            "test%0d%0aSet-Cookie:%20evil=value",
+            '%0d%0aHeader:%20Injected',
+            '%0aHeader:%20Injected',
+            'test%0d%0aSet-Cookie:%20evil=value',
             "test\r\nSet-Cookie: evil=value",
         ];
     }

@@ -35,7 +35,7 @@ trait TestsSecurityHeaders
                 'Missing X-Frame-Options Header',
                 'Response does not include X-Frame-Options header',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add X-Frame-Options: DENY or SAMEORIGIN header'
+                remediation: 'Add X-Frame-Options: DENY or SAMEORIGIN header',
             ));
         } else {
             $validValues = ['DENY', 'SAMEORIGIN'];
@@ -44,7 +44,7 @@ trait TestsSecurityHeaders
                     'Weak X-Frame-Options Value',
                     "X-Frame-Options value '{$header}' may not be secure",
                     'A05:2021-Security Misconfiguration',
-                    remediation: 'Use DENY or SAMEORIGIN'
+                    remediation: 'Use DENY or SAMEORIGIN',
                 ));
             }
         }
@@ -57,12 +57,12 @@ trait TestsSecurityHeaders
     {
         $header = $response->headers->get('X-Content-Type-Options');
 
-        if ($header !== 'nosniff') {
+        if ('nosniff' !== $header) {
             $this->recordFinding(SecurityFinding::medium(
                 'Missing X-Content-Type-Options Header',
                 'Response does not include X-Content-Type-Options: nosniff',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add X-Content-Type-Options: nosniff header'
+                remediation: 'Add X-Content-Type-Options: nosniff header',
             ));
         }
     }
@@ -80,7 +80,7 @@ trait TestsSecurityHeaders
                 'Suboptimal X-XSS-Protection',
                 "X-XSS-Protection value '{$header}' may not be optimal",
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Use "0" (disabled, rely on CSP) or "1; mode=block"'
+                remediation: 'Use "0" (disabled, rely on CSP) or "1; mode=block"',
             ));
         }
     }
@@ -97,7 +97,7 @@ trait TestsSecurityHeaders
                 'Missing HSTS Header',
                 'Response does not include Strict-Transport-Security header',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains'
+                remediation: 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains',
             ));
 
             return;
@@ -111,7 +111,7 @@ trait TestsSecurityHeaders
                     'Short HSTS Max-Age',
                     "HSTS max-age ({$maxAge}) is less than recommended 1 year",
                     'A05:2021-Security Misconfiguration',
-                    remediation: 'Increase max-age to at least 31536000 (1 year)'
+                    remediation: 'Increase max-age to at least 31536000 (1 year)',
                 ));
             }
         }
@@ -130,7 +130,7 @@ trait TestsSecurityHeaders
                 'Missing Content-Security-Policy Header',
                 'Response does not include a Content-Security-Policy header',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Implement a Content-Security-Policy to prevent XSS attacks'
+                remediation: 'Implement a Content-Security-Policy to prevent XSS attacks',
             ));
 
             return;
@@ -142,7 +142,7 @@ trait TestsSecurityHeaders
                 'CSP Uses unsafe-inline',
                 'CSP uses unsafe-inline without nonce or strict-dynamic',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Use nonces or strict-dynamic instead of unsafe-inline'
+                remediation: 'Use nonces or strict-dynamic instead of unsafe-inline',
             ));
         }
 
@@ -151,7 +151,7 @@ trait TestsSecurityHeaders
                 'CSP Uses unsafe-eval',
                 'CSP uses unsafe-eval which allows dynamic code execution',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Remove unsafe-eval and refactor code to avoid eval()'
+                remediation: 'Remove unsafe-eval and refactor code to avoid eval()',
             ));
         }
     }
@@ -168,7 +168,7 @@ trait TestsSecurityHeaders
                 'Missing Referrer-Policy Header',
                 'Response does not include Referrer-Policy header',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add Referrer-Policy: strict-origin-when-cross-origin'
+                remediation: 'Add Referrer-Policy: strict-origin-when-cross-origin',
             ));
 
             return;
@@ -180,7 +180,7 @@ trait TestsSecurityHeaders
                 'Insecure Referrer-Policy',
                 "Referrer-Policy '{$header}' may leak sensitive information",
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Use strict-origin-when-cross-origin or stricter policy'
+                remediation: 'Use strict-origin-when-cross-origin or stricter policy',
             ));
         }
     }
@@ -198,7 +198,7 @@ trait TestsSecurityHeaders
                 'Missing Permissions-Policy Header',
                 'Response does not include Permissions-Policy header',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add Permissions-Policy to restrict browser features'
+                remediation: 'Add Permissions-Policy to restrict browser features',
             ));
         }
     }
@@ -221,7 +221,7 @@ trait TestsSecurityHeaders
                     'Information Disclosure via Headers',
                     "Response includes '{$header}' header which reveals server information",
                     'A05:2021-Security Misconfiguration',
-                    remediation: "Remove or mask the '{$header}' header"
+                    remediation: "Remove or mask the '{$header}' header",
                 ));
             }
         }
@@ -234,7 +234,7 @@ trait TestsSecurityHeaders
     {
         $cacheControl = $response->headers->get('Cache-Control');
 
-        $requiredDirectives = ['no-store', 'no-cache', 'must-revalidate'];
+        $requiredDirectives    = ['no-store', 'no-cache', 'must-revalidate'];
         $hasRequiredDirectives = true;
 
         foreach ($requiredDirectives as $directive) {
@@ -249,7 +249,7 @@ trait TestsSecurityHeaders
                 'Sensitive Data May Be Cached',
                 'Response does not have proper Cache-Control headers for sensitive data',
                 'A05:2021-Security Misconfiguration',
-                remediation: 'Add Cache-Control: no-store, no-cache, must-revalidate'
+                remediation: 'Add Cache-Control: no-store, no-cache, must-revalidate',
             ));
         }
     }

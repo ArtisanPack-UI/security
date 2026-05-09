@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
 use ArtisanPackUI\Security\Services\EnvironmentValidationService;
@@ -17,11 +19,11 @@ class EnvironmentValidationServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new EnvironmentValidationService();
+        $this->validator = new EnvironmentValidationService;
     }
 
     #[Test]
-    public function it_returns_no_errors_or_warnings_for_a_valid_production_configuration()
+    public function it_returns_no_errors_or_warnings_for_a_valid_production_configuration(): void
     {
         Config::set('app.debug', false);
         Config::set('artisanpack.security.encrypt', true);
@@ -35,7 +37,7 @@ class EnvironmentValidationServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_an_error_if_debug_mode_is_enabled_in_production()
+    public function it_returns_an_error_if_debug_mode_is_enabled_in_production(): void
     {
         Config::set('app.debug', true);
 
@@ -45,7 +47,7 @@ class EnvironmentValidationServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_an_error_if_session_encryption_is_disabled_in_production()
+    public function it_returns_an_error_if_session_encryption_is_disabled_in_production(): void
     {
         Config::set('artisanpack.security.encrypt', false);
 
@@ -55,7 +57,7 @@ class EnvironmentValidationServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_a_warning_if_two_factor_authentication_is_disabled_in_production()
+    public function it_returns_a_warning_if_two_factor_authentication_is_disabled_in_production(): void
     {
         Config::set('artisanpack.security.enabled', false);
 
@@ -65,7 +67,7 @@ class EnvironmentValidationServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_a_warning_if_csp_contains_unsafe_inline()
+    public function it_returns_a_warning_if_csp_contains_unsafe_inline(): void
     {
         Config::set('artisanpack.security.security-headers.Content-Security-Policy', "script-src 'unsafe-inline'");
 
@@ -75,7 +77,7 @@ class EnvironmentValidationServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_returns_a_warning_if_csp_contains_unsafe_eval()
+    public function it_returns_a_warning_if_csp_contains_unsafe_eval(): void
     {
         Config::set('artisanpack.security.security-headers.Content-Security-Policy', "script-src 'unsafe-eval'");
 

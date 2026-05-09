@@ -6,14 +6,15 @@ namespace Tests\Unit\Testing\Reporting;
 
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
 use ArtisanPackUI\Security\Testing\Reporting\SecurityReportGenerator;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class SecurityReportGeneratorTest extends TestCase
 {
     public function test_can_add_finding(): void
     {
-        $generator = new SecurityReportGenerator();
-        $finding = SecurityFinding::high('Test Finding', 'Description', 'test');
+        $generator = new SecurityReportGenerator;
+        $finding   = SecurityFinding::high('Test Finding', 'Description', 'test');
 
         $generator->addFinding($finding);
         $findings = $generator->getFindings();
@@ -24,7 +25,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_can_add_multiple_findings(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
 
         $generator->addFinding(SecurityFinding::high('Finding 1', 'Desc', 'cat'));
         $generator->addFinding(SecurityFinding::medium('Finding 2', 'Desc', 'cat'));
@@ -35,8 +36,8 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_can_add_findings_array(): void
     {
-        $generator = new SecurityReportGenerator();
-        $findings = [
+        $generator = new SecurityReportGenerator;
+        $findings  = [
             SecurityFinding::high('Finding 1', 'Desc', 'cat'),
             SecurityFinding::medium('Finding 2', 'Desc', 'cat'),
         ];
@@ -48,7 +49,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_summary(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::critical('Critical', 'Desc', 'A01'));
         $generator->addFinding(SecurityFinding::high('High', 'Desc', 'A02'));
         $generator->addFinding(SecurityFinding::high('High 2', 'Desc', 'A02'));
@@ -62,7 +63,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_summary_counts_by_category(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('F1', 'Desc', 'Injection'));
         $generator->addFinding(SecurityFinding::high('F2', 'Desc', 'Injection'));
         $generator->addFinding(SecurityFinding::medium('F3', 'Desc', 'XSS'));
@@ -75,7 +76,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_json_report(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $report = $generator->generate('json');
@@ -87,7 +88,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_html_report(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $report = $generator->generate('html');
@@ -97,7 +98,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_sarif_report(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $report = $generator->generate('sarif');
@@ -108,7 +109,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_junit_report(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $report = $generator->generate('junit');
@@ -118,7 +119,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_generates_markdown_report(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $report = $generator->generate('markdown');
@@ -128,9 +129,9 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_throws_exception_for_unknown_format(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown format');
 
         $generator->generate('unknown-format');
@@ -138,10 +139,10 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_saves_report_to_file(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
-        $path = sys_get_temp_dir().'/security-report-test.json';
+        $path   = sys_get_temp_dir().'/security-report-test.json';
         $result = $generator->saveToFile($path, 'json');
 
         $this->assertTrue($result);
@@ -154,7 +155,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_clears_findings(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
         $this->assertCount(1, $generator->getFindings());
@@ -166,7 +167,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_gets_findings_by_severity(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::critical('Critical', 'Desc', 'cat'));
         $generator->addFinding(SecurityFinding::high('High', 'Desc', 'cat'));
         $generator->addFinding(SecurityFinding::medium('Medium', 'Desc', 'cat'));
@@ -178,7 +179,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_has_blocking_findings(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::medium('Medium', 'Desc', 'cat'));
 
         $summary = $generator->getSummary();
@@ -192,7 +193,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_sorts_by_severity(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::low('Low', 'Desc', 'cat'));
         $generator->addFinding(SecurityFinding::critical('Critical', 'Desc', 'cat'));
         $generator->addFinding(SecurityFinding::medium('Medium', 'Desc', 'cat'));
@@ -207,9 +208,9 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_empty_report_generates_successfully(): void
     {
-        $generator = new SecurityReportGenerator();
+        $generator = new SecurityReportGenerator;
 
-        $report = $generator->generate('json');
+        $report  = $generator->generate('json');
         $decoded = json_decode($report, true);
 
         $this->assertEmpty($decoded['findings']);
@@ -222,7 +223,7 @@ class SecurityReportGeneratorTest extends TestCase
         $generator->withMetadata(['customField' => 'customValue']);
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
-        $report = $generator->generate('json');
+        $report  = $generator->generate('json');
         $decoded = json_decode($report, true);
 
         $this->assertArrayHasKey('metadata', $decoded);
@@ -232,7 +233,7 @@ class SecurityReportGeneratorTest extends TestCase
 
     public function test_fluent_interface(): void
     {
-        $generator = (new SecurityReportGenerator())
+        $generator = (new SecurityReportGenerator)
             ->addFinding(SecurityFinding::high('Test 1', 'Desc', 'cat'))
             ->addFinding(SecurityFinding::medium('Test 2', 'Desc', 'cat'))
             ->withMetadata(['scanType' => 'full'])

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanPackUI\Security\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -8,15 +10,17 @@ use Illuminate\Support\Facades\RateLimiter;
 class ClearRateLimits extends Command
 {
     protected $signature = 'security:rate-limit:clear {--ip=} {--user=}';
+
     protected $description = 'Clear the rate limiter cache for a given IP address or user ID';
 
     public function handle(): int
     {
-        $ip = $this->option('ip');
+        $ip   = $this->option('ip');
         $user = $this->option('user');
 
-        if (!$ip && !$user) {
+        if (! $ip && ! $user) {
             $this->error('You must provide either an --ip or a --user option.');
+
             return 1;
         }
 

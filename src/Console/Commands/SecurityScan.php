@@ -29,48 +29,48 @@ class SecurityScan extends Command
         $this->newLine();
 
         $findings = [];
-        $type = $this->option('type');
+        $type     = $this->option('type');
 
         // Run scanners based on type
-        if ($type === 'all' || $type === 'owasp') {
+        if ('all' === $type || 'owasp' === $type) {
             $this->info('Running OWASP Top 10 scan...');
             $categories = $this->option('categories')
                 ? explode(',', $this->option('categories'))
                 : [];
-            $scanner = new OwaspScanner($categories);
+            $scanner       = new OwaspScanner($categories);
             $owaspFindings = $scanner->scan();
-            $findings = array_merge($findings, $owaspFindings);
+            $findings      = array_merge($findings, $owaspFindings);
             $this->line("  Found {$this->countFindings($owaspFindings)} issues");
         }
 
-        if ($type === 'all' || $type === 'dependencies') {
+        if ('all' === $type || 'dependencies' === $type) {
             $this->info('Running dependency scan...');
-            $scanner = new DependencyScanner;
+            $scanner     = new DependencyScanner;
             $depFindings = $scanner->scan();
-            $findings = array_merge($findings, $depFindings);
+            $findings    = array_merge($findings, $depFindings);
             $this->line("  Found {$this->countFindings($depFindings)} issues");
         }
 
-        if ($type === 'all' || $type === 'config') {
+        if ('all' === $type || 'config' === $type) {
             $this->info('Running configuration scan...');
-            $scanner = new ConfigurationScanner;
+            $scanner        = new ConfigurationScanner;
             $configFindings = $scanner->scan();
-            $findings = array_merge($findings, $configFindings);
+            $findings       = array_merge($findings, $configFindings);
             $this->line("  Found {$this->countFindings($configFindings)} issues");
         }
 
-        if ($type === 'all' || $type === 'headers') {
+        if ('all' === $type || 'headers' === $type) {
             $this->info('Running security headers scan...');
-            $scanner = new HeaderScanner;
+            $scanner        = new HeaderScanner;
             $headerFindings = $scanner->scan();
-            $findings = array_merge($findings, $headerFindings);
+            $findings       = array_merge($findings, $headerFindings);
             $this->line("  Found {$this->countFindings($headerFindings)} issues");
         }
 
         // Apply baseline if provided
         if ($baseline = $this->option('baseline')) {
             $originalCount = count($findings);
-            $findings = $this->applyBaseline($findings, $baseline);
+            $findings      = $this->applyBaseline($findings, $baseline);
             $filteredCount = $originalCount - count($findings);
 
             if ($filteredCount > 0) {
@@ -81,7 +81,7 @@ class SecurityScan extends Command
         // Generate report
         $report = new SecurityReportGenerator(
             projectName: config('app.name', 'Application'),
-            version: config('app.version', '1.0.0')
+            version: config('app.version', '1.0.0'),
         );
 
         $report->addFindings($findings)->sortBySeverity();
@@ -91,7 +91,7 @@ class SecurityScan extends Command
         // Output results
         if ($outputPath = $this->option('output')) {
             $bytes = @file_put_contents($outputPath, $output);
-            if ($bytes === false) {
+            if (false === $bytes) {
                 $this->error("Failed to save report to: {$outputPath}");
 
                 return self::FAILURE;
@@ -134,11 +134,11 @@ class SecurityScan extends Command
         foreach ($summary['bySeverity'] as $severity => $count) {
             $icon = match ($severity) {
                 'critical' => '<fg=red>●</>',
-                'high' => '<fg=yellow>●</>',
-                'medium' => '<fg=blue>●</>',
-                'low' => '<fg=cyan>●</>',
-                'info' => '<fg=gray>●</>',
-                default => '●',
+                'high'     => '<fg=yellow>●</>',
+                'medium'   => '<fg=blue>●</>',
+                'low'      => '<fg=cyan>●</>',
+                'info'     => '<fg=gray>●</>',
+                default    => '●',
             };
             $rows[] = [$icon.' '.ucfirst($severity), $count];
         }
@@ -156,11 +156,11 @@ class SecurityScan extends Command
      */
     protected function determineExitCode(array $findings): int
     {
-        $failOn = $this->option('fail-on');
+        $failOn        = $this->option('fail-on');
         $severityOrder = ['critical', 'high', 'medium', 'low', 'info'];
-        $threshold = array_search($failOn, $severityOrder);
+        $threshold     = array_search($failOn, $severityOrder);
 
-        if ($threshold === false) {
+        if (false === $threshold) {
             $this->warn("Invalid --fail-on value: {$failOn}. Using 'high' as default.");
             $threshold = array_search('high', $severityOrder);
         }
@@ -168,7 +168,7 @@ class SecurityScan extends Command
         foreach ($findings as $finding) {
             $findingSeverity = array_search($finding->severity, $severityOrder);
 
-            if ($findingSeverity !== false && $threshold !== false && $findingSeverity <= $threshold) {
+            if (false !== $findingSeverity && false !== $threshold && $findingSeverity <= $threshold) {
                 $this->newLine();
                 $this->error("Scan failed: Found {$finding->severity} severity issue(s)");
 
@@ -186,6 +186,7 @@ class SecurityScan extends Command
      * Apply baseline to filter known issues.
      *
      * @param  array<\ArtisanPackUI\Security\Testing\Reporting\SecurityFinding>  $findings
+     *
      * @return array<\ArtisanPackUI\Security\Testing\Reporting\SecurityFinding>
      */
     protected function applyBaseline(array $findings, string $baselinePath): array
@@ -197,7 +198,7 @@ class SecurityScan extends Command
         }
 
         $content = @file_get_contents($baselinePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->warn("Unable to read baseline file: {$baselinePath}");
 
             return $findings;
@@ -205,7 +206,7 @@ class SecurityScan extends Command
 
         $baseline = json_decode($content, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (JSON_ERROR_NONE !== json_last_error()) {
             $this->warn('Invalid baseline file format');
 
             return $findings;
@@ -215,7 +216,7 @@ class SecurityScan extends Command
 
         return array_filter(
             $findings,
-            fn ($f) => ! in_array($f->id, $baselineIds)
+            fn ($f) => ! in_array($f->id, $baselineIds),
         );
     }
 }

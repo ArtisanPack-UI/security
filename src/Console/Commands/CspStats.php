@@ -48,7 +48,7 @@ class CspStats extends Command
         $this->newLine();
 
         // Summary statistics
-        $totalCount = CspViolationReport::getTotalCount($hours);
+        $totalCount  = CspViolationReport::getTotalCount($hours);
         $uniqueCount = CspViolationReport::getUniqueCount($hours);
 
         $this->line("<fg=cyan>Total Occurrences:</> {$totalCount}");
@@ -118,7 +118,7 @@ class CspStats extends Command
             [
                 ['<fg=red>Enforced</>', $enforced],
                 ['<fg=yellow>Report Only</>', $reportOnly],
-            ]
+            ],
         );
 
         // Top source files
@@ -168,7 +168,7 @@ class CspStats extends Command
                 '%s  %s %d',
                 $date,
                 "<fg=cyan>{$bar}</>",
-                $count
+                $count,
             ));
         }
     }
@@ -179,12 +179,12 @@ class CspStats extends Command
     protected function formatDirective(string $directive): string
     {
         return match (true) {
-            str_starts_with($directive, 'script-src') => "<fg=red>{$directive}</>",
-            str_starts_with($directive, 'style-src') => "<fg=yellow>{$directive}</>",
-            str_starts_with($directive, 'img-src') => "<fg=blue>{$directive}</>",
+            str_starts_with($directive, 'script-src')  => "<fg=red>{$directive}</>",
+            str_starts_with($directive, 'style-src')   => "<fg=yellow>{$directive}</>",
+            str_starts_with($directive, 'img-src')     => "<fg=blue>{$directive}</>",
             str_starts_with($directive, 'connect-src') => "<fg=magenta>{$directive}</>",
-            str_starts_with($directive, 'font-src') => "<fg=cyan>{$directive}</>",
-            default => $directive,
+            str_starts_with($directive, 'font-src')    => "<fg=cyan>{$directive}</>",
+            default                                    => $directive,
         };
     }
 }

@@ -33,14 +33,14 @@ class AttackResult
         string $attack,
         string $severity,
         array $findings = [],
-        array $metadata = []
+        array $metadata = [],
     ): self {
         return new self(
             attack: $attack,
             vulnerable: true,
             findings: $findings,
             severity: $severity,
-            metadata: $metadata
+            metadata: $metadata,
         );
     }
 
@@ -56,7 +56,7 @@ class AttackResult
             vulnerable: false,
             findings: [],
             severity: 'none',
-            metadata: $metadata
+            metadata: $metadata,
         );
     }
 
@@ -65,7 +65,7 @@ class AttackResult
      */
     public function isCritical(): bool
     {
-        return $this->vulnerable && $this->severity === 'critical';
+        return $this->vulnerable && 'critical' === $this->severity;
     }
 
     /**
@@ -73,7 +73,7 @@ class AttackResult
      */
     public function isHigh(): bool
     {
-        return $this->vulnerable && $this->severity === 'high';
+        return $this->vulnerable && 'high' === $this->severity;
     }
 
     /**
@@ -100,12 +100,12 @@ class AttackResult
     public function toArray(): array
     {
         return [
-            'attack' => $this->attack,
-            'vulnerable' => $this->vulnerable,
-            'severity' => $this->severity,
-            'findings' => $this->findings,
+            'attack'       => $this->attack,
+            'vulnerable'   => $this->vulnerable,
+            'severity'     => $this->severity,
+            'findings'     => $this->findings,
             'findingCount' => $this->getFindingCount(),
-            'metadata' => $this->metadata,
+            'metadata'     => $this->metadata,
         ];
     }
 }

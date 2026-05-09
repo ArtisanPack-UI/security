@@ -16,7 +16,7 @@ interface CspPolicyInterface
     /**
      * Add a value to a CSP directive.
      *
-     * @param  string|array<string>  $values
+     * @param  array<string>|string  $values
      */
     public function addDirective(string $directive, string|array $values): self;
 

@@ -58,16 +58,16 @@ class CspViolationHandler
         if ($violation) {
             // Update existing violation
             $violation->update([
-                'last_seen_at' => now(),
+                'last_seen_at'     => now(),
                 'occurrence_count' => $violation->occurrence_count + 1,
             ]);
         } else {
             // Create new violation record
             $violation = CspViolationReport::create(array_merge($data, [
-                'fingerprint' => $fingerprint,
+                'fingerprint'      => $fingerprint,
                 'occurrence_count' => 1,
-                'first_seen_at' => now(),
-                'last_seen_at' => now(),
+                'first_seen_at'    => now(),
+                'last_seen_at'     => now(),
             ]));
         }
 
@@ -96,32 +96,33 @@ class CspViolationHandler
             ?? $report['effectiveDirective']
             ?? null;
 
-        return $directive !== null;
+        return null !== $directive;
     }
 
     /**
      * Normalize report data from different CSP report formats.
      *
      * @param  array<string, mixed>  $report
+     *
      * @return array<string, mixed>
      */
     protected function normalizeReport(array $report): array
     {
         return [
-            'document_uri' => $this->getValue($report, ['document-uri', 'documentUri', 'documentURL']) ?? '',
-            'blocked_uri' => $this->getValue($report, ['blocked-uri', 'blockedUri', 'blockedURL']),
-            'violated_directive' => $this->getValue($report, ['violated-directive', 'violatedDirective']) ?? '',
+            'document_uri'        => $this->getValue($report, ['document-uri', 'documentUri', 'documentURL']) ?? '',
+            'blocked_uri'         => $this->getValue($report, ['blocked-uri', 'blockedUri', 'blockedURL']),
+            'violated_directive'  => $this->getValue($report, ['violated-directive', 'violatedDirective']) ?? '',
             'effective_directive' => $this->getValue($report, ['effective-directive', 'effectiveDirective']),
-            'original_policy' => $this->getValue($report, ['original-policy', 'originalPolicy']),
-            'disposition' => $this->getValue($report, ['disposition']) ?? 'enforce',
-            'referrer' => $this->getValue($report, ['referrer']),
-            'script_sample' => $this->getValue($report, ['script-sample', 'scriptSample', 'sample']),
-            'source_file' => $this->getValue($report, ['source-file', 'sourceFile']),
-            'line_number' => $this->getIntValue($report, ['line-number', 'lineNumber']),
-            'column_number' => $this->getIntValue($report, ['column-number', 'columnNumber']),
-            'status_code' => $this->getValue($report, ['status-code', 'statusCode']),
-            'user_agent' => request()->userAgent(),
-            'ip_address' => config('artisanpack.security.csp.reporting.storeIpAddress', false)
+            'original_policy'     => $this->getValue($report, ['original-policy', 'originalPolicy']),
+            'disposition'         => $this->getValue($report, ['disposition']) ?? 'enforce',
+            'referrer'            => $this->getValue($report, ['referrer']),
+            'script_sample'       => $this->getValue($report, ['script-sample', 'scriptSample', 'sample']),
+            'source_file'         => $this->getValue($report, ['source-file', 'sourceFile']),
+            'line_number'         => $this->getIntValue($report, ['line-number', 'lineNumber']),
+            'column_number'       => $this->getIntValue($report, ['column-number', 'columnNumber']),
+            'status_code'         => $this->getValue($report, ['status-code', 'statusCode']),
+            'user_agent'          => request()->userAgent(),
+            'ip_address'          => config('artisanpack.security.csp.reporting.storeIpAddress', false)
                 ? request()->ip()
                 : null,
         ];
@@ -136,7 +137,7 @@ class CspViolationHandler
     protected function getValue(array $report, array $keys): ?string
     {
         foreach ($keys as $key) {
-            if (isset($report[$key]) && $report[$key] !== '') {
+            if (isset($report[$key]) && '' !== $report[$key]) {
                 return (string) $report[$key];
             }
         }
@@ -154,7 +155,7 @@ class CspViolationHandler
     {
         $value = $this->getValue($report, $keys);
 
-        return $value !== null ? (int) $value : null;
+        return null !== $value ? (int) $value : null;
     }
 
     /**
@@ -165,11 +166,11 @@ class CspViolationHandler
     protected function logViolation(array $data): void
     {
         Log::info('CSP Violation', [
-            'directive' => $data['violated_directive'],
-            'blocked_uri' => $data['blocked_uri'],
+            'directive'    => $data['violated_directive'],
+            'blocked_uri'  => $data['blocked_uri'],
             'document_uri' => $data['document_uri'],
-            'source_file' => $data['source_file'],
-            'line_number' => $data['line_number'],
+            'source_file'  => $data['source_file'],
+            'line_number'  => $data['line_number'],
         ]);
     }
 
@@ -186,12 +187,12 @@ class CspViolationHandler
             'csp_violation',
             "CSP violation: {$violation->violated_directive}",
             [
-                'blocked_uri' => $violation->blocked_uri,
-                'document_uri' => $violation->document_uri,
-                'source_file' => $violation->source_file,
-                'line_number' => $violation->line_number,
+                'blocked_uri'      => $violation->blocked_uri,
+                'document_uri'     => $violation->document_uri,
+                'source_file'      => $violation->source_file,
+                'line_number'      => $violation->line_number,
                 'occurrence_count' => $violation->occurrence_count,
-            ]
+            ],
         );
     }
 }

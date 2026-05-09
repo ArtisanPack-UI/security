@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
-use ArtisanPackUI\Security\Services\Csp\CspNonceGenerator;
 use ArtisanPackUI\Security\Services\Csp\CspPolicyBuilder;
 use ArtisanPackUI\Security\Services\Csp\Presets\LivewirePreset;
 use ArtisanPackUI\Security\Services\Csp\Presets\RelaxedPreset;
@@ -17,8 +18,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function livewire_preset_uses_strict_dynamic(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new LivewirePreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new LivewirePreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -29,8 +30,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function livewire_preset_includes_nonce(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new LivewirePreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new LivewirePreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -41,8 +42,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function livewire_preset_blocks_objects(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new LivewirePreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new LivewirePreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -53,8 +54,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function strict_preset_blocks_by_default(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new StrictPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new StrictPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -65,8 +66,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function strict_preset_blocks_objects(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new StrictPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new StrictPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -77,8 +78,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function strict_preset_requires_nonce_for_scripts(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new StrictPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new StrictPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -89,8 +90,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function relaxed_preset_allows_self(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new RelaxedPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new RelaxedPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -101,8 +102,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function relaxed_preset_uses_strict_dynamic(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new RelaxedPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new RelaxedPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -114,8 +115,8 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function relaxed_preset_allows_https(): void
     {
-        $builder = new CspPolicyBuilder();
-        $preset = new RelaxedPreset();
+        $builder = new CspPolicyBuilder;
+        $preset  = new RelaxedPreset;
 
         $preset->apply($builder, $this->testNonce);
         $policy = $builder->build();
@@ -126,9 +127,9 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function presets_can_return_their_name(): void
     {
-        $livewire = new LivewirePreset();
-        $strict = new StrictPreset();
-        $relaxed = new RelaxedPreset();
+        $livewire = new LivewirePreset;
+        $strict   = new StrictPreset;
+        $relaxed  = new RelaxedPreset;
 
         $this->assertEquals('livewire', $livewire->getName());
         $this->assertEquals('strict', $strict->getName());
@@ -138,9 +139,9 @@ class CspPresetsTest extends TestCase
     #[Test]
     public function presets_can_return_their_description(): void
     {
-        $livewire = new LivewirePreset();
-        $strict = new StrictPreset();
-        $relaxed = new RelaxedPreset();
+        $livewire = new LivewirePreset;
+        $strict   = new StrictPreset;
+        $relaxed  = new RelaxedPreset;
 
         $this->assertNotEmpty($livewire->getDescription());
         $this->assertNotEmpty($strict->getDescription());

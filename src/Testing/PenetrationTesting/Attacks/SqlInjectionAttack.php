@@ -7,6 +7,8 @@ namespace ArtisanPackUI\Security\Testing\PenetrationTesting\Attacks;
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackInterface;
 use ArtisanPackUI\Security\Testing\PenetrationTesting\AttackResult;
 use ArtisanPackUI\Security\Testing\PenetrationTesting\Payloads\SqlPayloads;
+use Exception;
+use PDOException;
 
 class SqlInjectionAttack implements AttackInterface
 {
@@ -26,15 +28,15 @@ class SqlInjectionAttack implements AttackInterface
 
     public function __construct()
     {
-        $this->payloads = SqlPayloads::getErrorBased();
+        $this->payloads          = SqlPayloads::getErrorBased();
         $this->timeBasedPayloads = SqlPayloads::getTimeBased();
     }
 
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method = $options['method'] ?? 'get';
-        $params = $options['parameters'] ?? [];
+        $method          = $options['method'] ?? 'get';
+        $params          = $options['parameters'] ?? [];
 
         // If no parameters provided, try common parameter names
         if (empty($params)) {
@@ -43,7 +45,7 @@ class SqlInjectionAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($this->payloads as $payload) {
-                $testParams = $params;
+                $testParams             = $params;
                 $testParams[$paramName] = $payload;
 
                 $startTime = microtime(true);
@@ -51,35 +53,35 @@ class SqlInjectionAttack implements AttackInterface
                 try {
                     $response = $testCase->$method($uri, $testParams);
                     $duration = microtime(true) - $startTime;
-                    $content = $response->getContent();
+                    $content  = $response->getContent();
 
                     // Check for error-based SQLi
                     if ($this->hasDbError($content)) {
                         $vulnerabilities[] = [
-                            'type' => 'error-based',
+                            'type'      => 'error-based',
                             'parameter' => $paramName,
-                            'payload' => $payload,
-                            'evidence' => $this->extractError($content),
+                            'payload'   => $payload,
+                            'evidence'  => $this->extractError($content),
                         ];
                     }
 
                     // Check for time-based SQLi (if payload is time-based)
                     if ($this->isTimeBased($payload) && $duration > 4.5) {
                         $vulnerabilities[] = [
-                            'type' => 'time-based',
+                            'type'      => 'time-based',
                             'parameter' => $paramName,
-                            'payload' => $payload,
-                            'duration' => $duration,
+                            'payload'   => $payload,
+                            'duration'  => $duration,
                         ];
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // Database errors might throw exceptions
                     if ($this->isDbException($e)) {
                         $vulnerabilities[] = [
-                            'type' => 'error-based',
+                            'type'      => 'error-based',
                             'parameter' => $paramName,
-                            'payload' => $payload,
-                            'evidence' => $e->getMessage(),
+                            'payload'   => $payload,
+                            'evidence'  => $e->getMessage(),
                         ];
                     }
                 }
@@ -91,13 +93,13 @@ class SqlInjectionAttack implements AttackInterface
                 attack: $this->getName(),
                 severity: 'critical',
                 findings: $vulnerabilities,
-                metadata: ['uri' => $uri, 'method' => $method]
+                metadata: ['uri' => $uri, 'method' => $method],
             );
         }
 
         return AttackResult::notVulnerable(
             attack: $this->getName(),
-            metadata: ['uri' => $uri, 'method' => $method, 'tested_params' => array_keys($params)]
+            metadata: ['uri' => $uri, 'method' => $method, 'tested_params' => array_keys($params)],
         );
     }
 
@@ -178,7 +180,7 @@ class SqlInjectionAttack implements AttackInterface
         $timeKeywords = ['SLEEP', 'WAITFOR', 'DELAY', 'pg_sleep', 'BENCHMARK'];
 
         foreach ($timeKeywords as $keyword) {
-            if (stripos($payload, $keyword) !== false) {
+            if (false !== stripos($payload, $keyword)) {
                 return true;
             }
         }
@@ -189,10 +191,10 @@ class SqlInjectionAttack implements AttackInterface
     /**
      * Check if exception is database-related.
      */
-    protected function isDbException(\Exception $e): bool
+    protected function isDbException(Exception $e): bool
     {
         $dbExceptions = [
-            \PDOException::class,
+            PDOException::class,
             'Illuminate\Database\QueryException',
         ];
 

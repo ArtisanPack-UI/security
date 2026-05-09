@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ArtisanPackUI\Security\Console\Commands;
 
-use ArtisanPackUI\Security\Testing\Reporting\SecurityReportGenerator;
 use ArtisanPackUI\Security\Testing\Scanners\ConfigurationScanner;
 use ArtisanPackUI\Security\Testing\Scanners\DependencyScanner;
 use ArtisanPackUI\Security\Testing\Scanners\OwaspScanner;
@@ -29,14 +28,14 @@ class SecurityBaseline extends Command
     public function handle(): int
     {
         $action = $this->argument('action');
-        $path = $this->option('path') ?? $this->defaultPath;
+        $path   = $this->option('path') ?? $this->defaultPath;
 
         return match ($action) {
-            'show' => $this->showBaseline($path),
+            'show'   => $this->showBaseline($path),
             'create' => $this->createBaseline($path),
             'update' => $this->updateBaseline($path),
-            'clear' => $this->clearBaseline($path),
-            default => $this->invalidAction($action),
+            'clear'  => $this->clearBaseline($path),
+            default  => $this->invalidAction($action),
         };
     }
 
@@ -54,7 +53,7 @@ class SecurityBaseline extends Command
 
         $baseline = json_decode(file_get_contents($path), true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (JSON_ERROR_NONE !== json_last_error()) {
             $this->error('Invalid baseline file format.');
 
             return self::FAILURE;
@@ -107,15 +106,16 @@ class SecurityBaseline extends Command
             'metadata' => [
                 'createdAt' => now()->toIso8601String(),
                 'updatedAt' => now()->toIso8601String(),
-                'version' => '1.0',
+                'version'   => '1.0',
             ],
             'findings' => array_map(fn ($f) => $f->toArray(), $findings),
         ];
 
         $result = file_put_contents($path, json_encode($baseline, JSON_PRETTY_PRINT));
-        
-        if ($result === false) {
+
+        if (false === $result) {
             $this->error("Failed to write baseline file: {$path}");
+
             return self::FAILURE;
         }
 
@@ -137,7 +137,7 @@ class SecurityBaseline extends Command
 
         $this->info('Running security scan...');
 
-        $findings = $this->runScan();
+        $findings    = $this->runScan();
         $newFindings = [];
         $existingIds = array_column($existingBaseline['findings'] ?? [], 'id');
 
@@ -169,11 +169,11 @@ class SecurityBaseline extends Command
             'metadata' => [
                 'createdAt' => $existingBaseline['metadata']['createdAt'] ?? now()->toIso8601String(),
                 'updatedAt' => now()->toIso8601String(),
-                'version' => '1.0',
+                'version'   => '1.0',
             ],
             'findings' => array_merge(
                 $existingBaseline['findings'] ?? [],
-                array_map(fn ($f) => $f->toArray(), $newFindings)
+                array_map(fn ($f) => $f->toArray(), $newFindings),
             ),
         ];
 
@@ -228,17 +228,17 @@ class SecurityBaseline extends Command
         $findings = [];
 
         $this->output->write('  OWASP scan... ');
-        $scanner = new OwaspScanner;
+        $scanner  = new OwaspScanner;
         $findings = array_merge($findings, $scanner->scan());
         $this->output->writeln('<fg=green>done</>');
 
         $this->output->write('  Dependency scan... ');
-        $scanner = new DependencyScanner;
+        $scanner  = new DependencyScanner;
         $findings = array_merge($findings, $scanner->scan());
         $this->output->writeln('<fg=green>done</>');
 
         $this->output->write('  Configuration scan... ');
-        $scanner = new ConfigurationScanner;
+        $scanner  = new ConfigurationScanner;
         $findings = array_merge($findings, $scanner->scan());
         $this->output->writeln('<fg=green>done</>');
 

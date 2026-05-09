@@ -14,14 +14,14 @@ class SecurityGateTest extends TestCase
 {
     public function test_creates_gate_with_default_thresholds(): void
     {
-        $gate = new SecurityGate();
+        $gate = new SecurityGate;
 
         $this->assertInstanceOf(SecurityGate::class, $gate);
     }
 
     public function test_passes_with_no_findings(): void
     {
-        $gate = new SecurityGate();
+        $gate   = new SecurityGate;
         $result = $gate->evaluate([]);
 
         $this->assertTrue($result->passed);
@@ -30,7 +30,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_critical_finding(): void
     {
-        $gate = new SecurityGate(maxCritical: 0);
+        $gate     = new SecurityGate(maxCritical: 0);
         $findings = [
             SecurityFinding::critical('Critical Issue', 'Description', 'test'),
         ];
@@ -44,7 +44,7 @@ class SecurityGateTest extends TestCase
 
     public function test_passes_with_critical_finding_when_threshold_allows(): void
     {
-        $gate = new SecurityGate(maxCritical: 1);
+        $gate     = new SecurityGate(maxCritical: 1);
         $findings = [
             SecurityFinding::critical('Critical Issue', 'Description', 'test'),
         ];
@@ -56,7 +56,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_high_finding_exceeding_threshold(): void
     {
-        $gate = new SecurityGate(maxHigh: 0);
+        $gate     = new SecurityGate(maxHigh: 0);
         $findings = [
             SecurityFinding::high('High Issue', 'Description', 'test'),
         ];
@@ -69,7 +69,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_medium_findings_exceeding_threshold(): void
     {
-        $gate = new SecurityGate(maxMedium: 2);
+        $gate     = new SecurityGate(maxMedium: 2);
         $findings = [
             SecurityFinding::medium('Medium 1', 'Description', 'test'),
             SecurityFinding::medium('Medium 2', 'Description', 'test'),
@@ -84,7 +84,7 @@ class SecurityGateTest extends TestCase
 
     public function test_ignores_low_findings(): void
     {
-        $gate = new SecurityGate();
+        $gate     = new SecurityGate;
         $findings = [
             SecurityFinding::low('Low Issue 1', 'Description', 'test'),
             SecurityFinding::low('Low Issue 2', 'Description', 'test'),
@@ -98,7 +98,7 @@ class SecurityGateTest extends TestCase
 
     public function test_ignores_info_findings(): void
     {
-        $gate = new SecurityGate();
+        $gate     = new SecurityGate;
         $findings = [
             SecurityFinding::info('Info 1', 'Description', 'test'),
             SecurityFinding::info('Info 2', 'Description', 'test'),
@@ -118,7 +118,7 @@ class SecurityGateTest extends TestCase
                 name: 'High Overhead Test',
                 withSecurity: ['mean' => 15.0, 'min' => 12.0, 'max' => 18.0, 'stddev' => 1.5],
                 withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-                iterations: 100
+                iterations: 100,
             ),
         ];
 
@@ -138,7 +138,7 @@ class SecurityGateTest extends TestCase
                 name: 'Acceptable Overhead',
                 withSecurity: ['mean' => 11.0, 'min' => 10.0, 'max' => 12.0, 'stddev' => 0.5],
                 withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-                iterations: 100
+                iterations: 100,
             ),
         ];
 
@@ -150,7 +150,7 @@ class SecurityGateTest extends TestCase
 
     public function test_adds_custom_rule(): void
     {
-        $gate = new SecurityGate();
+        $gate = new SecurityGate;
         $gate->addRule('custom', function ($findings, $benchmarks) {
             return count($findings) < 5 ? true : 'Too many findings';
         });
@@ -171,7 +171,7 @@ class SecurityGateTest extends TestCase
 
     public function test_custom_rule_passes_when_returning_true(): void
     {
-        $gate = new SecurityGate();
+        $gate = new SecurityGate;
         $gate->addRule('always-pass', function () {
             return true;
         });
@@ -215,7 +215,7 @@ class SecurityGateTest extends TestCase
         $result = new GateResult(
             passed: true,
             failures: [],
-            summary: ['critical' => 0, 'high' => 0, 'medium' => 0]
+            summary: ['critical' => 0, 'high' => 0, 'medium' => 0],
         );
 
         $this->assertEquals(0, $result->getExitCode());
@@ -226,7 +226,7 @@ class SecurityGateTest extends TestCase
         $result = new GateResult(
             passed: false,
             failures: ['Some failure'],
-            summary: ['critical' => 1, 'high' => 0, 'medium' => 0]
+            summary: ['critical' => 1, 'high' => 0, 'medium' => 0],
         );
 
         $this->assertEquals(1, $result->getExitCode());
@@ -237,7 +237,7 @@ class SecurityGateTest extends TestCase
         $result = new GateResult(
             passed: false,
             failures: ['Failure 1', 'Failure 2'],
-            summary: ['critical' => 0, 'high' => 0, 'medium' => 0]
+            summary: ['critical' => 0, 'high' => 0, 'medium' => 0],
         );
 
         $message = $result->getFailureMessage();
@@ -251,7 +251,7 @@ class SecurityGateTest extends TestCase
         $result = new GateResult(
             passed: true,
             failures: [],
-            summary: ['critical' => 0, 'high' => 0, 'medium' => 0]
+            summary: ['critical' => 0, 'high' => 0, 'medium' => 0],
         );
 
         $this->assertEquals('', $result->getFailureMessage());
@@ -262,7 +262,7 @@ class SecurityGateTest extends TestCase
         $result = new GateResult(
             passed: true,
             failures: [],
-            summary: ['critical' => 0, 'high' => 1, 'medium' => 2]
+            summary: ['critical' => 0, 'high' => 1, 'medium' => 2],
         );
 
         $array = $result->toArray();
@@ -276,7 +276,7 @@ class SecurityGateTest extends TestCase
 
     public function test_summary_contains_correct_counts(): void
     {
-        $gate = new SecurityGate(maxCritical: 5, maxHigh: 5, maxMedium: 20);
+        $gate     = new SecurityGate(maxCritical: 5, maxHigh: 5, maxMedium: 20);
         $findings = [
             SecurityFinding::critical('Critical 1', 'Desc', 'test'),
             SecurityFinding::high('High 1', 'Desc', 'test'),
@@ -297,7 +297,7 @@ class SecurityGateTest extends TestCase
             maxCritical: 0,
             maxHigh: 0,
             maxMedium: 0,
-            maxOverheadPercent: 5.0
+            maxOverheadPercent: 5.0,
         );
 
         $findings = [
@@ -311,7 +311,7 @@ class SecurityGateTest extends TestCase
                 name: 'Slow Test',
                 withSecurity: ['mean' => 12.0, 'min' => 10.0, 'max' => 14.0, 'stddev' => 1.0],
                 withoutSecurity: ['mean' => 10.0, 'min' => 9.0, 'max' => 11.0, 'stddev' => 0.5],
-                iterations: 100
+                iterations: 100,
             ),
         ];
 
@@ -323,7 +323,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fluent_rule_addition(): void
     {
-        $gate = (new SecurityGate())
+        $gate = (new SecurityGate)
             ->addRule('rule1', fn () => true)
             ->addRule('rule2', fn () => true);
 

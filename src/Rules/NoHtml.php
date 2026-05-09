@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ArtisanPackUI\Security\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
@@ -11,11 +13,12 @@ class NoHtml implements Rule
      *
      * @param  string  $attribute
      * @param  mixed  $value
+     *
      * @return bool
      */
     public function passes($attribute, $value)
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return true;
         }
 

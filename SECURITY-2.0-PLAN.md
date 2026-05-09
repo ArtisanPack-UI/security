@@ -280,6 +280,7 @@ artisanpack-ui/
 - Blade directives (@role, @permission)
 - Gate integration
 - Artisan commands for role/permission management
+- Configurable model bindings (allows other packages to extend the base models)
 
 **Dependencies**:
 - `illuminate/support`
@@ -287,6 +288,69 @@ artisanpack-ui/
 **Migrations**: 4
 
 **Config Lines**: ~50
+
+**Configuration**:
+```php
+// config/artisanpack/rbac.php
+return [
+    'models' => [
+        'role'       => \ArtisanPackUI\Rbac\Models\Role::class,
+        'permission' => \ArtisanPackUI\Rbac\Models\Permission::class,
+    ],
+];
+```
+
+#### CMS Framework Integration
+
+The `artisanpack-ui/cms-framework` package currently has its own RBAC implementation (`Role`, `Permission` models, `HasRolesAndPermissions` trait, migrations, managers, policies, and API controllers). Once this RBAC package is available, the CMS framework should adopt it as a dependency to eliminate duplication.
+
+**What RBAC owns (CMS framework removes)**:
+| Concern | RBAC Package | CMS Framework |
+|---------|-------------|---------------|
+| `Role` model (base) | Owns | Extends via subclass |
+| `Permission` model (base) | Owns | Extends via subclass |
+| `HasRolesAndPermissions` trait | Owns | Uses it |
+| Migrations (`roles`, `permissions`, pivots) | Owns (with `Schema::hasTable()` guards) | Removes its copies |
+| Middleware | Owns | Uses it |
+| Blade directives | Owns | Uses them |
+| Gate integration | Owns | Uses it |
+
+**What CMS framework keeps (CMS-specific layer)**:
+| Concern | CMS Framework |
+|---------|---------------|
+| `RoleManager` / `PermissionManager` | Keeps (registration helpers with hook system) |
+| `RolePolicy` / `PermissionPolicy` | Keeps (Eventy filter-based authorization) |
+| API routes and controllers | Keeps |
+| Helper functions (`ap_register_role`, etc.) | Keeps |
+| Extended `Role`/`Permission` models | Adds CMS-specific behavior on top of RBAC base models |
+
+**How model extension works**:
+
+The RBAC package provides configurable model bindings. The CMS framework overrides them in its service provider:
+
+```php
+// CMS framework service provider
+config()->set( 'artisanpack.rbac.models.role', \ArtisanPackUI\CMSFramework\Modules\Users\Models\Role::class );
+config()->set( 'artisanpack.rbac.models.permission', \ArtisanPackUI\CMSFramework\Modules\Users\Models\Permission::class );
+```
+
+The CMS framework models extend the RBAC base models:
+
+```php
+namespace ArtisanPackUI\CMSFramework\Modules\Users\Models;
+
+use ArtisanPackUI\Rbac\Models\Role as BaseRole;
+
+class Role extends BaseRole
+{
+    // CMS-specific hook integration, additional behavior
+}
+```
+
+**Migration conflict resolution**: The RBAC package's migrations use `Schema::hasTable()` guards, so they are safe to run even if the CMS framework's tables already exist. For users upgrading from an older CMS framework version, the upgrade guide should instruct them to:
+1. Install `artisanpack-ui/rbac`
+2. Run `php artisan migrate` (no-ops for existing tables)
+3. Update CMS framework to the version that removes its own RBAC migrations
 
 ### Package 5: `artisanpack-ui/secure-uploads`
 

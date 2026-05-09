@@ -15,7 +15,7 @@ class OwaspScannerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->scanner = new OwaspScanner();
+        $this->scanner = new OwaspScanner;
     }
 
     public function test_can_instantiate_scanner(): void
@@ -55,7 +55,7 @@ class OwaspScannerTest extends TestCase
             $this->assertContains(
                 $finding->severity,
                 $validSeverities,
-                "Invalid severity: {$finding->severity}"
+                "Invalid severity: {$finding->severity}",
             );
         }
     }

