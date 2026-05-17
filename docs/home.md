@@ -2,85 +2,41 @@
 title: ArtisanPack UI Security Documentation
 ---
 
-# ArtisanPack UI Security Documentation
+# ArtisanPack UI Security
 
-Welcome to the ArtisanPack UI Security package documentation. This package provides comprehensive security features for Laravel applications, including authentication, authorization, data protection, and compliance tools.
+The **core** Laravel security toolkit in the ArtisanPack UI ecosystem. Focused on input sanitization, output escaping, KSES filtering, security headers, XSS protection, basic rate limiting, and Content Security Policy.
 
-## Getting Started
+> **Security 2.0 — core-only.** Authentication, 2FA, RBAC, file uploads, analytics, and compliance have moved to dedicated sibling packages. See [UPGRADE.md](../UPGRADE.md) for migrating from 1.x.
 
-- [Getting Started](getting-started.md) - Installation, setup, and basic usage
-- [Implementation Guide](implementation-guide.md) - Step-by-step implementation walkthrough
-- [Security Checklist](security-checklist.md) - Pre-launch security checklist
+## What's in this package
 
-## Core Features
+- **Sanitization** — `sanitizeEmail`, `sanitizeUrl`, `sanitizeText`, `sanitizeInt`, `sanitizeArray`, …
+- **Escaping** — `escHtml`, `escAttr`, `escUrl`, `escJs`, `escCss` (Laminas Escaper-backed)
+- **KSES filtering** — `kses()` WordPress-style allowed-tag filtering
+- **Validation rules** — `NoHtml`, `SecureUrl`
+- **Middleware** — `csp`, `security.headers`, `xss.protection`, `api.security`, `api.rate_limit`
+- **Content Security Policy** — nonce generator, policy builder, presets (Strict / Relaxed / Livewire), violation reporting endpoint, optional CSP dashboard Livewire component, Artisan commands (`csp:test`, `csp:stats`, `csp:prune`, `csp:generate`)
+- **Security audit + testing toolkit** — OWASP / configuration scanners, penetration testing helpers, performance benchmarks, report generators (JSON, HTML, JUnit, SARIF, Markdown), CI/CD integration, Artisan commands (`security:audit`, `security:scan`, `security:baseline`, `security:benchmark`, `security:check-config`, `security:test-headers`, `security:scan-deps`)
 
-### Authentication
-- [Two-Factor Authentication](two-factor-authentication.md) - TOTP, backup codes, and recovery
-- [Advanced Authentication](advanced-authentication.md) - Social login, SSO, WebAuthn, and biometrics
-- [Session Security](session-security.md) - Session binding, concurrent sessions, and hijacking detection
+## What's NOT in this package (sibling packages)
 
-### Authorization
-- [Role-Based Access Control](rbac.md) - Roles, permissions, and access management
-- [API Security](api-security.md) - Token-based API authentication with abilities
+| Capability | Package |
+|---|---|
+| Authentication, 2FA, password complexity, account lockout, advanced sessions | [`artisanpack-ui/security-auth`](https://github.com/ArtisanPack-UI/security-auth) |
+| WebAuthn / FIDO2, SSO (SAML/OIDC), social auth, biometrics, device fingerprinting | [`artisanpack-ui/security-advanced-auth`](https://github.com/ArtisanPack-UI/security-advanced-auth) |
+| Roles, permissions, Gate integration, Blade directives, Artisan commands | [`artisanpack-ui/rbac`](https://github.com/ArtisanPack-UI/rbac) |
+| Secure uploads, malware scanning, signed-URL serving | [`artisanpack-ui/secure-uploads`](https://github.com/ArtisanPack-UI/secure-uploads) |
+| Security event logging, anomaly detection, SIEM export, dashboards | [`artisanpack-ui/security-analytics`](https://github.com/ArtisanPack-UI/security-analytics) |
+| GDPR / CCPA / LGPD compliance | `artisanpack-ui/compliance` (future) |
 
-### Protection
-- [CSP Framework](csp-framework.md) - Content Security Policy configuration and nonces
-- [File Upload Security](file-upload-security.md) - Validation, malware scanning, and secure storage
-- [Security Guidelines](security-guidelines.md) - Input sanitization and output escaping
+## Documentation map
 
-## Advanced Features
-
-- [Compliance Framework](compliance-framework.md) - GDPR, consent management, and data retention
-- [Analytics & Monitoring](analytics-monitoring.md) - Security dashboard, metrics, and alerting
-- [Security Testing](security-testing.md) - Testing security features and penetration testing
-
-## Configuration & Reference
-
-- [Configuration Reference](configuration-reference.md) - All configuration options
-- [Environment Variables](environment-variables.md) - Environment variable reference
-- [Command Reference](command-reference.md) - Artisan commands for security management
-- [API Reference](api-reference.md) - Function and class reference
-
-## Support
-
-- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
-- [FAQ](faq.md) - Frequently asked questions
-- [Video Tutorials](video-tutorials.md) - Step-by-step video guides
-
-## Contributing
-
-- [Contributing Guide](contributing.md) - How to contribute to this project
-- [AI Guidelines](ai-guidelines.md) - Guidelines for AI code generation
-- [Changelog](changelog.md) - Version history and changes
-
-## Package Features Overview
-
-| Feature | Description |
-|---------|-------------|
-| **Two-Factor Authentication** | TOTP, SMS, email backup, recovery codes |
-| **Social Authentication** | Google, Microsoft, GitHub, Facebook, Apple, LinkedIn |
-| **SSO** | SAML 2.0, OIDC, LDAP integration |
-| **WebAuthn** | Passkeys and hardware security keys |
-| **RBAC** | Roles, permissions, and hierarchies |
-| **API Security** | Token abilities, rate limiting, request signing |
-| **Session Security** | Binding, rotation, concurrent limits, hijacking detection |
-| **CSP** | Policy builder, nonces, violation reporting |
-| **File Security** | Type validation, malware scanning, secure storage |
-| **Compliance** | GDPR tools, consent management, audit logging |
-| **Monitoring** | Security dashboard, metrics, alerting |
-
-## Quick Links
-
-### For New Users
-1. Start with [Getting Started](getting-started.md)
-2. Follow the [Implementation Guide](implementation-guide.md)
-3. Review the [Security Checklist](security-checklist.md)
-
-### For Existing Users
-- [Configuration Reference](configuration-reference.md) for all options
-- [Command Reference](command-reference.md) for CLI tools
-- [Troubleshooting Guide](troubleshooting.md) for issues
-
-### For Contributors
-- [Contributing Guide](contributing.md)
-- [AI Guidelines](ai-guidelines.md)
+- [Getting Started](getting-started.md) — install + first sanitize / escape call
+- [Installation](installation.md) — requirements, configuration, environment variables, migration management
+- [Usage](usage.md) — sanitization, escaping, KSES, validation rules, middleware, CSP, headers, rate limiting, session security, API security, Artisan commands
+- [API Reference](api.md) — public API surface
+- [Advanced](advanced.md) — security testing toolkit, checklist, guidelines, AI assistant guidelines, video tutorials, implementation guide, migration guides
+- [FAQ](faq.md)
+- [Troubleshooting](troubleshooting.md)
+- [Upgrading from 1.x](../UPGRADE.md)
+- [Changelog](../CHANGELOG.md)

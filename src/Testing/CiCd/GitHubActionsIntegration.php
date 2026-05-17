@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * GitHubActionsIntegration CI/CD integration.
+ *
+ *
+ * @author     Jacob Martella <support@artisanpackui.dev>
+ *
+ * @since      2.0.0
+ */
+
 declare(strict_types=1);
 
 namespace ArtisanPackUI\Security\Testing\CiCd;

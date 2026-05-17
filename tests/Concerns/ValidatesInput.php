@@ -13,8 +13,6 @@ trait ValidatesInput
      *
      * @param  \Illuminate\Contracts\Validation\Rule  $rule
      * @param  mixed  $value
-     *
-     * @return void
      */
     public function assertValidates($rule, $value): void
     {
@@ -27,8 +25,6 @@ trait ValidatesInput
      *
      * @param  \Illuminate\Contracts\Validation\Rule  $rule
      * @param  mixed  $value
-     *
-     * @return void
      */
     public function assertFailsValidation($rule, $value): void
     {
