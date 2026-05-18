@@ -36,12 +36,8 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Run PHP-CS-Fixer
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
-
-      - name: Run PHPCS
-        continue-on-error: true
-        run: ./vendor/bin/phpcs src/ database/ tests/ config/
+      - name: Run Pint
+        run: ./vendor/bin/pint --test
 
   test:
     runs-on: ubuntu-latest
