@@ -3,7 +3,7 @@
   "description": "Core Laravel security toolkit — input sanitization, output escaping, KSES filtering, security headers, XSS protection, basic rate limiting, and Content Security Policy. Authentication / 2FA / RBAC / file uploads / analytics / compliance live in sibling packages.",
   "type": "library",
   "license": "MIT",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0",
   "keywords": [
     "laravel",
     "security",
@@ -32,7 +32,7 @@
   "authors": [
     {
       "name": "Jacob Martella",
-      "email": "me@jacobmartella.com"
+      "email": "support@artisanpackui.dev"
     }
   ],
   "require": {
@@ -61,6 +61,11 @@
     "artisanpack-ui/security-analytics": "Security event logging, anomaly detection, threat intelligence, SIEM export, incident response, alerting, dashboards.",
     "artisanpack-ui/compliance": "GDPR / CCPA / LGPD compliance toolkit — consent, DSR (erasure + portability), DPIA, data minimization, retention."
   },
+  "scripts": {
+    "lint": "./vendor/bin/pint --test",
+    "fix": "./vendor/bin/pint",
+    "test": "./vendor/bin/pest"
+  },
   "config": {
     "allow-plugins": {
       "pestphp/pest-plugin": true,
@@ -76,7 +81,8 @@
         "ArtisanPackUI\\Security\\SecurityServiceProvider"
       ],
       "aliases": {
-        "Security": "ArtisanPackUI\\Security\\Facades\\Security"
+        "Security": "ArtisanPackUI\\Security\\Facades\\Security",
+        "Csp": "ArtisanPackUI\\Security\\Facades\\Csp"
       }
     }
   }
