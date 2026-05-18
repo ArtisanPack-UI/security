@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-18
+
+### Changed
+
+- Promotes the `2.0.0-alpha.1` feature surface to the stable `2.0.0` release. No code changes from the alpha — see the alpha entry below for the complete 2.0 changelog.
+
 ## [2.0.0-alpha.1] - 2026-05-09
 
 ### Changed
