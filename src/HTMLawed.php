@@ -329,7 +329,7 @@ function hl_attributeValue(string $attr, string $value, array $ruleAr, string $e
     }
     $out = implode(',' == $valSep ? ', ' : ' ', $out);
 
-    return  isset($out[0]) ? $out : (isset($ruleAr['default']) ? $ruleAr['default'] : 0);
+    return isset($out[0]) ? $out : (isset($ruleAr['default']) ? $ruleAr['default'] : 0);
 }
 
 /*
@@ -379,7 +379,7 @@ function hl_balance(string $t, int $act = 1, string $parentEle = 'div'): string
         ? $parentEle
         : 'div';
     if (isset($noKidEleAr[$mom])) {
-        return  ! $act ? '' : str_replace(['<', '>'], ['&lt;', '&gt;'], $t);
+        return ! $act ? '' : str_replace(['<', '>'], ['&lt;', '&gt;'], $t);
     }
     if (isset($validMomKidAr[$mom])) {
         $validInMomEleAr = $validMomKidAr[$mom];
@@ -463,8 +463,7 @@ function hl_balance(string $t, int $act = 1, string $parentEle = 'div'): string
                 foreach (
                     preg_split(
                         '`(\x01\x02[^\x01\x02]+\x02\x01)`', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) as $m) {
-                    echo
-                    "\x01\x02" == substr($m, 0, 2)
+                    echo "\x01\x02" == substr($m, 0, 2)
                         ? $m
                         : ($act > 4
                         ? preg_replace('`\S`', '', $m)
@@ -666,8 +665,7 @@ function hl_balance(string $t, int $act = 1, string $parentEle = 'div'): string
             foreach (
                 preg_split(
                     '`(\x01\x02[^\x01\x02]+\x02\x01)`', $content, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) as $m) {
-                echo
-                "\x01\x02" == substr($m, 0, 2)
+                echo "\x01\x02" == substr($m, 0, 2)
                     ? $m
                     : ($act > 4
                     ? preg_replace('`\S`', '', $m)
@@ -1049,7 +1047,7 @@ function hl_tag(array $t): string
                     .'\x{370}-\x{37d}\x{37f}-\x{1fff}\x{200c}-\x{200d}\x{2070}-\x{218f}'
                     .'\x{2c00}-\x{2fef}\x{3001}-\x{d7ff}\x{f900}-\x{fdcf}\x{fdf0}-\x{fffd}\x{10000}-\x{effff}]`u', $ele)))
     ) {
-        return  ($C['keep_bad'] % 2) ? str_replace(['<', '>'], ['&lt;', '&gt;'], $t) : '';
+        return ($C['keep_bad'] % 2) ? str_replace(['<', '>'], ['&lt;', '&gt;'], $t) : '';
     }
 
     // Attribute string.
@@ -1062,7 +1060,7 @@ function hl_tag(array $t): string
     if ($C['make_tag_strict'] && isset($deprecatedEleAr[$ele])) {
         $eleTransformed = hl_deprecatedElement($ele, $attrStr, $C['make_tag_strict']); // hl_deprecatedElement uses referencing
         if (! $ele) {
-            return  ($C['keep_bad'] % 2) ? str_replace(['<', '>'], ['&lt;', '&gt;'], $t) : '';
+            return ($C['keep_bad'] % 2) ? str_replace(['<', '>'], ['&lt;', '&gt;'], $t) : '';
         }
     }
 
