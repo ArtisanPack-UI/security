@@ -1,6 +1,6 @@
-# Contributing to ArtisanPack UI Security
+# Contributing to ArtisanPack UI
 
-As an open source project, ArtisanPack UI Security is open to contributions from everyone. You don't need to be a developer to contribute. Whether it's contributing code, writing documentation, testing the package or anything in between there's a place for you here to contribute.
+As an open source project, ArtisanPack UI is open to contributions from everyone. You don't need to be a developer to contribute. Whether it's contributing code, writing documentation, testing the packages, or anything in between, there's a place for you here to contribute.
 
 ## Table of Contents
 
@@ -19,19 +19,21 @@ As an open source project, ArtisanPack UI Security is open to contributions from
 
 In order to make this a best place for everyone to contribute, there are some hard and fast rules that everyone needs to abide by.
 
-* ArtisanPack UI Security is open to everyone no matter your race, ethnicity, gender, who you love, etc. In order to keep it that way, there's zero tolerance for any racist, misogynistic, xenophobic, bigoted, Zionist, antisemitic (yes, there is a difference), Islamophobic, etc. messages. This includes messages sent to a fellow contributor outside of this repository. In short, don't be a jerk. Failure to comply will result in a ban from the project.
+* ArtisanPack UI is open to everyone no matter your race, ethnicity, gender, who you love, etc. In order to keep it that way, there's zero tolerance for any racist, misogynistic, xenophobic, bigoted, Zionist, antisemitic (yes, there is a difference), Islamophobic, etc. messages. This includes messages sent to a fellow contributor outside of this repository. In short, don't be a jerk. Failure to comply will result in a ban from the project.
 * Be respectful when communicating with fellow contributors.
 * Respect the decisions made for what to include in the package.
-* Work together to create the best possible content management system.
+* Work together to create the best possible developer toolkit.
 
 ## Ways to Contribute
 
-There are a ton of different ways to contribute to ArtisanPack UI Security even if you're not a developer. Here are some (but not all) of the ways you can contribute to the project:
+There are a ton of different ways to contribute to ArtisanPack UI even if you're not a developer. Here are some (but not all) of the ways you can contribute to the project:
 
-* Write code for ArtisanPack UI Security
+* Write code for the package
+* Build integrations or extensions on top of the package
+* Improve the package's tests, docs, and examples
 * Test and report bugs found in the package
 * Write documentation
-* Write tutorials and talk about ArtisanPack UI Security on your blog and/or social media profiles
+* Write tutorials and talk about ArtisanPack UI on your blog and/or social media profiles
 * Review pull/merge requests
 * Improve existing code
 * Help answer questions in issues
@@ -41,9 +43,8 @@ There are a ton of different ways to contribute to ArtisanPack UI Security even 
 ### Prerequisites
 
 Before contributing, make sure you have:
-
 - Git installed on your machine
-- PHP 8.1 or higher
+- PHP 8.2 or higher
 - Composer
 - A GitLab, GitHub, or other Git hosting account
 
@@ -65,7 +66,6 @@ When creating an issue, you'll be prompted to choose a template. We have several
 ### Bug Report Template
 
 Use this template when you've found a bug. It will ask for:
-
 - **Expected behavior** - What should happen
 - **Current behavior** - What actually happens
 - **Steps to reproduce** - How to recreate the bug
@@ -73,59 +73,50 @@ Use this template when you've found a bug. It will ask for:
 - **Screenshots** - If applicable
 
 The template automatically applies these labels:
-
 - `Type::Bug`
 - `Status::Backlog`
 
 **You should also add:**
-
 - `Priority::*` (Critical, High, Medium, or Low) if urgent
 - `Area::*` (Frontend, Backend, etc.) for the affected area
 
 ### Feature Request Template
 
 Use this when suggesting new functionality. It will ask for:
-
 - **Problem statement** - What problem does this solve?
 - **Proposed solution** - What would you like to happen?
 - **Alternatives considered** - Other solutions you've thought about
 - **Use cases** - How would this be used?
 
 The template automatically applies:
-
 - `Type::Feature`
 - `Status::Backlog`
 
 ### Enhancement Template
 
 Use this for improvements to existing features. It will ask for:
-
 - **Current behavior** - How it works now
 - **Proposed improvement** - How to make it better
 - **Benefits** - Why this improvement is valuable
 - **Backwards compatibility** - Will this break anything?
 
 The template automatically applies:
-
 - `Type::Enhancement`
 - `Status::Backlog`
 
 ### Task Template
 
 Use this for general tasks that don't fit other categories. It will ask for:
-
 - **Task description** - What needs to be done
 - **Acceptance criteria** - How we know it's complete
 - **Context** - Why this is needed
 
 The template automatically applies:
-
 - `Status::Backlog`
 
 ### Submitting Your Issue
 
 After filling out the template:
-
 1. Review your issue for completeness
 2. The labels will be applied automatically
 3. Add any additional labels if needed (Priority, Area)
@@ -141,12 +132,12 @@ We use GitLab Flow with release branches. Here's how it works:
 ### Main Branches
 
 - **`main`** - Latest stable release
-    - All releases are tagged from main
-    - Protected: No direct pushes allowed
-
+  - All releases are tagged from main
+  - Protected: No direct pushes allowed
+  
 - **`release/X.Y.x`** - Long-term support branches for patch releases
-    - Example: `release/1.0.x` for v1.0.1, v1.0.2, etc.
-    - Created when needed for patches
+  - Example: `release/1.0.x` for v1.0.1, v1.0.2, etc.
+  - Created when needed for patches
 
 ### Feature Branches
 
@@ -155,7 +146,6 @@ When contributing, create a feature branch:
 **Format:** `feature/short-description` or `fix/short-description`
 
 **Examples:**
-
 - `feature/add-dark-mode`
 - `fix/navigation-bug`
 - `feature/issue-123-user-profiles`
@@ -203,21 +193,18 @@ We have templates for different types of merge requests:
 #### Default Template (Bug Fixes, Features, Enhancements, Tasks)
 
 Use this for most MRs. It includes:
-
 - Description of changes
 - Type of change (Bug fix, Feature, Enhancement, etc.)
 - Testing performed
-- **Accessibility tests** (required for all UI changes)
+- **Tests for the change** (unit and/or feature; required for code changes)
 - Tests added
 - Documentation updates
 - Pre-submission checklist
 
 The template automatically applies:
-
 - `Status::In Review`
 
 **You should also add:**
-
 - `Type::*` (Bug, Feature, Enhancement, etc.)
 - `Area::*` (Frontend, Backend, etc.)
 
@@ -228,7 +215,6 @@ This template is for release merge requests and should only be used by maintaine
 ### Merge Request Guidelines
 
 **For External Contributors:**
-
 1. Create your MR using the Default template
 2. Fill out all sections completely
 3. Link to the related issue: `Closes #123`
@@ -241,7 +227,6 @@ This template is for release merge requests and should only be used by maintaine
 ### Code Review Process
 
 When you submit an MR:
-
 1. A maintainer will review within 1-3 days
 2. They may request changes or ask questions
 3. Address feedback by pushing new commits
@@ -262,7 +247,6 @@ We use a comprehensive label system to organize issues and merge requests:
 ### Status Labels (Workflow)
 
 Labels that track where an issue/MR is in the workflow:
-
 - `Status::Backlog` - Not yet prioritized
 - `Status::To Do` - Ready to work on
 - `Status::In Progress` - Currently being worked on
@@ -274,7 +258,6 @@ Labels that track where an issue/MR is in the workflow:
 ### Type Labels (What It Is)
 
 Labels that categorize the work:
-
 - `Type::Bug` - Something isn't working
 - `Type::Feature` - New functionality
 - `Type::Enhancement` - Improvement to existing feature
@@ -287,7 +270,6 @@ Labels that categorize the work:
 ### Priority Labels (Urgency)
 
 Labels that indicate importance:
-
 - `Priority::Critical` - Broken functionality, needs immediate fix
 - `Priority::High` - Important, should be addressed soon
 - `Priority::Medium` - Normal priority
@@ -296,11 +278,9 @@ Labels that indicate importance:
 ### Area Labels (Where)
 
 Labels that indicate affected code area:
-
-- `Area::Frontend` - UI/client-side code
-- `Area::Backend` - Server/API code
-- `Area::Design` - Visual design work
-- `Area::Infrastructure` - DevOps/deployment
+- `Area::Core` - Core package logic
+- `Area::Integration` - Integration with Laravel framework / sibling packages
+- `Area::Infrastructure` - DevOps/deployment / CI
 - `Area::Testing` - Test-related work
 
 ### Special Labels
@@ -325,7 +305,6 @@ We use milestones to organize and schedule work:
 ### For Contributors
 
 When you create an issue:
-
 - It's initially unassigned to a milestone
 - A maintainer will assign it to a milestone during triage
 - `Future Release` = under consideration but not scheduled
@@ -343,21 +322,21 @@ When you create an issue:
 
 ## Forking and Contributing
 
-ArtisanPack UI Security is primarily hosted on GitLab, but you can contribute from any Git hosting platform.
+ArtisanPack UI is primarily hosted on GitLab, but you can contribute from any Git hosting platform.
 
 ### From GitLab (Primary)
 
 **Easiest method:**
 
 1. **Fork the repository**
-    - Go to the project page
-    - Click "Fork" button
-    - Fork will be created in your account
+   - Go to the project page
+   - Click "Fork" button
+   - Fork will be created in your account
 
 2. **Clone your fork**
    ```bash
-   git clone git@gitlab.com:your-username/artisanpack-ui-package.git
-   cd artisanpack-ui-package
+   git clone git@gitlab.com:your-username/package-name.git
+   cd package-name
    ```
 
 3. **Add upstream remote**
@@ -378,11 +357,11 @@ ArtisanPack UI Security is primarily hosted on GitLab, but you can contribute fr
    ```
 
 6. **Create Merge Request**
-    - Go to your fork on GitLab
-    - Click "Create merge request"
-    - Target the original repository's `main` branch
-    - Fill out the MR template
-    - Submit
+   - Go to your fork on GitLab
+   - Click "Create merge request"
+   - Target the original repository's `main` branch
+   - Fill out the MR template
+   - Submit
 
 ### From GitHub
 
@@ -395,8 +374,8 @@ ArtisanPack UI Security is primarily hosted on GitLab, but you can contribute fr
    ```
 
 2. **Create repository on GitHub**
-    - Go to GitHub and create a new repository
-    - Don't initialize with README
+   - Go to GitHub and create a new repository
+   - Don't initialize with README
 
 3. **Add GitHub as remote**
    ```bash
@@ -416,14 +395,14 @@ ArtisanPack UI Security is primarily hosted on GitLab, but you can contribute fr
    ```
 
 6. **Create Pull Request**
-    - Create PR on GitHub as normal
-    - Mention you're contributing to a GitLab project
-    - Include: "This PR is for GitLab project: [link]"
+   - Create PR on GitHub as normal
+   - Mention you're contributing to a GitLab project
+   - Include: "This PR is for GitLab project: [link]"
 
 7. **Maintainer will create GitLab MR**
-    - Maintainer will pull your changes
-    - Create MR on GitLab
-    - Credit you in commits
+   - Maintainer will pull your changes
+   - Create MR on GitLab
+   - Credit you in commits
 
 **Note:** This requires maintainer coordination. GitLab forks are preferred.
 
@@ -452,9 +431,9 @@ Similar to GitHub process:
    ```
 
 5. **Notify maintainer**
-    - Create issue on GitLab: "Contribution available"
-    - Link to your Bitbucket branch
-    - Maintainer will integrate
+   - Create issue on GitLab: "Contribution available"
+   - Link to your Bitbucket branch
+   - Maintainer will integrate
 
 ### From Local Git (No Account)
 
@@ -484,10 +463,10 @@ Similar to GitHub process:
    ```
 
 5. **Submit patch**
-    - Create GitLab issue (no account needed via email)
-    - Or email patch to: [your email or link to contribution email]
-    - Describe changes in issue/email
-    - Attach `.patch` file
+   - Create GitLab issue (no account needed via email)
+   - Or email patch to: support@artisanpackui.dev
+   - Describe changes in issue/email
+   - Attach `.patch` file
 
 6. **Maintainer applies patch**
    ```bash
@@ -527,11 +506,11 @@ git push origin main  # or 'github' or 'bitbucket'
 
 ### Contribution Workflow Summary
 
-| Platform    | Difficulty   | Preferred?     | Notes                                  |
-|-------------|--------------|----------------|----------------------------------------|
-| GitLab Fork | ⭐ Easy       | ✅ Yes          | Native workflow, use this if possible  |
-| GitHub      | ⭐⭐ Medium    | ⚠️ Okay        | Requires maintainer coordination       |
-| Bitbucket   | ⭐⭐ Medium    | ⚠️ Okay        | Requires maintainer coordination       |
+| Platform | Difficulty | Preferred? | Notes |
+|----------|-----------|------------|-------|
+| GitLab Fork | ⭐ Easy | ✅ Yes | Native workflow, use this if possible |
+| GitHub | ⭐⭐ Medium | ⚠️ Okay | Requires maintainer coordination |
+| Bitbucket | ⭐⭐ Medium | ⚠️ Okay | Requires maintainer coordination |
 | Local/Patch | ⭐⭐⭐ Advanced | ⚠️ Last resort | For privacy or no-account contributors |
 
 **Recommendation:** Use GitLab fork whenever possible for the smoothest contribution experience.
@@ -567,7 +546,7 @@ To keep things consistent across the code base, it's important to follow these n
 
 Follow conventional commit format:
 
-```
+```text
 type: Short description
 
 Longer description if needed.
@@ -576,7 +555,6 @@ Closes #123
 ```
 
 **Types:**
-
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -586,8 +564,7 @@ Closes #123
 - `chore:` - Maintenance tasks
 
 **Examples:**
-
-```
+```text
 feat: Add dark mode support
 
 Implements dark mode theme with toggle in settings.
@@ -596,7 +573,7 @@ Includes proper color contrast for accessibility.
 Closes #456
 ```
 
-```
+```text
 fix: Resolve navigation menu overlap on mobile
 
 Menu was overlapping content on screens < 768px.
@@ -616,10 +593,9 @@ If you have questions about contributing:
 
 ## Thank You!
 
-Thank you for contributing to ArtisanPack UI Security! Your contributions help make this project better for everyone.
+Thank you for contributing to ArtisanPack UI! Your contributions help make this project better for everyone.
 
 Every contribution matters, whether it's:
-
 - 🐛 Fixing a typo in documentation
 - ✨ Adding a major feature
 - 🧪 Writing tests

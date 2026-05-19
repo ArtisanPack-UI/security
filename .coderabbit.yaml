@@ -1,4 +1,4 @@
-# .coderabbit.yaml configuration for ArtisanPack UI Security
+# .coderabbit.yaml configuration for ArtisanPack UI Package
 language: "en-US"
 
 reviews:
@@ -13,10 +13,6 @@ reviews:
     drafts: true
     base_branches:
       - ".*" # Regex to match all branches
-
-  # Increase file review limits
-  limits:
-    files: 100
 
   # ------------------------------------------------------------------
   # IGNORE PATTERNS
