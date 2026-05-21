@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-05-21
+
+### Fixed
+
+- Restore the `csp:test` command (`CspTest`) to the distributed package. An over-broad `export-ignore` rule (`/src/**/*Test.php`) stripped it from the release tarball, so `SecurityServiceProvider` registered a class that wasn't shipped — causing `Target class [ArtisanPackUI\Security\Console\Commands\CspTest] does not exist` during package discovery for every consumer.
+
 ## [2.0.0] - 2026-05-18
 
 ### Changed
