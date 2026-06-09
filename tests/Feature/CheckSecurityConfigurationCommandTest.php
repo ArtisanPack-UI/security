@@ -102,9 +102,9 @@ class CheckSecurityConfigurationCommandTest extends TestCase
         // Set up base security configuration
         $app['config']->set('artisanpack.security.security-headers', [
             'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains',
-            'X-Frame-Options'           => 'SAMEORIGIN',
-            'X-Content-Type-Options'    => 'nosniff',
-            'Content-Security-Policy'   => "default-src 'self'",
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'self'",
         ]);
         $app['config']->set('artisanpack.security.xss.enabled', true);
         $app['config']->set('artisanpack.security.rateLimiting.enabled', true);

@@ -28,7 +28,7 @@ class Security
      */
     public function sanitizeEmail(?string $email = ''): string
     {
-        if (null === $email || '' === $email) {
+        if ($email === null || $email === '') {
             return '';
         }
 
@@ -44,7 +44,7 @@ class Security
      */
     public function sanitizeUrl(?string $url = ''): string
     {
-        if (null === $url || '' === $url) {
+        if ($url === null || $url === '') {
             return '';
         }
 
@@ -60,7 +60,7 @@ class Security
      */
     public function sanitizeFilename(?string $filename = ''): string
     {
-        if (null === $filename || '' === $filename) {
+        if ($filename === null || $filename === '') {
             return '';
         }
 
@@ -76,7 +76,7 @@ class Security
      */
     public function sanitizePassword(?string $password = ''): string
     {
-        if (null === $password || '' === $password) {
+        if ($password === null || $password === '') {
             return '';
         }
 
@@ -104,7 +104,7 @@ class Security
      */
     public function sanitizeDate(?string $date = ''): string
     {
-        if (null === $date || '' === $date) {
+        if ($date === null || $date === '') {
             return '';
         }
 
@@ -160,7 +160,7 @@ class Security
      */
     public function sanitizeText(?string $input = ''): string
     {
-        if (null === $input || '' === $input) {
+        if ($input === null || $input === '') {
             return '';
         }
 
@@ -176,7 +176,7 @@ class Security
      */
     public function escHtml(?string $string = ''): string
     {
-        if (null === $string || '' === $string) {
+        if ($string === null || $string === '') {
             return '';
         }
 
@@ -192,7 +192,7 @@ class Security
      */
     public function escAttr(?string $string = ''): string
     {
-        if (null === $string || '' === $string) {
+        if ($string === null || $string === '') {
             return '';
         }
 
@@ -208,7 +208,7 @@ class Security
      */
     public function escUrl(?string $string = ''): string
     {
-        if (null === $string || '' === $string) {
+        if ($string === null || $string === '') {
             return '';
         }
 
@@ -224,7 +224,7 @@ class Security
      */
     public function escJs(?string $string = ''): string
     {
-        if (null === $string || '' === $string) {
+        if ($string === null || $string === '') {
             return '';
         }
 
@@ -240,7 +240,7 @@ class Security
      */
     public function escCss(?string $string = ''): string
     {
-        if (null === $string || '' === $string) {
+        if ($string === null || $string === '') {
             return '';
         }
 
@@ -268,7 +268,7 @@ class Security
     {
         foreach ($data as $key => &$value) {
             if (is_string($value)) {
-                $rule  = $rules[$key] ?? 'text';
+                $rule = $rules[$key] ?? 'text';
                 $value = $this->applySanitizationRule($rule, $value);
             }
         }
@@ -282,12 +282,12 @@ class Security
     protected function applySanitizationRule(string $rule, string $value): string
     {
         return match ($rule) {
-            'html'     => $this->kses($value),
-            'email'    => $this->sanitizeEmail($value),
-            'url'      => $this->sanitizeUrl($value),
+            'html' => $this->kses($value),
+            'email' => $this->sanitizeEmail($value),
+            'url' => $this->sanitizeUrl($value),
             'filename' => $this->sanitizeFilename($value),
-            'text'     => $this->sanitizeText($value),
-            default    => $this->sanitizeText($value),
+            'text' => $this->sanitizeText($value),
+            default => $this->sanitizeText($value),
         };
     }
 }

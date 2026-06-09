@@ -35,7 +35,7 @@ class DependencyScanner implements ScannerInterface
         protected string $packageLockPath = 'package-lock.json',
     ) {
         $this->composerLockPath = base_path($composerLockPath);
-        $this->packageLockPath  = base_path($packageLockPath);
+        $this->packageLockPath = base_path($packageLockPath);
     }
 
     public function scan(): array
@@ -87,7 +87,7 @@ class DependencyScanner implements ScannerInterface
 
         $lock = json_decode(File::get($this->composerLockPath), true);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
             $this->findings[] = SecurityFinding::medium(
                 'Invalid composer.lock',
                 'composer.lock file is not valid JSON',
@@ -107,7 +107,7 @@ class DependencyScanner implements ScannerInterface
         $advisories = $this->loadAdvisories();
 
         foreach ($packages as $package) {
-            $name    = $package['name'] ?? '';
+            $name = $package['name'] ?? '';
             $version = $package['version'] ?? '';
 
             // Check against known vulnerabilities
@@ -119,10 +119,10 @@ class DependencyScanner implements ScannerInterface
 
             // Check for abandoned packages
             if (isset($package['abandoned'])) {
-                $replacement      = is_string($package['abandoned']) ? $package['abandoned'] : 'unknown';
+                $replacement = is_string($package['abandoned']) ? $package['abandoned'] : 'unknown';
                 $this->findings[] = SecurityFinding::medium(
                     'Abandoned Package',
-                    "Package '{$name}' is abandoned".('unknown' !== $replacement ? ", suggested replacement: {$replacement}" : ''),
+                    "Package '{$name}' is abandoned".($replacement !== 'unknown' ? ", suggested replacement: {$replacement}" : ''),
                     'A06:2021-Vulnerable and Outdated Components',
                     $this->composerLockPath,
                     "Replace '{$name}' with an actively maintained alternative",
@@ -145,7 +145,7 @@ class DependencyScanner implements ScannerInterface
 
         $lock = json_decode(File::get($this->packageLockPath), true);
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
             $this->findings[] = SecurityFinding::medium(
                 'Invalid package-lock.json',
                 'package-lock.json file is not valid JSON',
@@ -161,11 +161,11 @@ class DependencyScanner implements ScannerInterface
 
         // Check each package
         foreach ($packages as $path => $package) {
-            if ('' === $path) {
+            if ($path === '') {
                 continue; // Skip root package
             }
 
-            $name    = str_replace('node_modules/', '', $path);
+            $name = str_replace('node_modules/', '', $path);
             $version = $package['version'] ?? '';
 
             // Basic check for known vulnerable packages
@@ -186,7 +186,7 @@ class DependencyScanner implements ScannerInterface
     {
         if ($this->advisoryDatabase && File::exists($this->advisoryDatabase)) {
             $content = File::get($this->advisoryDatabase);
-            $data    = json_decode($content, true);
+            $data = json_decode($content, true);
 
             return $data ?? [];
         }
@@ -195,18 +195,18 @@ class DependencyScanner implements ScannerInterface
         return [
             'symfony/http-foundation' => [
                 [
-                    'cve'               => 'CVE-2022-24894',
-                    'title'             => 'Cookie Parsing Vulnerability',
+                    'cve' => 'CVE-2022-24894',
+                    'title' => 'Cookie Parsing Vulnerability',
                     'affected_versions' => '<5.4.20,>=6.0.0 <6.0.20,>=6.1.0 <6.1.12,>=6.2.0 <6.2.6',
-                    'severity'          => 'high',
+                    'severity' => 'high',
                 ],
             ],
             'guzzlehttp/guzzle' => [
                 [
-                    'cve'               => 'CVE-2022-31090',
-                    'title'             => 'CURLOPT_HTTPAUTH leak',
+                    'cve' => 'CVE-2022-31090',
+                    'title' => 'CURLOPT_HTTPAUTH leak',
                     'affected_versions' => '<6.5.8,>=7.0.0 <7.4.5',
-                    'severity'          => 'high',
+                    'severity' => 'high',
                 ],
             ],
         ];
@@ -216,7 +216,6 @@ class DependencyScanner implements ScannerInterface
      * Check if a package version is vulnerable.
      *
      * @param  array<string, array<array<string, mixed>>>  $advisories
-     *
      * @return array<array<string, mixed>>
      */
     protected function checkPackageVulnerabilities(string $name, string $version, array $advisories): array
@@ -230,12 +229,12 @@ class DependencyScanner implements ScannerInterface
         foreach ($advisories[$name] as $advisory) {
             if ($this->versionMatchesConstraint($version, $advisory['affected_versions'] ?? '')) {
                 $vulnerabilities[] = [
-                    'id'          => $advisory['cve'] ?? 'UNKNOWN',
-                    'title'       => "Vulnerable Package: {$name}",
+                    'id' => $advisory['cve'] ?? 'UNKNOWN',
+                    'title' => "Vulnerable Package: {$name}",
                     'description' => $advisory['title'] ?? 'Known vulnerability in package',
-                    'severity'    => $advisory['severity'] ?? 'medium',
-                    'category'    => 'A06:2021-Vulnerable and Outdated Components',
-                    'location'    => "{$name}@{$version}",
+                    'severity' => $advisory['severity'] ?? 'medium',
+                    'category' => 'A06:2021-Vulnerable and Outdated Components',
+                    'location' => "{$name}@{$version}",
                     'remediation' => 'Update to a patched version',
                 ];
             }
@@ -255,18 +254,18 @@ class DependencyScanner implements ScannerInterface
         $knownVulnerabilities = [
             'lodash' => [
                 [
-                    'cve'      => 'CVE-2021-23337',
+                    'cve' => 'CVE-2021-23337',
                     'affected' => '<4.17.21',
                     'severity' => 'high',
-                    'title'    => 'Command Injection',
+                    'title' => 'Command Injection',
                 ],
             ],
             'axios' => [
                 [
-                    'cve'      => 'CVE-2021-3749',
+                    'cve' => 'CVE-2021-3749',
                     'affected' => '<0.21.2',
                     'severity' => 'high',
-                    'title'    => 'Server-Side Request Forgery',
+                    'title' => 'Server-Side Request Forgery',
                 ],
             ],
         ];
@@ -277,12 +276,12 @@ class DependencyScanner implements ScannerInterface
             foreach ($knownVulnerabilities[$name] as $vuln) {
                 if ($this->versionMatchesConstraint($version, $vuln['affected'])) {
                     $vulnerabilities[] = [
-                        'id'          => $vuln['cve'],
-                        'title'       => "Vulnerable NPM Package: {$name}",
+                        'id' => $vuln['cve'],
+                        'title' => "Vulnerable NPM Package: {$name}",
                         'description' => $vuln['title'],
-                        'severity'    => $vuln['severity'],
-                        'category'    => 'A06:2021-Vulnerable and Outdated Components',
-                        'location'    => "{$name}@{$version} (npm)",
+                        'severity' => $vuln['severity'],
+                        'category' => 'A06:2021-Vulnerable and Outdated Components',
+                        'location' => "{$name}@{$version} (npm)",
                         'remediation' => 'Update to a patched version',
                     ];
                 }
@@ -300,9 +299,9 @@ class DependencyScanner implements ScannerInterface
     protected function checkOutdatedPackages(array $packages): void
     {
         foreach ($packages as $package) {
-            $name    = $package['name'] ?? '';
+            $name = $package['name'] ?? '';
             $version = $package['version'] ?? '';
-            $time    = $package['time'] ?? null;
+            $time = $package['time'] ?? null;
 
             if ($time) {
                 $packageDate = strtotime($time);

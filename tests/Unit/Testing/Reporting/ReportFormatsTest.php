@@ -31,16 +31,16 @@ class ReportFormatsTest extends TestCase
         ];
 
         $this->sampleSummary = [
-            'total'      => 3,
+            'total' => 3,
             'bySeverity' => [
                 'critical' => 1,
-                'high'     => 1,
-                'medium'   => 1,
-                'low'      => 0,
-                'info'     => 0,
+                'high' => 1,
+                'medium' => 1,
+                'low' => 0,
+                'info' => 0,
             ],
             'byCategory' => [
-                'A03:2021-Injection'                 => 2,
+                'A03:2021-Injection' => 2,
                 'A05:2021-Security Misconfiguration' => 1,
             ],
         ];
@@ -48,7 +48,7 @@ class ReportFormatsTest extends TestCase
         $this->sampleMetadata = [
             'generatedAt' => now()->toIso8601String(),
             'projectName' => 'Test Project',
-            'version'     => '1.0.0',
+            'version' => '1.0.0',
         ];
     }
 
@@ -64,8 +64,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_findings(): void
     {
-        $format  = new JsonReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new JsonReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('findings', $decoded);
@@ -74,8 +74,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_summary(): void
     {
-        $format  = new JsonReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new JsonReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('summary', $decoded);
@@ -84,8 +84,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_json_format_contains_metadata(): void
     {
-        $format  = new JsonReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new JsonReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('metadata', $decoded);
@@ -185,8 +185,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_has_correct_version(): void
     {
-        $format  = new SarifReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new SarifReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertEquals('2.1.0', $decoded['version']);
@@ -195,8 +195,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_contains_runs(): void
     {
-        $format  = new SarifReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new SarifReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $this->assertArrayHasKey('runs', $decoded);
@@ -205,8 +205,8 @@ class ReportFormatsTest extends TestCase
 
     public function test_sarif_format_contains_results(): void
     {
-        $format  = new SarifReportFormat;
-        $output  = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
+        $format = new SarifReportFormat;
+        $output = $format->format($this->sampleFindings, $this->sampleMetadata, $this->sampleSummary);
         $decoded = json_decode($output, true);
 
         $results = $decoded['runs'][0]['results'] ?? [];

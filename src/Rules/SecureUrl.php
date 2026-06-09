@@ -22,7 +22,6 @@ class SecureUrl implements Rule
      *
      * @param  string  $attribute
      * @param  mixed  $value
-     *
      * @return bool
      */
     public function passes($attribute, $value)
@@ -31,7 +30,7 @@ class SecureUrl implements Rule
             return false;
         }
 
-        if (false === filter_var($value, FILTER_VALIDATE_URL)) {
+        if (filter_var($value, FILTER_VALIDATE_URL) === false) {
             return false;
         }
 

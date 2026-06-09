@@ -129,14 +129,14 @@ class AttackResults
     public function getSummary(): array
     {
         $summary = [
-            'total_attacks'  => count($this->results),
-            'vulnerable'     => 0,
+            'total_attacks' => count($this->results),
+            'vulnerable' => 0,
             'not_vulnerable' => 0,
-            'by_severity'    => [
+            'by_severity' => [
                 'critical' => 0,
-                'high'     => 0,
-                'medium'   => 0,
-                'low'      => 0,
+                'high' => 0,
+                'medium' => 0,
+                'low' => 0,
             ],
         ];
 

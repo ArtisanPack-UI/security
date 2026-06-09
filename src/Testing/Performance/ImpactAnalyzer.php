@@ -26,8 +26,8 @@ class ImpactAnalyzer
         'middleware' => 5.0,      // Max 5% for middleware
         'validation' => 10.0,     // Max 10% for validation
         'encryption' => 50.0,     // Higher tolerance for crypto
-        'hashing'    => 100.0,       // Hashing is intentionally slow
-        'default'    => 15.0,        // Default threshold
+        'hashing' => 100.0,       // Hashing is intentionally slow
+        'default' => 15.0,        // Default threshold
     ];
 
     /**
@@ -45,7 +45,7 @@ class ImpactAnalyzer
      */
     public function __construct(array $results = [], array $customThresholds = [])
     {
-        $this->results    = $results;
+        $this->results = $results;
         $this->thresholds = array_merge($this->thresholds, $customThresholds);
     }
 
@@ -82,7 +82,7 @@ class ImpactAnalyzer
 
         foreach ($this->results as $result) {
             $threshold = $this->getThresholdFor($result->name);
-            $overhead  = $result->getOverhead();
+            $overhead = $result->getOverhead();
 
             if ($overhead > $threshold) {
                 $findings[] = SecurityFinding::medium(
@@ -110,14 +110,14 @@ class ImpactAnalyzer
      */
     public function getSummary(): array
     {
-        $totalOverhead     = 0;
-        $acceptableCount   = 0;
+        $totalOverhead = 0;
+        $acceptableCount = 0;
         $unacceptableCount = 0;
-        $details           = [];
+        $details = [];
 
         foreach ($this->results as $result) {
-            $threshold  = $this->getThresholdFor($result->name);
-            $overhead   = $result->getOverhead();
+            $threshold = $this->getThresholdFor($result->name);
+            $overhead = $result->getOverhead();
             $acceptable = $overhead <= $threshold;
 
             $totalOverhead += $overhead;
@@ -129,9 +129,9 @@ class ImpactAnalyzer
             }
 
             $details[] = [
-                'name'       => $result->name,
-                'overhead'   => $overhead,
-                'threshold'  => $threshold,
+                'name' => $result->name,
+                'overhead' => $overhead,
+                'threshold' => $threshold,
                 'acceptable' => $acceptable,
             ];
         }
@@ -141,10 +141,10 @@ class ImpactAnalyzer
         return [
             'total_benchmarks' => $count,
             'average_overhead' => $count > 0 ? $totalOverhead / $count : 0,
-            'acceptable'       => $acceptableCount,
-            'unacceptable'     => $unacceptableCount,
-            'pass_rate'        => $count > 0 ? ($acceptableCount / $count) * 100 : 100,
-            'details'          => $details,
+            'acceptable' => $acceptableCount,
+            'unacceptable' => $unacceptableCount,
+            'pass_rate' => $count > 0 ? ($acceptableCount / $count) * 100 : 100,
+            'details' => $details,
         ];
     }
 
@@ -175,7 +175,7 @@ class ImpactAnalyzer
 
         foreach ($this->results as $result) {
             $threshold = $this->getThresholdFor($result->name);
-            $overhead  = $result->getOverhead();
+            $overhead = $result->getOverhead();
 
             if ($overhead > $threshold) {
                 $recommendations[$result->name] = $this->generateRecommendation($result, $overhead, $threshold);
@@ -193,9 +193,9 @@ class ImpactAnalyzer
     public function toArray(): array
     {
         return [
-            'summary'         => $this->getSummary(),
+            'summary' => $this->getSummary(),
             'recommendations' => $this->getRecommendations(),
-            'findings'        => array_map(fn ($f) => $f->toArray(), $this->analyze()),
+            'findings' => array_map(fn ($f) => $f->toArray(), $this->analyze()),
         ];
     }
 
@@ -231,7 +231,7 @@ class ImpactAnalyzer
     protected function generateRecommendation(BenchmarkResult $result, float $overhead, float $threshold): string
     {
         $absoluteMs = $result->getAbsoluteOverhead();
-        $name       = strtolower($result->name);
+        $name = strtolower($result->name);
 
         if (str_contains($name, 'middleware')) {
             return sprintf(

@@ -57,7 +57,7 @@ class GenerateCspPolicy extends Command
         $this->info('CSP Policy Generator');
         $this->newLine();
 
-        $preset           = $this->option('preset');
+        $preset = $this->option('preset');
         $availablePresets = array_keys($csp->getPresets());
 
         if (! in_array($preset, $availablePresets, true)) {
@@ -105,7 +105,7 @@ class GenerateCspPolicy extends Command
         // Output to file or display
         if ($outputPath = $this->option('output')) {
             $result = File::put($outputPath, $output);
-            if (false === $result) {
+            if ($result === false) {
                 $this->error("Failed to write policy to: {$outputPath}");
 
                 return self::FAILURE;
@@ -246,7 +246,7 @@ class GenerateCspPolicy extends Command
 
         if ($outputPath = $this->ask('Save to file? (leave empty to display)')) {
             $result = File::put($outputPath, $output);
-            if (false === $result) {
+            if ($result === false) {
                 $this->error("Failed to save policy to: {$outputPath}");
 
                 return self::FAILURE;
@@ -304,11 +304,11 @@ class GenerateCspPolicy extends Command
      */
     protected function applyImgChoice(CspPolicyBuilder $builder, string $choice): void
     {
-        if ("'self'" === $choice) {
+        if ($choice === "'self'") {
             $builder->imgSrc("'self'");
-        } elseif ("'self' data:" === $choice) {
+        } elseif ($choice === "'self' data:") {
             $builder->imgSrc("'self'", 'data:');
-        } elseif ("'self' data: https:" === $choice) {
+        } elseif ($choice === "'self' data: https:") {
             $builder->imgSrc("'self'", 'data:', 'https:');
         } else {
             $custom = $this->ask('Enter custom img-src values (space-separated)');
@@ -321,9 +321,9 @@ class GenerateCspPolicy extends Command
      */
     protected function applyFontChoice(CspPolicyBuilder $builder, string $choice): void
     {
-        if ("'self'" === $choice) {
+        if ($choice === "'self'") {
             $builder->fontSrc("'self'");
-        } elseif ("'self' data:" === $choice) {
+        } elseif ($choice === "'self' data:") {
             $builder->fontSrc("'self'", 'data:');
         } elseif (str_contains($choice, 'fonts.gstatic.com')) {
             $builder->fontSrc("'self'", 'https://fonts.gstatic.com', 'https://fonts.bunny.net');
@@ -354,12 +354,12 @@ class GenerateCspPolicy extends Command
     protected function analyzeApplication(): void
     {
         $this->detectedSources = [
-            'script-src'  => [],
-            'style-src'   => [],
-            'img-src'     => [],
-            'font-src'    => [],
+            'script-src' => [],
+            'style-src' => [],
+            'img-src' => [],
+            'font-src' => [],
             'connect-src' => [],
-            'frame-src'   => [],
+            'frame-src' => [],
         ];
 
         $viewsPath = resource_path('views');
@@ -371,7 +371,7 @@ class GenerateCspPolicy extends Command
         $files = File::allFiles($viewsPath);
 
         foreach ($files as $file) {
-            if ('php' !== $file->getExtension()) {
+            if ($file->getExtension() !== 'php') {
                 continue;
             }
 
@@ -459,7 +459,7 @@ class GenerateCspPolicy extends Command
         if (str_starts_with($source, 'http://') || str_starts_with($source, 'https://') || str_starts_with($source, '//')) {
             $parsed = parse_url($source);
             if (isset($parsed['host'])) {
-                $scheme                              = $parsed['scheme'] ?? 'https';
+                $scheme = $parsed['scheme'] ?? 'https';
                 $this->detectedSources[$directive][] = "{$scheme}://{$parsed['host']}";
             }
         } elseif (str_starts_with($source, 'data:')) {
@@ -491,7 +491,7 @@ class GenerateCspPolicy extends Command
         // Check package.json for common CDN-based packages
         $packageJson = base_path('package.json');
         if (File::exists($packageJson)) {
-            $package      = json_decode(File::get($packageJson), true);
+            $package = json_decode(File::get($packageJson), true);
             $dependencies = array_merge(
                 $package['dependencies'] ?? [],
                 $package['devDependencies'] ?? [],
@@ -543,17 +543,17 @@ class GenerateCspPolicy extends Command
     protected function formatOutput(string $policy, string $format): string
     {
         $isReportOnly = $this->option('report-only');
-        $headerName   = $isReportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy';
+        $headerName = $isReportOnly ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy';
 
         return match ($format) {
             'header' => "{$headerName}: {$policy}",
-            'meta'   => '<meta http-equiv="'.$headerName.'" content="'.htmlspecialchars($policy, ENT_QUOTES).'">',
-            'nginx'  => "add_header {$headerName} \"{$policy}\" always;",
+            'meta' => '<meta http-equiv="'.$headerName.'" content="'.htmlspecialchars($policy, ENT_QUOTES).'">',
+            'nginx' => "add_header {$headerName} \"{$policy}\" always;",
             'apache' => "Header always set {$headerName} \"{$policy}\"",
-            'json'   => json_encode([
+            'json' => json_encode([
                 'header_name' => $headerName,
-                'policy'      => $policy,
-                'directives'  => $this->parseDirectives($policy),
+                'policy' => $policy,
+                'directives' => $this->parseDirectives($policy),
                 'report_only' => $isReportOnly,
             ], JSON_PRETTY_PRINT),
             default => $this->formatAsConfig($policy, $isReportOnly), // 'config'
@@ -596,7 +596,7 @@ class GenerateCspPolicy extends Command
     protected function parseDirectives(string $policy): array
     {
         $directives = [];
-        $parts      = explode(';', $policy);
+        $parts = explode(';', $policy);
 
         foreach ($parts as $part) {
             $part = trim($part);
@@ -605,10 +605,10 @@ class GenerateCspPolicy extends Command
             }
 
             $tokens = preg_split('/\s+/', $part);
-            if (false === $tokens) {
+            if ($tokens === false) {
                 continue;
             }
-            $directive              = array_shift($tokens);
+            $directive = array_shift($tokens);
             $directives[$directive] = $tokens;
         }
 
@@ -623,7 +623,7 @@ class GenerateCspPolicy extends Command
         $this->info("Generated Policy ({$format} format):");
         $this->newLine();
 
-        if ('json' === $format) {
+        if ($format === 'json') {
             $this->line($output);
         } else {
             $this->line('<fg=yellow>'.$output.'</>');
@@ -641,7 +641,7 @@ class GenerateCspPolicy extends Command
         $this->info('Recommendations:');
 
         $recommendations = [];
-        $directives      = $this->parseDirectives($policy);
+        $directives = $this->parseDirectives($policy);
 
         // Check for unsafe-inline without nonce
         if (isset($directives['script-src'])) {

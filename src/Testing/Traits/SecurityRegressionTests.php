@@ -54,7 +54,7 @@ trait SecurityRegressionTests
     protected function registerSecurityRegression(string $id, callable $test, ?string $description = null): void
     {
         $this->securityRegressions[$id] = [
-            'test'        => $test,
+            'test' => $test,
             'description' => $description,
         ];
     }
@@ -69,21 +69,21 @@ trait SecurityRegressionTests
         $this->regressionResults = [];
 
         foreach ($this->securityRegressions as $id => $config) {
-            $test        = $config['test'];
+            $test = $config['test'];
             $description = $config['description'] ?? $id;
 
             try {
                 $test();
                 $this->regressionResults[$id] = [
-                    'status'      => 'passed',
+                    'status' => 'passed',
                     'description' => $description,
                 ];
             } catch (Throwable $e) {
                 $this->regressionResults[$id] = [
-                    'status'      => 'failed',
+                    'status' => 'failed',
                     'description' => $description,
-                    'error'       => $e->getMessage(),
-                    'trace'       => $e->getTraceAsString(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ];
 
                 $this->recordFinding(SecurityFinding::critical(
@@ -240,7 +240,7 @@ trait SecurityRegressionTests
         $failed = 0;
 
         foreach ($this->regressionResults as $result) {
-            if ('passed' === $result['status']) {
+            if ($result['status'] === 'passed') {
                 $passed++;
             } else {
                 $failed++;
@@ -248,7 +248,7 @@ trait SecurityRegressionTests
         }
 
         return [
-            'total'  => count($this->regressionResults),
+            'total' => count($this->regressionResults),
             'passed' => $passed,
             'failed' => $failed,
         ];
@@ -260,7 +260,7 @@ trait SecurityRegressionTests
     protected function allRegressionsPassing(): bool
     {
         foreach ($this->regressionResults as $result) {
-            if ('passed' !== $result['status']) {
+            if ($result['status'] !== 'passed') {
                 return false;
             }
         }

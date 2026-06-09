@@ -178,7 +178,7 @@ class CspPolicyService implements CspPolicyInterface
      */
     public function toHeader(): array
     {
-        $policy  = $this->getPolicy();
+        $policy = $this->getPolicy();
         $headers = [];
 
         if (empty($policy)) {
@@ -220,7 +220,7 @@ class CspPolicyService implements CspPolicyInterface
     {
         $this->builder->reset();
         $this->nonceGenerator->reset();
-        $this->isBuilt       = false;
+        $this->isBuilt = false;
         $this->currentPreset = null;
 
         return $this;
@@ -275,8 +275,8 @@ class CspPolicyService implements CspPolicyInterface
     {
         $this->presets = [
             'livewire' => new LivewirePreset,
-            'strict'   => new StrictPreset,
-            'relaxed'  => new RelaxedPreset,
+            'strict' => new StrictPreset,
+            'relaxed' => new RelaxedPreset,
         ];
     }
 
@@ -286,7 +286,7 @@ class CspPolicyService implements CspPolicyInterface
     protected function determinePreset(Request $request): string
     {
         $routePolicies = config('artisanpack.security.csp.routePolicies', []);
-        $path          = $request->path();
+        $path = $request->path();
 
         foreach ($routePolicies as $pattern => $preset) {
             if ($this->matchesPattern($path, $pattern)) {
@@ -313,7 +313,7 @@ class CspPolicyService implements CspPolicyInterface
     protected function isExcludedRoute(Request $request): bool
     {
         $excludedRoutes = config('artisanpack.security.csp.excludedRoutes', []);
-        $path           = $request->path();
+        $path = $request->path();
 
         foreach ($excludedRoutes as $pattern) {
             if ($this->matchesPattern($path, $pattern)) {

@@ -167,7 +167,7 @@ class SecurityFinding
      */
     public function isCritical(): bool
     {
-        return self::SEVERITY_CRITICAL === $this->severity;
+        return $this->severity === self::SEVERITY_CRITICAL;
     }
 
     /**
@@ -175,7 +175,7 @@ class SecurityFinding
      */
     public function isHigh(): bool
     {
-        return self::SEVERITY_HIGH === $this->severity;
+        return $this->severity === self::SEVERITY_HIGH;
     }
 
     /**
@@ -193,11 +193,11 @@ class SecurityFinding
     {
         return match ($this->severity) {
             self::SEVERITY_CRITICAL => 0,
-            self::SEVERITY_HIGH     => 1,
-            self::SEVERITY_MEDIUM   => 2,
-            self::SEVERITY_LOW      => 3,
-            self::SEVERITY_INFO     => 4,
-            default                 => 5,
+            self::SEVERITY_HIGH => 1,
+            self::SEVERITY_MEDIUM => 2,
+            self::SEVERITY_LOW => 3,
+            self::SEVERITY_INFO => 4,
+            default => 5,
         };
     }
 
@@ -209,15 +209,15 @@ class SecurityFinding
     public function toArray(): array
     {
         return [
-            'id'          => $this->id,
-            'title'       => $this->title,
+            'id' => $this->id,
+            'title' => $this->title,
             'description' => $this->description,
-            'severity'    => $this->severity,
-            'category'    => $this->category,
-            'location'    => $this->location,
-            'evidence'    => $this->evidence,
+            'severity' => $this->severity,
+            'category' => $this->category,
+            'location' => $this->location,
+            'evidence' => $this->evidence,
             'remediation' => $this->remediation,
-            'metadata'    => $this->metadata,
+            'metadata' => $this->metadata,
         ];
     }
 

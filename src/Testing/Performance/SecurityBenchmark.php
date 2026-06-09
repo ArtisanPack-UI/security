@@ -82,7 +82,7 @@ class SecurityBenchmark
         int $iterations = 1000,
     ): BenchmarkResult {
         $request ??= Request::create('/test', 'GET');
-        $middleware  = app($middlewareClass);
+        $middleware = app($middlewareClass);
         $passthrough = fn ($r) => response('OK');
 
         return $this->benchmark(
@@ -221,7 +221,6 @@ class SecurityBenchmark
      * Calculate statistics from timing data.
      *
      * @param  array<int>  $times  Times in nanoseconds
-     *
      * @return array<string, float>
      */
     protected function calculateStats(array $times): array
@@ -229,32 +228,32 @@ class SecurityBenchmark
         sort($times);
         $count = count($times);
 
-        if (0 === $count) {
+        if ($count === 0) {
             return [
-                'min'    => 0,
-                'max'    => 0,
-                'mean'   => 0,
+                'min' => 0,
+                'max' => 0,
+                'mean' => 0,
                 'median' => 0,
-                'p95'    => 0,
-                'p99'    => 0,
+                'p95' => 0,
+                'p99' => 0,
                 'stddev' => 0,
             ];
         }
 
-        $sum  = array_sum($times);
+        $sum = array_sum($times);
         $mean = $sum / $count;
 
         // Calculate standard deviation
         $squaredDiffs = array_map(fn ($t) => pow($t - $mean, 2), $times);
-        $stddev       = sqrt(array_sum($squaredDiffs) / $count);
+        $stddev = sqrt(array_sum($squaredDiffs) / $count);
 
         return [
-            'min'    => min($times) / 1e6,         // Convert to ms
-            'max'    => max($times) / 1e6,
-            'mean'   => $mean / 1e6,
+            'min' => min($times) / 1e6,         // Convert to ms
+            'max' => max($times) / 1e6,
+            'mean' => $mean / 1e6,
             'median' => $times[(int) ($count / 2)] / 1e6,
-            'p95'    => $times[(int) ($count * 0.95)] / 1e6,
-            'p99'    => $times[(int) ($count * 0.99)] / 1e6,
+            'p95' => $times[(int) ($count * 0.95)] / 1e6,
+            'p99' => $times[(int) ($count * 0.99)] / 1e6,
             'stddev' => $stddev / 1e6,
         ];
     }

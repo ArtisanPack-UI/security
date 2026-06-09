@@ -88,13 +88,13 @@ class GitHubActionsIntegrationTest extends TestCase
         ];
 
         $summary = [
-            'total'      => 2,
+            'total' => 2,
             'bySeverity' => [
                 'critical' => 1,
-                'high'     => 1,
-                'medium'   => 0,
-                'low'      => 0,
-                'info'     => 0,
+                'high' => 1,
+                'medium' => 0,
+                'low' => 0,
+                'info' => 0,
             ],
         ];
 
@@ -113,11 +113,11 @@ class GitHubActionsIntegrationTest extends TestCase
         ];
 
         $summary = [
-            'total'      => 1,
+            'total' => 1,
             'bySeverity' => [
                 'critical' => 0,
-                'high'     => 1,
-                'medium'   => 0,
+                'high' => 1,
+                'medium' => 0,
             ],
         ];
 
@@ -133,11 +133,11 @@ class GitHubActionsIntegrationTest extends TestCase
         ];
 
         $summary = [
-            'total'      => 1,
+            'total' => 1,
             'bySeverity' => [
                 'critical' => 0,
-                'high'     => 0,
-                'medium'   => 1,
+                'high' => 0,
+                'medium' => 1,
             ],
         ];
 
@@ -154,7 +154,7 @@ class GitHubActionsIntegrationTest extends TestCase
         }
 
         $summary = [
-            'total'      => 7,
+            'total' => 7,
             'bySeverity' => ['medium' => 7],
         ];
 
@@ -169,7 +169,7 @@ class GitHubActionsIntegrationTest extends TestCase
     public function test_summary_handles_empty_findings(): void
     {
         $summary = [
-            'total'      => 0,
+            'total' => 0,
             'bySeverity' => [],
         ];
 

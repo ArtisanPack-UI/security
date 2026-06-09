@@ -44,7 +44,7 @@ class BaseFormRequest extends FormRequest
     {
         foreach ($data as $key => &$value) {
             if (is_string($value)) {
-                $rule  = $this->sanitizationRules[$key] ?? 'text';
+                $rule = $this->sanitizationRules[$key] ?? 'text';
                 $value = $this->applySanitizationRule($rule, $value);
             }
         }
@@ -58,12 +58,12 @@ class BaseFormRequest extends FormRequest
     protected function applySanitizationRule(string $rule, string $value): string
     {
         return match ($rule) {
-            'html'     => kses($value),
-            'email'    => sanitizeEmail($value),
-            'url'      => sanitizeUrl($value),
+            'html' => kses($value),
+            'email' => sanitizeEmail($value),
+            'url' => sanitizeUrl($value),
             'filename' => sanitizeFilename($value),
-            'text'     => sanitizeText($value),
-            default    => $this->handleUnknownRule($rule, $value),
+            'text' => sanitizeText($value),
+            default => $this->handleUnknownRule($rule, $value),
         };
     }
 

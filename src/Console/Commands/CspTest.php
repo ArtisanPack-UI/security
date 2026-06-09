@@ -159,7 +159,7 @@ class CspTest extends Command
     protected function parseDirectives(string $policy): array
     {
         $directives = [];
-        $parts      = explode(';', $policy);
+        $parts = explode(';', $policy);
 
         foreach ($parts as $part) {
             $part = trim($part);
@@ -167,8 +167,8 @@ class CspTest extends Command
                 continue;
             }
 
-            $tokens                 = preg_split('/\s+/', $part);
-            $directive              = array_shift($tokens);
+            $tokens = preg_split('/\s+/', $part);
+            $directive = array_shift($tokens);
             $directives[$directive] = $tokens;
         }
 
@@ -202,7 +202,7 @@ class CspTest extends Command
         }
 
         // Check for strict-dynamic (good for scripts)
-        if ('script-src' === $directive && in_array("'strict-dynamic'", $values, true)) {
+        if ($directive === 'script-src' && in_array("'strict-dynamic'", $values, true)) {
             return '<fg=green>Strict Dynamic</>';
         }
 
@@ -225,7 +225,7 @@ class CspTest extends Command
         }
 
         // Check for self only
-        if (1 === count($values) && "'self'" === $values[0]) {
+        if (count($values) === 1 && $values[0] === "'self'") {
             return '<fg=green>Self only</>';
         }
 
@@ -257,7 +257,7 @@ class CspTest extends Command
         $this->info('Security Recommendations:');
 
         $recommendations = [];
-        $directives      = $this->parseDirectives($policy);
+        $directives = $this->parseDirectives($policy);
 
         // Check for missing important directives
         $important = ['default-src', 'script-src', 'style-src', 'object-src', 'base-uri', 'frame-ancestors'];
@@ -280,7 +280,7 @@ class CspTest extends Command
         // Check for unsafe inline without nonce
         if (isset($directives['script-src'])) {
             $scriptSrc = $directives['script-src'];
-            $hasNonce  = false;
+            $hasNonce = false;
             foreach ($scriptSrc as $value) {
                 if (str_starts_with($value, "'nonce-")) {
                     $hasNonce = true;

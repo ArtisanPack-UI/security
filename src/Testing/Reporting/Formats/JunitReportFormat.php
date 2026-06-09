@@ -20,7 +20,7 @@ class JunitReportFormat implements ReportFormatInterface
 {
     public function format(array $findings, array $metadata, array $summary): string
     {
-        $dom               = new DOMDocument('1.0', 'UTF-8');
+        $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
         // Create root testsuites element
@@ -73,7 +73,7 @@ class JunitReportFormat implements ReportFormatInterface
                     $testcase->appendChild($failure);
                 }
                 // Medium are warnings (system-out)
-                elseif ('medium' === $finding->severity) {
+                elseif ($finding->severity === 'medium') {
                     $systemOut = $dom->createElement('system-out');
                     $systemOut->appendChild($dom->createCDATASection(
                         "Warning: {$finding->description}\nLocation: {$finding->location}",
@@ -127,7 +127,6 @@ class JunitReportFormat implements ReportFormatInterface
      * Group findings by category.
      *
      * @param  array<SecurityFinding>  $findings
-     *
      * @return array<string, array<SecurityFinding>>
      */
     protected function groupByCategory(array $findings): array
@@ -148,7 +147,7 @@ class JunitReportFormat implements ReportFormatInterface
     {
         // Remove special characters and convert to PascalCase
         $cleaned = preg_replace('/[^a-zA-Z0-9\s]/', '', $category);
-        $words   = explode(' ', $cleaned);
+        $words = explode(' ', $cleaned);
 
         return implode('', array_map('ucfirst', array_map('strtolower', $words)));
     }

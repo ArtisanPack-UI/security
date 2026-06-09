@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Facades;
 
 use ArtisanPackUI\Security\Contracts\CspPolicyInterface;
+use ArtisanPackUI\Security\Services\Csp\CspPolicyService;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string renderMetaTag()
  * @method static self reset()
  *
- * @see \ArtisanPackUI\Security\Services\Csp\CspPolicyService
+ * @see CspPolicyService
  */
 class Csp extends Facade
 {

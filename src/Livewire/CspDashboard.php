@@ -70,7 +70,7 @@ class CspDashboard extends Component
         $hours = $this->days * 24;
 
         // Summary stats
-        $this->totalViolations  = CspViolationReport::getTotalCount($hours);
+        $this->totalViolations = CspViolationReport::getTotalCount($hours);
         $this->uniqueViolations = CspViolationReport::getUniqueCount($hours);
 
         // Count by disposition
@@ -85,11 +85,11 @@ class CspDashboard extends Component
             ->sum('occurrence_count');
 
         // Chart: Violations by directive
-        $byDirective                      = CspViolationReport::getViolationsByDirective();
+        $byDirective = CspViolationReport::getViolationsByDirective();
         $this->violationsByDirectiveChart = $this->buildDirectiveChart($byDirective->toArray());
 
         // Chart: Trend over time
-        $trend                     = CspViolationReport::getViolationTrend($this->days);
+        $trend = CspViolationReport::getViolationTrend($this->days);
         $this->violationTrendChart = $this->buildTrendChart($trend);
 
         // Top blocked URIs
@@ -109,12 +109,12 @@ class CspDashboard extends Component
             ->limit(5)
             ->get()
             ->map(fn ($violation) => [
-                'directive'   => $violation->violated_directive,
+                'directive' => $violation->violated_directive,
                 'blocked_uri' => $violation->blocked_uri
                     ? (strlen($violation->blocked_uri) > 30 ? substr($violation->blocked_uri, 0, 27).'...' : $violation->blocked_uri)
                     : 'N/A',
                 'occurrence_count' => $violation->occurrence_count,
-                'last_seen'        => $violation->last_seen_at?->diffForHumans() ?? 'N/A',
+                'last_seen' => $violation->last_seen_at?->diffForHumans() ?? 'N/A',
             ])
             ->toArray();
     }
@@ -140,16 +140,16 @@ class CspDashboard extends Component
         return [
             'type' => 'doughnut',
             'data' => [
-                'labels'   => array_keys($data),
+                'labels' => array_keys($data),
                 'datasets' => [
                     [
-                        'data'            => array_values($data),
+                        'data' => array_values($data),
                         'backgroundColor' => array_slice($colors, 0, count($data)),
                     ],
                 ],
             ],
             'options' => [
-                'responsive'          => true,
+                'responsive' => true,
                 'maintainAspectRatio' => false,
             ],
         ];
@@ -169,22 +169,22 @@ class CspDashboard extends Component
         return [
             'type' => 'line',
             'data' => [
-                'labels'   => $labels,
+                'labels' => $labels,
                 'datasets' => [
                     [
-                        'label'           => 'Violations',
-                        'data'            => array_values($data),
-                        'borderColor'     => 'rgba(239, 68, 68, 1)',
+                        'label' => 'Violations',
+                        'data' => array_values($data),
+                        'borderColor' => 'rgba(239, 68, 68, 1)',
                         'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
-                        'fill'            => true,
-                        'tension'         => 0.3,
+                        'fill' => true,
+                        'tension' => 0.3,
                     ],
                 ],
             ],
             'options' => [
-                'responsive'          => true,
+                'responsive' => true,
                 'maintainAspectRatio' => false,
-                'scales'              => [
+                'scales' => [
                     'y' => [
                         'beginAtZero' => true,
                     ],

@@ -426,7 +426,7 @@ class CspPolicyBuilder
         $parts = [];
 
         foreach ($this->directives as $directive => $values) {
-            if (true === $values) {
+            if ($values === true) {
                 $parts[] = $directive;
             } elseif (is_array($values) && ! empty($values)) {
                 $parts[] = $directive.' '.implode(' ', $values);

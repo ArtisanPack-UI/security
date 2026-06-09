@@ -126,7 +126,7 @@ return [
              * Default rate limit for authenticated API requests.
              */
             'authenticated' => [
-                'max_attempts'  => env('API_RATE_LIMIT_AUTHENTICATED', 60),
+                'max_attempts' => env('API_RATE_LIMIT_AUTHENTICATED', 60),
                 'decay_minutes' => 1,
             ],
 
@@ -134,7 +134,7 @@ return [
              * Rate limit for unauthenticated/guest API requests.
              */
             'guest' => [
-                'max_attempts'  => env('API_RATE_LIMIT_GUEST', 30),
+                'max_attempts' => env('API_RATE_LIMIT_GUEST', 30),
                 'decay_minutes' => 1,
             ],
         ],

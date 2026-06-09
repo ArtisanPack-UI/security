@@ -56,8 +56,8 @@ class SecurityGate
 
         // Check severity thresholds
         $critical = $this->countBySeverity($findings, SecurityFinding::SEVERITY_CRITICAL);
-        $high     = $this->countBySeverity($findings, SecurityFinding::SEVERITY_HIGH);
-        $medium   = $this->countBySeverity($findings, SecurityFinding::SEVERITY_MEDIUM);
+        $high = $this->countBySeverity($findings, SecurityFinding::SEVERITY_HIGH);
+        $medium = $this->countBySeverity($findings, SecurityFinding::SEVERITY_MEDIUM);
 
         if ($critical > $this->maxCritical) {
             $failures[] = "Critical findings ({$critical}) exceed threshold ({$this->maxCritical})";
@@ -97,7 +97,7 @@ class SecurityGate
         foreach ($this->rules as $name => $check) {
             $result = $check($findings, $benchmarks);
 
-            if (true !== $result) {
+            if ($result !== true) {
                 $failures[] = "Rule '{$name}' failed: {$result}";
             }
         }
@@ -107,8 +107,8 @@ class SecurityGate
             failures: $failures,
             summary: [
                 'critical' => $critical,
-                'high'     => $high,
-                'medium'   => $medium,
+                'high' => $high,
+                'medium' => $medium,
             ],
         );
     }
@@ -186,9 +186,9 @@ class GateResult
     public function toArray(): array
     {
         return [
-            'passed'   => $this->passed,
+            'passed' => $this->passed,
             'failures' => $this->failures,
-            'summary'  => $this->summary,
+            'summary' => $this->summary,
         ];
     }
 }

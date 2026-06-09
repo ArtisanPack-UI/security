@@ -46,7 +46,7 @@ trait TestsSessionSecurity
         }
 
         $sameSite = $sessionConfig['same_site'] ?? null;
-        if (null === $sameSite || 'none' === $sameSite) {
+        if ($sameSite === null || $sameSite === 'none') {
             $this->recordFinding(SecurityFinding::medium(
                 'Session Cookie SameSite Not Strict',
                 'Session cookie SameSite attribute is not set to Strict or Lax',

@@ -52,11 +52,11 @@ class CspViolationReport extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'line_number'      => 'integer',
-        'column_number'    => 'integer',
+        'line_number' => 'integer',
+        'column_number' => 'integer',
         'occurrence_count' => 'integer',
-        'first_seen_at'    => 'datetime',
-        'last_seen_at'     => 'datetime',
+        'first_seen_at' => 'datetime',
+        'last_seen_at' => 'datetime',
     ];
 
     /**
@@ -123,12 +123,12 @@ class CspViolationReport extends Model
      */
     public static function getViolationTrend(int $days = 7): array
     {
-        $trend     = [];
+        $trend = [];
         $startDate = now()->subDays($days)->startOfDay();
 
         // Pre-fill with zeros for all dates in range
         for ($i = 0; $i <= $days; $i++) {
-            $date                          = $startDate->copy()->addDays($i);
+            $date = $startDate->copy()->addDays($i);
             $trend[$date->format('Y-m-d')] = 0;
         }
 

@@ -21,7 +21,7 @@ class SecurityGateTest extends TestCase
 
     public function test_passes_with_no_findings(): void
     {
-        $gate   = new SecurityGate;
+        $gate = new SecurityGate;
         $result = $gate->evaluate([]);
 
         $this->assertTrue($result->passed);
@@ -30,7 +30,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_critical_finding(): void
     {
-        $gate     = new SecurityGate(maxCritical: 0);
+        $gate = new SecurityGate(maxCritical: 0);
         $findings = [
             SecurityFinding::critical('Critical Issue', 'Description', 'test'),
         ];
@@ -44,7 +44,7 @@ class SecurityGateTest extends TestCase
 
     public function test_passes_with_critical_finding_when_threshold_allows(): void
     {
-        $gate     = new SecurityGate(maxCritical: 1);
+        $gate = new SecurityGate(maxCritical: 1);
         $findings = [
             SecurityFinding::critical('Critical Issue', 'Description', 'test'),
         ];
@@ -56,7 +56,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_high_finding_exceeding_threshold(): void
     {
-        $gate     = new SecurityGate(maxHigh: 0);
+        $gate = new SecurityGate(maxHigh: 0);
         $findings = [
             SecurityFinding::high('High Issue', 'Description', 'test'),
         ];
@@ -69,7 +69,7 @@ class SecurityGateTest extends TestCase
 
     public function test_fails_with_medium_findings_exceeding_threshold(): void
     {
-        $gate     = new SecurityGate(maxMedium: 2);
+        $gate = new SecurityGate(maxMedium: 2);
         $findings = [
             SecurityFinding::medium('Medium 1', 'Description', 'test'),
             SecurityFinding::medium('Medium 2', 'Description', 'test'),
@@ -84,7 +84,7 @@ class SecurityGateTest extends TestCase
 
     public function test_ignores_low_findings(): void
     {
-        $gate     = new SecurityGate;
+        $gate = new SecurityGate;
         $findings = [
             SecurityFinding::low('Low Issue 1', 'Description', 'test'),
             SecurityFinding::low('Low Issue 2', 'Description', 'test'),
@@ -98,7 +98,7 @@ class SecurityGateTest extends TestCase
 
     public function test_ignores_info_findings(): void
     {
-        $gate     = new SecurityGate;
+        $gate = new SecurityGate;
         $findings = [
             SecurityFinding::info('Info 1', 'Description', 'test'),
             SecurityFinding::info('Info 2', 'Description', 'test'),
@@ -276,7 +276,7 @@ class SecurityGateTest extends TestCase
 
     public function test_summary_contains_correct_counts(): void
     {
-        $gate     = new SecurityGate(maxCritical: 5, maxHigh: 5, maxMedium: 20);
+        $gate = new SecurityGate(maxCritical: 5, maxHigh: 5, maxMedium: 20);
         $findings = [
             SecurityFinding::critical('Critical 1', 'Desc', 'test'),
             SecurityFinding::high('High 1', 'Desc', 'test'),

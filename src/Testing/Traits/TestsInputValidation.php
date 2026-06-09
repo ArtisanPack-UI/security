@@ -32,11 +32,11 @@ trait TestsInputValidation
         $payloads = SqlPayloads::getErrorBased();
 
         foreach ($payloads as $payload) {
-            $testParams                   = $parameters;
+            $testParams = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content  = $response->getContent();
+            $content = $response->getContent();
 
             if ($this->hasSqlError($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -64,11 +64,11 @@ trait TestsInputValidation
         $payloads = XssPayloads::getBasic();
 
         foreach ($payloads as $payload) {
-            $testParams                   = $parameters;
+            $testParams = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content  = $response->getContent();
+            $content = $response->getContent();
 
             // Check if payload is reflected unescaped
             if ($this->isXssPayloadReflected($content, $payload)) {
@@ -97,11 +97,11 @@ trait TestsInputValidation
         $payloads = InjectionPayloads::getCommandInjection();
 
         foreach ($payloads as $payload) {
-            $testParams                   = $parameters;
+            $testParams = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content  = $response->getContent();
+            $content = $response->getContent();
 
             if ($this->hasCommandExecutionIndicator($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -137,11 +137,11 @@ trait TestsInputValidation
         ];
 
         foreach ($payloads as $payload) {
-            $testParams                   = $parameters;
+            $testParams = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
-            $content  = $response->getContent();
+            $content = $response->getContent();
 
             if ($this->hasSensitiveFileContent($content)) {
                 $this->recordFinding(SecurityFinding::critical(
@@ -166,18 +166,18 @@ trait TestsInputValidation
         array $parameters,
         string $vulnerableParam,
     ): void {
-        $payloads           = InjectionPayloads::getLdapInjection();
+        $payloads = InjectionPayloads::getLdapInjection();
         $vulnerabilityFound = false;
 
         foreach ($payloads as $payload) {
-            $testParams                   = $parameters;
+            $testParams = $parameters;
             $testParams[$vulnerableParam] = $payload;
 
             $response = $this->$method($uri, $testParams);
 
             // LDAP injection might result in unexpected success or error patterns
             // Check for wildcard injection (returns all results)
-            if (200 === $response->status() && str_contains($payload, '*')) {
+            if ($response->status() === 200 && str_contains($payload, '*')) {
                 $this->recordFinding(SecurityFinding::high(
                     'Potential LDAP Injection',
                     "Parameter '{$vulnerableParam}' may be vulnerable to LDAP injection with wildcard payload",
@@ -346,7 +346,7 @@ trait TestsInputValidation
         $response = $this->$method($uri, $invalidData);
 
         $this->assertTrue(
-            422 === $response->status() || 400 === $response->status(),
+            $response->status() === 422 || $response->status() === 400,
             "Expected validation error (422/400) for invalid input, got {$response->status()}",
         );
     }

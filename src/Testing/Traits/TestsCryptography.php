@@ -71,7 +71,7 @@ trait TestsCryptography
         }
 
         // Check bcrypt cost factor
-        if ('bcrypt' === $hashDriver) {
+        if ($hashDriver === 'bcrypt') {
             $rounds = config('hashing.bcrypt.rounds', 10);
             if ($rounds < 10) {
                 $this->recordFinding(SecurityFinding::medium(
@@ -116,7 +116,7 @@ trait TestsCryptography
         foreach ($sensitiveFields as $field) {
             $cast = $casts[$field] ?? null;
 
-            if ('encrypted' !== $cast && 'encrypted:array' !== $cast && 'encrypted:collection' !== $cast) {
+            if ($cast !== 'encrypted' && $cast !== 'encrypted:array' && $cast !== 'encrypted:collection') {
                 $this->recordFinding(SecurityFinding::medium(
                     'Sensitive Data Not Encrypted',
                     "Field '{$field}' in {$modelClass} is not encrypted at rest",
@@ -155,7 +155,7 @@ trait TestsCryptography
      */
     protected function assertDatabaseConnectionEncrypted(): void
     {
-        $connections       = config('database.connections', []);
+        $connections = config('database.connections', []);
         $defaultConnection = config('database.default');
 
         $connection = $connections[$defaultConnection] ?? [];
@@ -186,7 +186,7 @@ trait TestsCryptography
         $weakCiphers = ['DES', 'RC4', 'MD5', 'SHA1'];
 
         foreach ($weakCiphers as $weak) {
-            if (false !== stripos($cipher, $weak)) {
+            if (stripos($cipher, $weak) !== false) {
                 $this->recordFinding(SecurityFinding::critical(
                     'Weak Cipher Configured',
                     "Cipher '{$cipher}' contains weak algorithm",

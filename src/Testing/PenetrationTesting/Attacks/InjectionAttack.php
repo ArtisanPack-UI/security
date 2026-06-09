@@ -23,8 +23,8 @@ class InjectionAttack implements AttackInterface
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method          = $options['method'] ?? 'get';
-        $params          = $options['parameters'] ?? [];
+        $method = $options['method'] ?? 'get';
+        $params = $options['parameters'] ?? [];
 
         // If no parameters provided, try common parameter names
         if (empty($params)) {
@@ -89,19 +89,19 @@ class InjectionAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($payloads as $payload) {
-                $testParams             = $params;
+                $testParams = $params;
                 $testParams[$paramName] = $payload;
 
                 try {
                     $response = $testCase->$method($uri, $testParams);
-                    $content  = $response->getContent();
+                    $content = $response->getContent();
 
                     if ($this->hasCommandOutput($content)) {
                         $vulnerabilities[] = [
-                            'type'      => 'command-injection',
+                            'type' => 'command-injection',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $this->extractCommandEvidence($content),
+                            'payload' => $payload,
+                            'evidence' => $this->extractCommandEvidence($content),
                         ];
                     }
                 } catch (Exception $e) {
@@ -128,30 +128,30 @@ class InjectionAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($payloads as $payload) {
-                $testParams             = $params;
+                $testParams = $params;
                 $testParams[$paramName] = $payload;
 
                 try {
                     $response = $testCase->$method($uri, $testParams);
-                    $content  = $response->getContent();
+                    $content = $response->getContent();
 
                     // Check if template expression was evaluated
                     if ($this->templateWasEvaluated($payload, $content)) {
                         $vulnerabilities[] = [
-                            'type'      => 'template-injection',
+                            'type' => 'template-injection',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $this->extractTemplateEvidence($content, $payload),
+                            'payload' => $payload,
+                            'evidence' => $this->extractTemplateEvidence($content, $payload),
                         ];
                     }
                 } catch (Exception $e) {
                     // Template parsing errors might indicate injection possibility
                     if ($this->isTemplateException($e)) {
                         $vulnerabilities[] = [
-                            'type'      => 'template-error',
+                            'type' => 'template-error',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $e->getMessage(),
+                            'payload' => $payload,
+                            'evidence' => $e->getMessage(),
                         ];
                     }
                 }
@@ -176,7 +176,7 @@ class InjectionAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($payloads as $payload) {
-                $testParams             = $params;
+                $testParams = $params;
                 $testParams[$paramName] = $payload;
 
                 try {
@@ -185,9 +185,9 @@ class InjectionAttack implements AttackInterface
                     // Check if injected headers appear in response
                     if ($response->headers->has('Header') || $response->headers->has('Injected')) {
                         $vulnerabilities[] = [
-                            'type'      => 'header-injection',
+                            'type' => 'header-injection',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
+                            'payload' => $payload,
                         ];
                     }
                 } catch (Exception $e) {
@@ -294,7 +294,7 @@ class InjectionAttack implements AttackInterface
     protected function determineSeverity(array $vulnerabilities): string
     {
         foreach ($vulnerabilities as $vuln) {
-            if ('command-injection' === $vuln['type']) {
+            if ($vuln['type'] === 'command-injection') {
                 return 'critical';
             }
         }

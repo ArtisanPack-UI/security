@@ -38,8 +38,8 @@ class XssAttack implements AttackInterface
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method          = $options['method'] ?? 'get';
-        $params          = $options['parameters'] ?? [];
+        $method = $options['method'] ?? 'get';
+        $params = $options['parameters'] ?? [];
 
         // If no parameters provided, try common parameter names
         if (empty($params)) {
@@ -48,20 +48,20 @@ class XssAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($this->payloads as $payload) {
-                $testParams             = $params;
+                $testParams = $params;
                 $testParams[$paramName] = $payload;
 
                 try {
                     $response = $testCase->$method($uri, $testParams);
-                    $content  = $response->getContent();
+                    $content = $response->getContent();
 
                     // Check if payload is reflected unescaped
                     if ($this->isPayloadReflected($content, $payload)) {
                         $vulnerabilities[] = [
-                            'type'      => $this->determineXssType($payload),
+                            'type' => $this->determineXssType($payload),
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'context'   => $this->detectContext($content, $payload),
+                            'payload' => $payload,
+                            'context' => $this->detectContext($content, $payload),
                         ];
                     }
                 } catch (Exception $e) {
@@ -164,13 +164,13 @@ class XssAttack implements AttackInterface
     {
         $pos = strpos($content, $payload);
 
-        if (false === $pos) {
+        if ($pos === false) {
             return 'unknown';
         }
 
         // Get surrounding context
         $before = substr($content, max(0, $pos - 50), 50);
-        $after  = substr($content, $pos + strlen($payload), 50);
+        $after = substr($content, $pos + strlen($payload), 50);
 
         // Check if inside script tag
         if (preg_match('/<script[^>]*>$/i', $before)) {

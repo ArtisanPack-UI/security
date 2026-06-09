@@ -44,7 +44,7 @@ class ContentSecurityPolicy
         $this->csp->forRequest($request);
 
         // Apply preset if specified via middleware parameter
-        if (null !== $preset) {
+        if ($preset !== null) {
             $this->csp->usePreset($preset);
         }
 

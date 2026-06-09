@@ -66,7 +66,7 @@ trait TestsSecurityHeaders
     {
         $header = $response->headers->get('X-Content-Type-Options');
 
-        if ('nosniff' !== $header) {
+        if ($header !== 'nosniff') {
             $this->recordFinding(SecurityFinding::medium(
                 'Missing X-Content-Type-Options Header',
                 'Response does not include X-Content-Type-Options: nosniff',
@@ -243,7 +243,7 @@ trait TestsSecurityHeaders
     {
         $cacheControl = $response->headers->get('Cache-Control');
 
-        $requiredDirectives    = ['no-store', 'no-cache', 'must-revalidate'];
+        $requiredDirectives = ['no-store', 'no-cache', 'must-revalidate'];
         $hasRequiredDirectives = true;
 
         foreach ($requiredDirectives as $directive) {
