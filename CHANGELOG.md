@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Laravel 13 support. Widened the `illuminate/support` constraint to `^10.0|^11.0|^12.0|^13.0`. Existing Laravel 10/11/12 users are unaffected; Laravel 13 is only selectable on PHP 8.3+ per its own framework constraint.
+
 ## [2.0.1] - 2026-05-21
 
 ### Fixed
