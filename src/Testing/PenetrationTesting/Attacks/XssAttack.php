@@ -170,7 +170,6 @@ class XssAttack implements AttackInterface
 
         // Get surrounding context
         $before = substr($content, max(0, $pos - 50), 50);
-        $after = substr($content, $pos + strlen($payload), 50);
 
         // Check if inside script tag
         if (preg_match('/<script[^>]*>$/i', $before)) {
