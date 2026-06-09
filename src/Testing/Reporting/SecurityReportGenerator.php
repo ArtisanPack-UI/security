@@ -41,10 +41,10 @@ class SecurityReportGenerator implements SecurityReportInterface
         protected ?string $version = null,
     ) {
         $this->metadata = [
-            'generatedAt'      => now()->toIso8601String(),
-            'projectName'      => $projectName,
-            'version'          => $version,
-            'generator'        => 'ArtisanPack Security Testing Framework',
+            'generatedAt' => now()->toIso8601String(),
+            'projectName' => $projectName,
+            'version' => $version,
+            'generator' => 'ArtisanPack Security Testing Framework',
             'generatorVersion' => '2.0.0',
         ];
     }
@@ -87,12 +87,12 @@ class SecurityReportGenerator implements SecurityReportInterface
     public function generate(string $format = 'json'): string
     {
         return match ($format) {
-            'json'           => $this->generateJson(),
-            'html'           => $this->generateHtml(),
-            'junit'          => $this->generateJunit(),
-            'sarif'          => $this->generateSarif(),
+            'json' => $this->generateJson(),
+            'html' => $this->generateHtml(),
+            'junit' => $this->generateJunit(),
+            'sarif' => $this->generateSarif(),
             'markdown', 'md' => $this->generateMarkdown(),
-            default          => throw new InvalidArgumentException("Unknown format: {$format}"),
+            default => throw new InvalidArgumentException("Unknown format: {$format}"),
         };
     }
 
@@ -104,15 +104,15 @@ class SecurityReportGenerator implements SecurityReportInterface
     public function getSummary(): array
     {
         return [
-            'total'      => count($this->findings),
+            'total' => count($this->findings),
             'bySeverity' => [
                 'critical' => $this->countBySeverity([SecurityFinding::SEVERITY_CRITICAL]),
-                'high'     => $this->countBySeverity([SecurityFinding::SEVERITY_HIGH]),
-                'medium'   => $this->countBySeverity([SecurityFinding::SEVERITY_MEDIUM]),
-                'low'      => $this->countBySeverity([SecurityFinding::SEVERITY_LOW]),
-                'info'     => $this->countBySeverity([SecurityFinding::SEVERITY_INFO]),
+                'high' => $this->countBySeverity([SecurityFinding::SEVERITY_HIGH]),
+                'medium' => $this->countBySeverity([SecurityFinding::SEVERITY_MEDIUM]),
+                'low' => $this->countBySeverity([SecurityFinding::SEVERITY_LOW]),
+                'info' => $this->countBySeverity([SecurityFinding::SEVERITY_INFO]),
             ],
-            'byCategory'  => $this->groupByCategory(),
+            'byCategory' => $this->groupByCategory(),
             'hasBlocking' => $this->hasBlockingFindings(),
         ];
     }
@@ -147,7 +147,7 @@ class SecurityReportGenerator implements SecurityReportInterface
     {
         $content = $this->generate($format);
 
-        return false !== file_put_contents($path, $content);
+        return file_put_contents($path, $content) !== false;
     }
 
     /**

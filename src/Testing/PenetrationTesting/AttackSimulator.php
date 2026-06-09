@@ -65,7 +65,7 @@ class AttackSimulator
         $this->results = [];
 
         foreach ($this->attacks as $attack) {
-            $result          = $attack->execute($this->testCase, $uri, $options);
+            $result = $attack->execute($this->testCase, $uri, $options);
             $this->results[] = $result;
         }
 

@@ -29,7 +29,7 @@ trait TestsAuthorization
     ): void {
         $response = $this->actingAs($user)->$method($uri, $data);
 
-        if (403 !== $response->status()) {
+        if ($response->status() !== 403) {
             $this->recordFinding(SecurityFinding::high(
                 'Missing Authorization Check',
                 "User without permission can access {$method} {$uri}",
@@ -158,7 +158,7 @@ trait TestsAuthorization
         } else {
             // For non-Eloquent implementations, we cannot verify the change
             // but we can check the response status
-            if (200 === $response->status() || 204 === $response->status()) {
+            if ($response->status() === 200 || $response->status() === 204) {
                 $this->recordFinding(SecurityFinding::medium(
                     'Potential Mass Assignment - Role Escalation',
                     "Role change request accepted (status {$response->status()}). Manual verification needed.",
@@ -195,7 +195,7 @@ trait TestsAuthorization
 
         $allowedOrigin = $response->headers->get('Access-Control-Allow-Origin');
 
-        if ('*' === $allowedOrigin || $allowedOrigin === $maliciousOrigin) {
+        if ($allowedOrigin === '*' || $allowedOrigin === $maliciousOrigin) {
             $this->recordFinding(SecurityFinding::medium(
                 'Permissive CORS Configuration',
                 "Endpoint allows requests from {$maliciousOrigin}",

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ArtisanPackUI\Security\Contracts;
 
+use ArtisanPackUI\Security\Services\Csp\Presets\CspPresetInterface;
 use Illuminate\Http\Request;
 
 interface CspPolicyInterface
@@ -64,7 +65,7 @@ interface CspPolicyInterface
     /**
      * Get all registered presets.
      *
-     * @return array<string, \ArtisanPackUI\Security\Services\Csp\Presets\CspPresetInterface>
+     * @return array<string, CspPresetInterface>
      */
     public function getPresets(): array;
 

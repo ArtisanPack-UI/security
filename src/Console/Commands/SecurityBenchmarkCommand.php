@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace ArtisanPackUI\Security\Console\Commands;
 
+use ArtisanPackUI\Security\Http\Middleware\ContentSecurityPolicy;
+use ArtisanPackUI\Security\Http\Middleware\SecurityHeaders;
+use ArtisanPackUI\Security\Testing\Performance\BenchmarkResult;
 use ArtisanPackUI\Security\Testing\Performance\ImpactAnalyzer;
 use ArtisanPackUI\Security\Testing\Performance\SecurityBenchmark;
 use Exception;
@@ -31,7 +34,7 @@ class SecurityBenchmarkCommand extends Command
     public function handle(): int
     {
         $iterations = (int) $this->option('iterations');
-        $threshold  = (float) $this->option('threshold');
+        $threshold = (float) $this->option('threshold');
 
         $this->info('Running security performance benchmarks...');
         $this->line("Iterations: {$iterations}");
@@ -60,8 +63,8 @@ class SecurityBenchmarkCommand extends Command
 
         // Benchmark middleware if available
         $middlewareClasses = [
-            \ArtisanPackUI\Security\Http\Middleware\SecurityHeaders::class,
-            \ArtisanPackUI\Security\Http\Middleware\ContentSecurityPolicy::class,
+            SecurityHeaders::class,
+            ContentSecurityPolicy::class,
         ];
 
         foreach ($middlewareClasses as $middlewareClass) {
@@ -77,15 +80,15 @@ class SecurityBenchmarkCommand extends Command
 
         // Analyze results
         $analyzer = new ImpactAnalyzer($results, ['default' => $threshold]);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         // Output results
         $format = $this->option('format');
 
-        if ('json' === $format) {
+        if ($format === 'json') {
             $output = json_encode([
-                'results'         => $benchmark->generateReport(),
-                'summary'         => $summary,
+                'results' => $benchmark->generateReport(),
+                'summary' => $summary,
                 'recommendations' => $analyzer->getRecommendations(),
             ], JSON_PRETTY_PRINT);
 
@@ -140,7 +143,7 @@ class SecurityBenchmarkCommand extends Command
     /**
      * Display results as a table.
      *
-     * @param  array<\ArtisanPackUI\Security\Testing\Performance\BenchmarkResult>  $results
+     * @param  array<BenchmarkResult>  $results
      * @param  array<string, mixed>  $summary
      */
     protected function displayTable(array $results, array $summary): void
@@ -169,7 +172,7 @@ class SecurityBenchmarkCommand extends Command
         $this->newLine();
         $this->line(sprintf(
             'Pass rate: <fg=%s>%.1f%%</> (%d/%d)',
-            100 === $summary['pass_rate'] ? 'green' : 'yellow',
+            $summary['pass_rate'] === 100 ? 'green' : 'yellow',
             $summary['pass_rate'],
             $summary['acceptable'],
             $summary['total_benchmarks'],

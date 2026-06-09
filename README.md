@@ -87,7 +87,7 @@ Route::middleware('api.rate_limit:api')->group(function () {
 ## Requirements
 
 - PHP 8.2+
-- Laravel 10 / 11 / 12
+- Laravel 10 / 11 / 12 / 13 (Laravel 13 requires PHP 8.3+)
 
 ## Sibling packages
 

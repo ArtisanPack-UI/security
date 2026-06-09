@@ -79,8 +79,8 @@ class ConfigurationScanner implements ScannerInterface
         }
 
         // Check for non-production environment name in production-like URLs
-        $appUrl          = config('app.url', '');
-        $appEnv          = config('app.env', 'production');
+        $appUrl = config('app.url', '');
+        $appEnv = config('app.env', 'production');
         $isProductionUrl = str_contains($appUrl, 'prod') ||
                            str_contains($appUrl, '.com') ||
                            str_contains($appUrl, '.io') ||
@@ -103,7 +103,7 @@ class ConfigurationScanner implements ScannerInterface
     protected function scanDatabaseConfig(): void
     {
         $connection = config('database.default');
-        $dbConfig   = config("database.connections.{$connection}", []);
+        $dbConfig = config("database.connections.{$connection}", []);
 
         // Check for default/empty passwords
         $password = $dbConfig['password'] ?? '';
@@ -131,12 +131,12 @@ class ConfigurationScanner implements ScannerInterface
 
         // Check for SSL in production
         if (app()->environment('production')) {
-            $driver     = $dbConfig['driver'] ?? '';
+            $driver = $dbConfig['driver'] ?? '';
             $sslEnabled = false;
 
-            if ('mysql' === $driver) {
+            if ($driver === 'mysql') {
                 $sslEnabled = isset($dbConfig['options'][PDO::MYSQL_ATTR_SSL_CA]);
-            } elseif ('pgsql' === $driver) {
+            } elseif ($driver === 'pgsql') {
                 $sslEnabled = ($dbConfig['sslmode'] ?? 'prefer') === 'require';
             }
 
@@ -181,7 +181,7 @@ class ConfigurationScanner implements ScannerInterface
 
         // SameSite attribute
         $sameSite = config('session.same_site', 'lax');
-        if ('none' === $sameSite || null === $sameSite) {
+        if ($sameSite === 'none' || $sameSite === null) {
             $this->findings[] = SecurityFinding::medium(
                 'Weak SameSite Cookie Attribute',
                 "Session cookie SameSite is set to '{$sameSite}'",
@@ -205,7 +205,7 @@ class ConfigurationScanner implements ScannerInterface
 
         // Session driver
         $driver = config('session.driver', 'file');
-        if ('cookie' === $driver) {
+        if ($driver === 'cookie') {
             $this->findings[] = SecurityFinding::medium(
                 'Cookie Session Driver',
                 'Using cookie driver exposes session data to clients',
@@ -224,7 +224,7 @@ class ConfigurationScanner implements ScannerInterface
         $cacheDriver = config('cache.default', 'file');
 
         // File cache in shared hosting
-        if ('file' === $cacheDriver) {
+        if ($cacheDriver === 'file') {
             $cachePath = config('cache.stores.file.path', storage_path('framework/cache'));
 
             if (! File::exists($cachePath)) {
@@ -233,7 +233,7 @@ class ConfigurationScanner implements ScannerInterface
 
             // Check permissions (should not be world-readable)
             $perms = fileperms($cachePath);
-            if (false !== $perms && ($perms & 0x0004)) {
+            if ($perms !== false && ($perms & 0x0004)) {
                 $this->findings[] = SecurityFinding::low(
                     'Cache Directory World-Readable',
                     'Cache directory may be accessible to other users',
@@ -250,11 +250,11 @@ class ConfigurationScanner implements ScannerInterface
      */
     protected function scanMailConfig(): void
     {
-        $mailer       = config('mail.default', 'smtp');
+        $mailer = config('mail.default', 'smtp');
         $mailerConfig = config("mail.mailers.{$mailer}", []);
 
         // Check for unencrypted SMTP
-        if ('smtp' === $mailer) {
+        if ($mailer === 'smtp') {
             $encryption = $mailerConfig['encryption'] ?? null;
 
             if (app()->environment('production') && ! in_array($encryption, ['tls', 'ssl'])) {
@@ -275,11 +275,11 @@ class ConfigurationScanner implements ScannerInterface
     protected function scanFilesystemConfig(): void
     {
         $defaultDisk = config('filesystems.default', 'local');
-        $disks       = config('filesystems.disks', []);
+        $disks = config('filesystems.disks', []);
 
         foreach ($disks as $name => $disk) {
             // Check for public visibility on sensitive disks
-            if (($disk['visibility'] ?? 'private') === 'public' && 'public' !== $name) {
+            if (($disk['visibility'] ?? 'private') === 'public' && $name !== 'public') {
                 $this->findings[] = SecurityFinding::medium(
                     'Public Disk Visibility',
                     "Disk '{$name}' has public visibility by default",
@@ -360,7 +360,7 @@ class ConfigurationScanner implements ScannerInterface
 
         // Check .env file permissions
         $perms = fileperms($envPath);
-        if (false !== $perms && ($perms & 0x0004)) {
+        if ($perms !== false && ($perms & 0x0004)) {
             $this->findings[] = SecurityFinding::high(
                 '.env File World-Readable',
                 '.env file may be readable by other system users',

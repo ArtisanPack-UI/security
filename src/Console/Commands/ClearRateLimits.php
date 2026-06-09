@@ -24,7 +24,7 @@ class ClearRateLimits extends Command
 
     public function handle(): int
     {
-        $ip   = $this->option('ip');
+        $ip = $this->option('ip');
         $user = $this->option('user');
 
         if (! $ip && ! $user) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use ArtisanPackUI\Security\SecurityServiceProvider;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
@@ -37,7 +38,7 @@ class RateLimitingTest extends TestCase
             return 'Success';
         })->middleware('throttle:test');
 
-        $user     = new User;
+        $user = new User;
         $user->id = 1;
         $this->actingAs($user);
 
@@ -55,7 +56,7 @@ class RateLimitingTest extends TestCase
     protected function getPackageProviders($app): array
     {
         return [
-            \ArtisanPackUI\Security\SecurityServiceProvider::class,
+            SecurityServiceProvider::class,
         ];
     }
 
@@ -64,7 +65,7 @@ class RateLimitingTest extends TestCase
         // Enable rate limiting and define a test route with a limiter
         Config::set('artisanpack.security.rateLimiting.enabled', true);
         Config::set('artisanpack.security.rateLimiting.limiters.test', [
-            'maxAttempts'  => 3,
+            'maxAttempts' => 3,
             'decayMinutes' => 1,
         ]);
     }

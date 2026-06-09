@@ -17,13 +17,13 @@ class SecurityHeadersMiddlewareTest extends TestCase
     public function it_adds_configured_security_headers_to_the_response(): void
     {
         $headers = [
-            'X-Frame-Options'         => 'DENY',
-            'X-Content-Type-Options'  => 'nosniff',
+            'X-Frame-Options' => 'DENY',
+            'X-Content-Type-Options' => 'nosniff',
             'Content-Security-Policy' => "default-src 'none'",
         ];
         Config::set('artisanpack.security.security-headers', $headers);
 
-        $request    = new Request;
+        $request = new Request;
         $middleware = new SecurityHeadersMiddleware;
 
         $response = $middleware->handle($request, function () {
@@ -39,13 +39,13 @@ class SecurityHeadersMiddlewareTest extends TestCase
     public function it_does_not_add_headers_that_are_null_or_empty(): void
     {
         $headers = [
-            'X-Frame-Options'        => 'SAMEORIGIN',
+            'X-Frame-Options' => 'SAMEORIGIN',
             'X-Content-Type-Options' => null, // This should be ignored
-            'Referrer-Policy'        => '', // This should be ignored
+            'Referrer-Policy' => '', // This should be ignored
         ];
         Config::set('artisanpack.security.security-headers', $headers);
 
-        $request    = new Request;
+        $request = new Request;
         $middleware = new SecurityHeadersMiddleware;
 
         $response = $middleware->handle($request, function () {

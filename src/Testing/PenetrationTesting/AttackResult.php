@@ -74,7 +74,7 @@ class AttackResult
      */
     public function isCritical(): bool
     {
-        return $this->vulnerable && 'critical' === $this->severity;
+        return $this->vulnerable && $this->severity === 'critical';
     }
 
     /**
@@ -82,7 +82,7 @@ class AttackResult
      */
     public function isHigh(): bool
     {
-        return $this->vulnerable && 'high' === $this->severity;
+        return $this->vulnerable && $this->severity === 'high';
     }
 
     /**
@@ -109,12 +109,12 @@ class AttackResult
     public function toArray(): array
     {
         return [
-            'attack'       => $this->attack,
-            'vulnerable'   => $this->vulnerable,
-            'severity'     => $this->severity,
-            'findings'     => $this->findings,
+            'attack' => $this->attack,
+            'vulnerable' => $this->vulnerable,
+            'severity' => $this->severity,
+            'findings' => $this->findings,
             'findingCount' => $this->getFindingCount(),
-            'metadata'     => $this->metadata,
+            'metadata' => $this->metadata,
         ];
     }
 }

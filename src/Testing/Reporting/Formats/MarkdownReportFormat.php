@@ -111,7 +111,6 @@ class MarkdownReportFormat implements ReportFormatInterface
      * Group findings by severity.
      *
      * @param  array<SecurityFinding>  $findings
-     *
      * @return array<string, array<SecurityFinding>>
      */
     protected function groupBySeverity(array $findings): array
@@ -133,7 +132,7 @@ class MarkdownReportFormat implements ReportFormatInterface
     protected function renderSeveritySection(string $severity, array $findings): string
     {
         $icon = $this->getSeverityIcon($severity);
-        $md   = "### {$icon} ".ucfirst($severity).' ('.count($findings).")\n\n";
+        $md = "### {$icon} ".ucfirst($severity).' ('.count($findings).")\n\n";
 
         foreach ($findings as $finding) {
             $md .= $this->renderFinding($finding);
@@ -196,11 +195,11 @@ class MarkdownReportFormat implements ReportFormatInterface
     {
         return match ($severity) {
             'critical' => '🔴',
-            'high'     => '🟠',
-            'medium'   => '🟡',
-            'low'      => '🔵',
-            'info'     => '⚪',
-            default    => '⚫',
+            'high' => '🟠',
+            'medium' => '🟡',
+            'low' => '🔵',
+            'info' => '⚪',
+            default => '⚫',
         };
     }
 }

@@ -80,38 +80,38 @@ class HeaderScanner implements ScannerInterface
     {
         $requiredHeaders = [
             'X-Frame-Options' => [
-                'severity'    => 'medium',
-                'title'       => 'Missing X-Frame-Options',
+                'severity' => 'medium',
+                'title' => 'Missing X-Frame-Options',
                 'description' => 'X-Frame-Options header is not set, allowing clickjacking',
                 'remediation' => 'Add X-Frame-Options: DENY or SAMEORIGIN',
             ],
             'X-Content-Type-Options' => [
-                'severity'    => 'medium',
-                'title'       => 'Missing X-Content-Type-Options',
+                'severity' => 'medium',
+                'title' => 'Missing X-Content-Type-Options',
                 'description' => 'X-Content-Type-Options header is not set',
                 'remediation' => 'Add X-Content-Type-Options: nosniff',
             ],
             'Strict-Transport-Security' => [
-                'severity'    => 'high',
-                'title'       => 'Missing HSTS Header',
+                'severity' => 'high',
+                'title' => 'Missing HSTS Header',
                 'description' => 'Strict-Transport-Security header is not set',
                 'remediation' => 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains',
             ],
             'Content-Security-Policy' => [
-                'severity'    => 'high',
-                'title'       => 'Missing Content-Security-Policy',
+                'severity' => 'high',
+                'title' => 'Missing Content-Security-Policy',
                 'description' => 'No Content-Security-Policy header to prevent XSS',
                 'remediation' => 'Implement a Content-Security-Policy',
             ],
             'Referrer-Policy' => [
-                'severity'    => 'low',
-                'title'       => 'Missing Referrer-Policy',
+                'severity' => 'low',
+                'title' => 'Missing Referrer-Policy',
                 'description' => 'Referrer-Policy header is not set',
                 'remediation' => 'Add Referrer-Policy: strict-origin-when-cross-origin',
             ],
             'Permissions-Policy' => [
-                'severity'    => 'low',
-                'title'       => 'Missing Permissions-Policy',
+                'severity' => 'low',
+                'title' => 'Missing Permissions-Policy',
                 'description' => 'Permissions-Policy header is not set',
                 'remediation' => 'Add Permissions-Policy to restrict browser features',
             ],
@@ -143,13 +143,13 @@ class HeaderScanner implements ScannerInterface
     protected function scanInformationDisclosure(): void
     {
         $disclosureHeaders = [
-            'Server'              => 'Server version information exposed',
-            'X-Powered-By'        => 'Technology stack information exposed',
-            'X-AspNet-Version'    => 'ASP.NET version information exposed',
+            'Server' => 'Server version information exposed',
+            'X-Powered-By' => 'Technology stack information exposed',
+            'X-AspNet-Version' => 'ASP.NET version information exposed',
             'X-AspNetMvc-Version' => 'ASP.NET MVC version exposed',
-            'X-Generator'         => 'Generator information exposed',
-            'X-Drupal-Cache'      => 'Drupal cache information exposed',
-            'X-Varnish'           => 'Varnish cache information exposed',
+            'X-Generator' => 'Generator information exposed',
+            'X-Drupal-Cache' => 'Drupal cache information exposed',
+            'X-Varnish' => 'Varnish cache information exposed',
         ];
 
         foreach ($disclosureHeaders as $header => $description) {
@@ -343,7 +343,7 @@ class HeaderScanner implements ScannerInterface
             ?? $this->responseHeaders[$name]
             ?? null;
 
-        if (null === $value) {
+        if ($value === null) {
             return [];
         }
 

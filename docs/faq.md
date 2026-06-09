@@ -10,7 +10,7 @@ Common questions about the ArtisanPack Security package.
 
 ### What Laravel versions are supported?
 
-The package supports Laravel 10.x and 11.x. PHP 8.1 or higher is required.
+The package supports Laravel 10.x, 11.x, 12.x, and 13.x. PHP 8.2 or higher is required (Laravel 13 requires PHP 8.3+).
 
 ### Can I use this package with Jetstream/Breeze?
 

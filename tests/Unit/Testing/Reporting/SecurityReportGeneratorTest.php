@@ -14,7 +14,7 @@ class SecurityReportGeneratorTest extends TestCase
     public function test_can_add_finding(): void
     {
         $generator = new SecurityReportGenerator;
-        $finding   = SecurityFinding::high('Test Finding', 'Description', 'test');
+        $finding = SecurityFinding::high('Test Finding', 'Description', 'test');
 
         $generator->addFinding($finding);
         $findings = $generator->getFindings();
@@ -37,7 +37,7 @@ class SecurityReportGeneratorTest extends TestCase
     public function test_can_add_findings_array(): void
     {
         $generator = new SecurityReportGenerator;
-        $findings  = [
+        $findings = [
             SecurityFinding::high('Finding 1', 'Desc', 'cat'),
             SecurityFinding::medium('Finding 2', 'Desc', 'cat'),
         ];
@@ -142,7 +142,7 @@ class SecurityReportGeneratorTest extends TestCase
         $generator = new SecurityReportGenerator;
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
-        $path   = sys_get_temp_dir().'/security-report-test.json';
+        $path = sys_get_temp_dir().'/security-report-test.json';
         $result = $generator->saveToFile($path, 'json');
 
         $this->assertTrue($result);
@@ -210,7 +210,7 @@ class SecurityReportGeneratorTest extends TestCase
     {
         $generator = new SecurityReportGenerator;
 
-        $report  = $generator->generate('json');
+        $report = $generator->generate('json');
         $decoded = json_decode($report, true);
 
         $this->assertEmpty($decoded['findings']);
@@ -223,7 +223,7 @@ class SecurityReportGeneratorTest extends TestCase
         $generator->withMetadata(['customField' => 'customValue']);
         $generator->addFinding(SecurityFinding::high('Test', 'Desc', 'cat'));
 
-        $report  = $generator->generate('json');
+        $report = $generator->generate('json');
         $decoded = json_decode($report, true);
 
         $this->assertArrayHasKey('metadata', $decoded);

@@ -27,7 +27,7 @@ class SecurityHeadersMiddleware
         $headers = config('artisanpack.security.security-headers', []);
 
         foreach ($headers as $key => $value) {
-            if (null !== $value && '' !== $value) {
+            if ($value !== null && $value !== '') {
                 $response->headers->set($key, $value);
             }
         }

@@ -87,7 +87,7 @@ abstract class SecurityTestCase extends TestCase
      */
     public function getFindings(?string $severity = null): array
     {
-        if (null === $severity) {
+        if ($severity === null) {
             return $this->securityFindings;
         }
 
@@ -118,18 +118,18 @@ abstract class SecurityTestCase extends TestCase
         }
 
         $critical = $this->getFindings(SecurityFinding::SEVERITY_CRITICAL);
-        $high     = $this->getFindings(SecurityFinding::SEVERITY_HIGH);
-        $medium   = $this->getFindings(SecurityFinding::SEVERITY_MEDIUM);
-        $low      = $this->getFindings(SecurityFinding::SEVERITY_LOW);
-        $info     = $this->getFindings(SecurityFinding::SEVERITY_INFO);
+        $high = $this->getFindings(SecurityFinding::SEVERITY_HIGH);
+        $medium = $this->getFindings(SecurityFinding::SEVERITY_MEDIUM);
+        $low = $this->getFindings(SecurityFinding::SEVERITY_LOW);
+        $info = $this->getFindings(SecurityFinding::SEVERITY_INFO);
 
         // Define severity order for comparison
         $severityOrder = [
             SecurityFinding::SEVERITY_CRITICAL => 0,
-            SecurityFinding::SEVERITY_HIGH     => 1,
-            SecurityFinding::SEVERITY_MEDIUM   => 2,
-            SecurityFinding::SEVERITY_LOW      => 3,
-            SecurityFinding::SEVERITY_INFO     => 4,
+            SecurityFinding::SEVERITY_HIGH => 1,
+            SecurityFinding::SEVERITY_MEDIUM => 2,
+            SecurityFinding::SEVERITY_LOW => 3,
+            SecurityFinding::SEVERITY_INFO => 4,
         ];
 
         $thresholdLevel = $severityOrder[$this->severityThreshold] ?? 2; // Default to medium
@@ -232,7 +232,7 @@ abstract class SecurityTestCase extends TestCase
 
         for ($i = 0; $i < $attempts; $i++) {
             $response = $this->$method($uri);
-            if (429 === $response->status()) {
+            if ($response->status() === 429) {
                 $rateLimited = true;
                 break;
             }

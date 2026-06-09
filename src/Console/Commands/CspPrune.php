@@ -52,7 +52,7 @@ class CspPrune extends Command
             ->where('last_seen_at', '<', now()->subDays($days))
             ->count();
 
-        if (0 === $count) {
+        if ($count === 0) {
             $this->info('No violation reports to prune.');
 
             return self::SUCCESS;

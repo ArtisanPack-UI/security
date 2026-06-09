@@ -57,7 +57,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         $this->assertEquals(3, $summary['total_benchmarks']);
         $this->assertEquals(2, $summary['acceptable']);
@@ -73,7 +73,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         // 2 out of 3 pass = 66.67%
         $this->assertEqualsWithDelta(66.67, $summary['pass_rate'], 0.01);
@@ -98,7 +98,7 @@ class ImpactAnalyzerTest extends TestCase
         );
 
         $analyzer = new ImpactAnalyzer([$acceptable, $unacceptable]);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         // Average of 5% and 150% = 77.5%
         $this->assertEqualsWithDelta(77.5, $summary['average_overhead'], 0.1);
@@ -111,7 +111,7 @@ class ImpactAnalyzerTest extends TestCase
             $this->createUnacceptableResult('Hashing'),
         ];
 
-        $analyzer        = new ImpactAnalyzer($results);
+        $analyzer = new ImpactAnalyzer($results);
         $recommendations = $analyzer->getRecommendations();
 
         $this->assertArrayHasKey('Hashing', $recommendations);
@@ -125,7 +125,7 @@ class ImpactAnalyzerTest extends TestCase
             $this->createAcceptableResult('Test 2'),
         ];
 
-        $analyzer        = new ImpactAnalyzer($results);
+        $analyzer = new ImpactAnalyzer($results);
         $recommendations = $analyzer->getRecommendations();
 
         $this->assertEmpty($recommendations);
@@ -134,7 +134,7 @@ class ImpactAnalyzerTest extends TestCase
     public function test_handles_empty_results(): void
     {
         $analyzer = new ImpactAnalyzer([]);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         $this->assertEquals(0, $summary['total_benchmarks']);
         $this->assertEquals(0, $summary['acceptable']);
@@ -193,7 +193,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $summary  = $analyzer->getSummary();
+        $summary = $analyzer->getSummary();
 
         $this->assertEquals(100.0, $summary['pass_rate']);
     }
@@ -218,7 +218,7 @@ class ImpactAnalyzerTest extends TestCase
         ];
 
         $analyzer = new ImpactAnalyzer($results);
-        $export   = $analyzer->toArray();
+        $export = $analyzer->toArray();
 
         $this->assertArrayHasKey('summary', $export);
         $this->assertArrayHasKey('recommendations', $export);

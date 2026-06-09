@@ -31,6 +31,7 @@ use ArtisanPackUI\Security\Http\Middleware\ApiSecurity;
 use ArtisanPackUI\Security\Http\Middleware\ContentSecurityPolicy;
 use ArtisanPackUI\Security\Http\Middleware\SecurityHeadersMiddleware;
 use ArtisanPackUI\Security\Http\Middleware\XssProtection;
+use ArtisanPackUI\Security\Livewire\CspDashboard;
 use ArtisanPackUI\Security\Services\Csp\CspNonceGenerator;
 use ArtisanPackUI\Security\Services\Csp\CspPolicyService;
 use ArtisanPackUI\Security\Services\Csp\CspViolationHandler;
@@ -170,7 +171,7 @@ class SecurityServiceProvider extends ServiceProvider
         }
 
         foreach ((array) config('artisanpack.security.rateLimiting.limiters', []) as $name => $config) {
-            $maxAttempts  = (int) ($config['maxAttempts'] ?? 60);
+            $maxAttempts = (int) ($config['maxAttempts'] ?? 60);
             $decayMinutes = (int) ($config['decayMinutes'] ?? 1);
 
             RateLimiter::for($name, function (Request $request) use ($maxAttempts, $decayMinutes) {
@@ -202,6 +203,6 @@ class SecurityServiceProvider extends ServiceProvider
             return;
         }
 
-        Livewire::component('csp-dashboard', \ArtisanPackUI\Security\Livewire\CspDashboard::class);
+        Livewire::component('csp-dashboard', CspDashboard::class);
     }
 }

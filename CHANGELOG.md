@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-09
+
+### Added
+
+- Laravel 13 support. Widened the `illuminate/support` constraint to `^10.0|^11.0|^12.0|^13.0`. Existing Laravel 10/11/12 users are unaffected; Laravel 13 is only selectable on PHP 8.3+ per its own framework constraint.
+
+### Changed
+
+- Widened `orchestra/testbench` dev requirement to `^10.2|^11.0` so package tests can install against Laravel 13.
+- Swept the package through Laravel Pint to bring it back in line with the configured code style (no behavioral changes).
+
 ## [2.0.1] - 2026-05-21
 
 ### Fixed

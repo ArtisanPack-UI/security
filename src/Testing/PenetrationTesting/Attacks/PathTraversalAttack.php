@@ -35,8 +35,8 @@ class PathTraversalAttack implements AttackInterface
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method          = $options['method'] ?? 'get';
-        $params          = $options['parameters'] ?? [];
+        $method = $options['method'] ?? 'get';
+        $params = $options['parameters'] ?? [];
 
         // If no parameters provided, try common file parameter names
         if (empty($params)) {
@@ -45,40 +45,40 @@ class PathTraversalAttack implements AttackInterface
 
         foreach ($params as $paramName => $originalValue) {
             foreach ($this->payloads as $payload) {
-                $testParams             = $params;
+                $testParams = $params;
                 $testParams[$paramName] = $payload;
 
                 try {
                     $response = $testCase->$method($uri, $testParams);
-                    $content  = $response->getContent();
+                    $content = $response->getContent();
 
                     // Check for sensitive file content
                     if ($this->hasSensitiveContent($content)) {
                         $vulnerabilities[] = [
-                            'type'      => 'path-traversal',
+                            'type' => 'path-traversal',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $this->extractEvidence($content),
+                            'payload' => $payload,
+                            'evidence' => $this->extractEvidence($content),
                         ];
                     }
 
                     // Check for error messages indicating path manipulation
                     if ($this->hasPathError($content)) {
                         $vulnerabilities[] = [
-                            'type'      => 'path-disclosure',
+                            'type' => 'path-disclosure',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $this->extractPathError($content),
+                            'payload' => $payload,
+                            'evidence' => $this->extractPathError($content),
                         ];
                     }
                 } catch (Exception $e) {
                     // Some payloads might cause exceptions
                     if ($this->isPathException($e)) {
                         $vulnerabilities[] = [
-                            'type'      => 'path-error',
+                            'type' => 'path-error',
                             'parameter' => $paramName,
-                            'payload'   => $payload,
-                            'evidence'  => $e->getMessage(),
+                            'payload' => $payload,
+                            'evidence' => $e->getMessage(),
                         ];
                     }
                 }
@@ -233,7 +233,7 @@ class PathTraversalAttack implements AttackInterface
         $pathKeywords = ['file', 'path', 'directory', 'open_basedir', 'fopen', 'include', 'require'];
 
         foreach ($pathKeywords as $keyword) {
-            if (false !== stripos($message, $keyword)) {
+            if (stripos($message, $keyword) !== false) {
                 return true;
             }
         }

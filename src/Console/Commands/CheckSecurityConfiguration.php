@@ -49,18 +49,18 @@ class CheckSecurityConfiguration extends Command
      * @var array<string, string>
      */
     protected array $categories = [
-        'env'        => 'Environment Configuration',
-        'session'    => 'Session Security',
-        'database'   => 'Database Security',
-        'cache'      => 'Cache Configuration',
-        'mail'       => 'Mail Security',
+        'env' => 'Environment Configuration',
+        'session' => 'Session Security',
+        'database' => 'Database Security',
+        'cache' => 'Cache Configuration',
+        'mail' => 'Mail Security',
         'filesystem' => 'Filesystem Security',
-        'security'   => 'General Security',
-        'api'        => 'API Security',
-        'rbac'       => 'RBAC Configuration',
-        'csp'        => 'Content Security Policy',
-        'password'   => 'Password Policy',
-        'upload'     => 'File Upload Security',
+        'security' => 'General Security',
+        'api' => 'API Security',
+        'rbac' => 'RBAC Configuration',
+        'csp' => 'Content Security Policy',
+        'password' => 'Password Policy',
+        'upload' => 'File Upload Security',
     ];
 
     public function __construct(EnvironmentValidationService $validator)
@@ -75,10 +75,10 @@ class CheckSecurityConfiguration extends Command
     public function handle(): int
     {
         $environment = App::environment();
-        $category    = $this->option('category');
-        $isJson      = $this->option('json');
-        $isStrict    = $this->option('strict');
-        $showPassed  = $this->option('show-passed');
+        $category = $this->option('category');
+        $isJson = $this->option('json');
+        $isStrict = $this->option('strict');
+        $showPassed = $this->option('show-passed');
 
         // Get ignored checks
         $ignoredChecks = [];
@@ -98,12 +98,12 @@ class CheckSecurityConfiguration extends Command
         $additionalResults = $this->runAdditionalChecks($category);
 
         // Merge results
-        $errors   = array_merge($results['errors'] ?? [], $additionalResults['errors'] ?? []);
+        $errors = array_merge($results['errors'] ?? [], $additionalResults['errors'] ?? []);
         $warnings = array_merge($results['warnings'] ?? [], $additionalResults['warnings'] ?? []);
-        $passed   = $additionalResults['passed'] ?? [];
+        $passed = $additionalResults['passed'] ?? [];
 
         // Apply ignored checks
-        $errors   = $this->filterIgnored($errors, $ignoredChecks);
+        $errors = $this->filterIgnored($errors, $ignoredChecks);
         $warnings = $this->filterIgnored($warnings, $ignoredChecks);
 
         // Output results
@@ -121,26 +121,26 @@ class CheckSecurityConfiguration extends Command
      */
     protected function runAdditionalChecks(?string $category): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $categoriesToCheck = $category ? [$category] : array_keys($this->categories);
 
         foreach ($categoriesToCheck as $cat) {
             $method = 'check'.ucfirst($cat);
             if (method_exists($this, $method)) {
-                $result   = $this->$method();
-                $errors   = array_merge($errors, $result['errors'] ?? []);
+                $result = $this->$method();
+                $errors = array_merge($errors, $result['errors'] ?? []);
                 $warnings = array_merge($warnings, $result['warnings'] ?? []);
-                $passed   = array_merge($passed, $result['passed'] ?? []);
+                $passed = array_merge($passed, $result['passed'] ?? []);
             }
         }
 
         return [
-            'errors'   => $errors,
+            'errors' => $errors,
             'warnings' => $warnings,
-            'passed'   => $passed,
+            'passed' => $passed,
         ];
     }
 
@@ -151,9 +151,9 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkApi(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $apiConfig = config('artisanpack.security.api', []);
 
@@ -165,7 +165,7 @@ class CheckSecurityConfiguration extends Command
 
         // Token expiration
         $expiration = $apiConfig['tokens']['expiration'] ?? null;
-        if (null === $expiration) {
+        if ($expiration === null) {
             $warnings[] = '[API-002] API tokens do not expire by default';
         } elseif ($expiration > 60 * 24 * 30) { // 30 days
             $warnings[] = '[API-003] API token expiration is very long (> 30 days)';
@@ -191,9 +191,9 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkRbac(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $rbacConfig = config('artisanpack.security.rbac', []);
 
@@ -213,12 +213,12 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkCsp(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $cspConfig = config('artisanpack.security.csp', []);
-        $headers   = config('artisanpack.security.security-headers', []);
+        $headers = config('artisanpack.security.security-headers', []);
 
         // Check if CSP is configured
         $cspHeader = $headers['Content-Security-Policy'] ?? '';
@@ -264,9 +264,9 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkPassword(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $passwordConfig = config('artisanpack.security.passwordSecurity', []);
 
@@ -300,9 +300,9 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkUpload(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $uploadConfig = config('artisanpack.security.fileUpload', []);
 
@@ -314,7 +314,7 @@ class CheckSecurityConfiguration extends Command
 
         // Malware scanning
         $scannerDriver = $uploadConfig['malware']['driver'] ?? 'null';
-        if ('null' === $scannerDriver) {
+        if ($scannerDriver === 'null') {
             $warnings[] = '[UPLOAD-002] Malware scanning is disabled (null driver)';
         } else {
             $passed[] = "[UPLOAD-002] Malware scanning is enabled ({$scannerDriver})";
@@ -329,7 +329,7 @@ class CheckSecurityConfiguration extends Command
 
         // Dangerous extensions blocked
         $dangerousExts = ['php', 'phtml', 'php3', 'php4', 'php5', 'exe', 'sh', 'bat'];
-        $blockedExts   = $uploadConfig['validation']['blockedExtensions'] ?? [];
+        $blockedExts = $uploadConfig['validation']['blockedExtensions'] ?? [];
         $missingBlocks = array_diff($dangerousExts, $blockedExts);
         if (! empty($missingBlocks)) {
             $warnings[] = '[UPLOAD-004] Some dangerous extensions not blocked: '.implode(', ', $missingBlocks);
@@ -347,17 +347,17 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkSession(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
-        $sessionDriver   = config('session.driver');
-        $sessionSecure   = config('session.secure');
+        $sessionDriver = config('session.driver');
+        $sessionSecure = config('session.secure');
         $sessionHttpOnly = config('session.http_only');
         $sessionSameSite = config('session.same_site');
 
         // Session driver
-        if ('file' === $sessionDriver) {
+        if ($sessionDriver === 'file') {
             $warnings[] = '[SESSION-001] Using file session driver (consider database or redis for production)';
         } else {
             $passed[] = "[SESSION-001] Using {$sessionDriver} session driver";
@@ -378,7 +378,7 @@ class CheckSecurityConfiguration extends Command
         }
 
         // SameSite
-        if (empty($sessionSameSite) || 'none' === $sessionSameSite) {
+        if (empty($sessionSameSite) || $sessionSameSite === 'none') {
             $warnings[] = '[SESSION-004] Session SameSite attribute is not set or is "none"';
         } else {
             $passed[] = "[SESSION-004] Session SameSite is '{$sessionSameSite}'";
@@ -394,9 +394,9 @@ class CheckSecurityConfiguration extends Command
      */
     protected function checkSecurity(): array
     {
-        $errors   = [];
+        $errors = [];
         $warnings = [];
-        $passed   = [];
+        $passed = [];
 
         $headers = config('artisanpack.security.security-headers', []);
 
@@ -441,7 +441,6 @@ class CheckSecurityConfiguration extends Command
      *
      * @param  array<string>  $items
      * @param  array<string>  $ignored
-     *
      * @return array<string>
      */
     protected function filterIgnored(array $items, array $ignored): array
@@ -478,22 +477,22 @@ class CheckSecurityConfiguration extends Command
         }
 
         $output = [
-            'status'      => $status,
+            'status' => $status,
             'environment' => App::environment(),
-            'timestamp'   => now()->toIso8601String(),
-            'summary'     => [
-                'errors'   => count($errors),
+            'timestamp' => now()->toIso8601String(),
+            'summary' => [
+                'errors' => count($errors),
                 'warnings' => count($warnings),
-                'passed'   => count($passed),
+                'passed' => count($passed),
             ],
-            'errors'   => $errors,
+            'errors' => $errors,
             'warnings' => $warnings,
-            'passed'   => $passed,
+            'passed' => $passed,
         ];
 
         $this->line(json_encode($output, JSON_PRETTY_PRINT));
 
-        return 'failed' === $status ? self::FAILURE : self::SUCCESS;
+        return $status === 'failed' ? self::FAILURE : self::SUCCESS;
     }
 
     /**

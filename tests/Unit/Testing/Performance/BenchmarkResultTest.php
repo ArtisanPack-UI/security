@@ -12,16 +12,16 @@ class BenchmarkResultTest extends TestCase
     public function test_can_create_benchmark_result(): void
     {
         $withSecurity = [
-            'mean'   => 10.5,
-            'min'    => 8.0,
-            'max'    => 15.0,
+            'mean' => 10.5,
+            'min' => 8.0,
+            'max' => 15.0,
             'stddev' => 2.5,
         ];
 
         $withoutSecurity = [
-            'mean'   => 5.0,
-            'min'    => 4.0,
-            'max'    => 7.0,
+            'mean' => 5.0,
+            'min' => 4.0,
+            'max' => 7.0,
             'stddev' => 1.0,
         ];
 

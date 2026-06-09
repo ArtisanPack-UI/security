@@ -50,13 +50,13 @@ trait TestsAuthentication
     {
         // Test with invalid token
         $response = $this->post($uri, [
-            'token'                 => 'invalid-token',
-            'email'                 => 'test@example.com',
-            'password'              => 'NewPassword123!',
+            'token' => 'invalid-token',
+            'email' => 'test@example.com',
+            'password' => 'NewPassword123!',
             'password_confirmation' => 'NewPassword123!',
         ]);
 
-        if (200 === $response->status()) {
+        if ($response->status() === 200) {
             $this->recordFinding(SecurityFinding::critical(
                 'Password Reset Token Not Validated',
                 'Password reset endpoint accepts invalid tokens',
@@ -104,18 +104,18 @@ trait TestsAuthentication
     {
         // Test with invalid user
         $invalidUserResponse = $this->post($loginUri, [
-            $emailField    => 'nonexistent@example.com',
+            $emailField => 'nonexistent@example.com',
             $passwordField => 'SomePassword123!',
         ]);
 
         // Test with valid user but wrong password (requires a real user in test)
         $invalidPasswordResponse = $this->post($loginUri, [
-            $emailField    => 'test@example.com',
+            $emailField => 'test@example.com',
             $passwordField => 'WrongPassword123!',
         ]);
 
         // Both should return the same error structure
-        $invalidUserErrors     = $invalidUserResponse->json('errors') ?? $invalidUserResponse->json('message');
+        $invalidUserErrors = $invalidUserResponse->json('errors') ?? $invalidUserResponse->json('message');
         $invalidPasswordErrors = $invalidPasswordResponse->json('errors') ?? $invalidPasswordResponse->json('message');
 
         // Check if error messages are the same (preventing enumeration)
@@ -171,7 +171,7 @@ trait TestsAuthentication
         for ($i = 0; $i < $maxAttempts + 2; $i++) {
             $lastResponse = $this->post($loginUri, $credentials);
 
-            if (429 === $lastResponse->status()) {
+            if ($lastResponse->status() === 429) {
                 return $lastResponse;
             }
         }

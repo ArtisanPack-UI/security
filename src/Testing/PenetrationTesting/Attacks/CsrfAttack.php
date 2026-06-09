@@ -22,7 +22,7 @@ class CsrfAttack implements AttackInterface
     public function execute(object $testCase, string $uri, array $options = []): AttackResult
     {
         $vulnerabilities = [];
-        $method          = strtolower($options['method'] ?? 'post');
+        $method = strtolower($options['method'] ?? 'post');
 
         // Only test state-changing methods
         if (! in_array($method, ['post', 'put', 'patch', 'delete'])) {
@@ -42,11 +42,11 @@ class CsrfAttack implements AttackInterface
 
             // If request succeeds with an invalid token (not 419 Token Mismatch), it's vulnerable
             if ($response->status() < 400) {
-                $csrfVulnerable    = true;
+                $csrfVulnerable = true;
                 $vulnerabilities[] = [
-                    'type'        => 'csrf-missing',
+                    'type' => 'csrf-missing',
                     'description' => 'Endpoint accepts requests with invalid CSRF token',
-                    'method'      => strtoupper($method),
+                    'method' => strtoupper($method),
                     'status_code' => $response->status(),
                 ];
             }
@@ -59,11 +59,11 @@ class CsrfAttack implements AttackInterface
             try {
                 $response = $testCase->$method($uri, $data);
 
-                if ($response->status() < 400 && 419 !== $response->status()) {
+                if ($response->status() < 400 && $response->status() !== 419) {
                     $vulnerabilities[] = [
-                        'type'        => 'csrf-bypass',
+                        'type' => 'csrf-bypass',
                         'description' => 'Endpoint accepts requests without CSRF token',
-                        'method'      => strtoupper($method),
+                        'method' => strtoupper($method),
                         'status_code' => $response->status(),
                     ];
                 }
@@ -74,10 +74,10 @@ class CsrfAttack implements AttackInterface
 
         // Test 3: Check for SameSite cookie protection
         $sameSite = config('session.same_site', 'lax');
-        if ('none' === $sameSite || null === $sameSite) {
+        if ($sameSite === 'none' || $sameSite === null) {
             $vulnerabilities[] = [
-                'type'          => 'weak-samesite',
-                'description'   => 'Session cookie SameSite attribute is not protective',
+                'type' => 'weak-samesite',
+                'description' => 'Session cookie SameSite attribute is not protective',
                 'current_value' => $sameSite ?? 'not set',
             ];
         }

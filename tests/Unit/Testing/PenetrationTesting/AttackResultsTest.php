@@ -75,7 +75,7 @@ class AttackResultsTest extends TestCase
     public function test_is_critical(): void
     {
         $critical = AttackResult::vulnerable('Test', 'critical');
-        $high     = AttackResult::vulnerable('Test', 'high');
+        $high = AttackResult::vulnerable('Test', 'high');
 
         $this->assertTrue($critical->isCritical());
         $this->assertFalse($high->isCritical());
@@ -83,7 +83,7 @@ class AttackResultsTest extends TestCase
 
     public function test_is_high(): void
     {
-        $high   = AttackResult::vulnerable('Test', 'high');
+        $high = AttackResult::vulnerable('Test', 'high');
         $medium = AttackResult::vulnerable('Test', 'medium');
 
         $this->assertTrue($high->isHigh());
@@ -93,9 +93,9 @@ class AttackResultsTest extends TestCase
     public function test_is_blocking(): void
     {
         $critical = AttackResult::vulnerable('Test', 'critical');
-        $high     = AttackResult::vulnerable('Test', 'high');
-        $medium   = AttackResult::vulnerable('Test', 'medium');
-        $notVuln  = AttackResult::notVulnerable('Test');
+        $high = AttackResult::vulnerable('Test', 'high');
+        $medium = AttackResult::vulnerable('Test', 'medium');
+        $notVuln = AttackResult::notVulnerable('Test');
 
         $this->assertTrue($critical->isBlocking());
         $this->assertTrue($high->isBlocking());
@@ -131,7 +131,7 @@ class AttackResultsTest extends TestCase
     public function test_can_add_result(): void
     {
         $results = new AttackResults;
-        $result  = AttackResult::notVulnerable('XSS');
+        $result = AttackResult::notVulnerable('XSS');
 
         $results->add($result);
 

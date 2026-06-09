@@ -24,7 +24,6 @@ trait ApiSecurityAssertions
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
      * @param  int|null  $expiresInMinutes  Token expiration
-     *
      * @return string The plain text token
      */
     protected function createTestApiToken(
@@ -44,7 +43,6 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
-     *
      * @return string The plain text token
      */
     protected function createExpiredTestApiToken($user, array $abilities = ['*']): string
@@ -68,7 +66,6 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
-     *
      * @return string The plain text token
      */
     protected function createRevokedTestApiToken($user, array $abilities = ['*']): string
@@ -102,7 +99,7 @@ trait ApiSecurityAssertions
     {
         $response->assertStatus(403);
 
-        if (null !== $ability) {
+        if ($ability !== null) {
             $response->assertJson([
                 'error' => 'insufficient_ability',
             ]);
@@ -182,7 +179,6 @@ trait ApiSecurityAssertions
      *
      * @param  mixed  $user  The user model instance
      * @param  array  $abilities  Token abilities
-     *
      * @return $this
      */
     protected function actingAsApiUser($user, array $abilities = ['*']): self

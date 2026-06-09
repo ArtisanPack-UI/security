@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ArtisanPackUI\Security\Console\Commands;
 
 use ArtisanPackUI\Security\Testing\CiCd\SecurityGate;
+use ArtisanPackUI\Security\Testing\Performance\BenchmarkResult;
 use ArtisanPackUI\Security\Testing\Performance\ImpactAnalyzer;
 use ArtisanPackUI\Security\Testing\Performance\SecurityBenchmark;
 use ArtisanPackUI\Security\Testing\Reporting\SecurityFinding;
@@ -46,10 +47,10 @@ class SecurityAudit extends Command
      * @var array<string, string>
      */
     protected array $availableScanners = [
-        'owasp'        => 'OWASP Top 10 Scanner',
+        'owasp' => 'OWASP Top 10 Scanner',
         'dependencies' => 'Dependency Scanner',
-        'config'       => 'Configuration Scanner',
-        'headers'      => 'Security Headers Scanner',
+        'config' => 'Configuration Scanner',
+        'headers' => 'Security Headers Scanner',
     ];
 
     /**
@@ -58,10 +59,10 @@ class SecurityAudit extends Command
      * @var array<string, int>
      */
     protected array $severityLevels = [
-        'info'     => 0,
-        'low'      => 1,
-        'medium'   => 2,
-        'high'     => 3,
+        'info' => 0,
+        'low' => 1,
+        'medium' => 2,
+        'high' => 3,
         'critical' => 4,
     ];
 
@@ -75,7 +76,7 @@ class SecurityAudit extends Command
         }
 
         $startTime = microtime(true);
-        $findings  = [];
+        $findings = [];
 
         // Determine which scanners to run
         $scannersToRun = $this->getScannersToRun();
@@ -83,7 +84,7 @@ class SecurityAudit extends Command
         // Run selected scanners
         if (in_array('owasp', $scannersToRun, true)) {
             $this->runTask('OWASP Top 10 Scanner', function () use (&$findings) {
-                $scanner  = new OwaspScanner;
+                $scanner = new OwaspScanner;
                 $findings = array_merge($findings, $scanner->scan());
 
                 return true;
@@ -92,7 +93,7 @@ class SecurityAudit extends Command
 
         if (in_array('dependencies', $scannersToRun, true)) {
             $this->runTask('Dependency Scanner', function () use (&$findings) {
-                $scanner  = new DependencyScanner;
+                $scanner = new DependencyScanner;
                 $findings = array_merge($findings, $scanner->scan());
 
                 return true;
@@ -101,7 +102,7 @@ class SecurityAudit extends Command
 
         if (in_array('config', $scannersToRun, true)) {
             $this->runTask('Configuration Scanner', function () use (&$findings) {
-                $scanner  = new ConfigurationScanner;
+                $scanner = new ConfigurationScanner;
                 $findings = array_merge($findings, $scanner->scan());
 
                 return true;
@@ -111,7 +112,7 @@ class SecurityAudit extends Command
         if (in_array('headers', $scannersToRun, true)) {
             $this->runTask('Security Headers Scanner', function () use (&$findings) {
                 $headerFindings = $this->runHeadersScanner();
-                $findings       = array_merge($findings, $headerFindings);
+                $findings = array_merge($findings, $headerFindings);
 
                 return true;
             }, $silent);
@@ -121,16 +122,16 @@ class SecurityAudit extends Command
         $benchmarkResults = [];
         if ($this->option('benchmark')) {
             $this->runTask('Performance Benchmarks', function () use (&$benchmarkResults) {
-                $benchmark        = new SecurityBenchmark;
+                $benchmark = new SecurityBenchmark;
                 $benchmarkResults = $benchmark->runFullSuite();
 
                 return true;
             }, $silent);
 
             // Analyze performance impact
-            $analyzer            = new ImpactAnalyzer($benchmarkResults);
+            $analyzer = new ImpactAnalyzer($benchmarkResults);
             $performanceFindings = $analyzer->analyze();
-            $findings            = array_merge($findings, $performanceFindings);
+            $findings = array_merge($findings, $performanceFindings);
         }
 
         // Filter by severity if specified
@@ -145,9 +146,9 @@ class SecurityAudit extends Command
         );
 
         $metadata = [
-            'auditDuration'      => $duration,
+            'auditDuration' => $duration,
             'benchmarksIncluded' => $this->option('benchmark'),
-            'scannersRun'        => $scannersToRun,
+            'scannersRun' => $scannersToRun,
         ];
 
         if ($this->option('include-recommendations')) {
@@ -164,7 +165,7 @@ class SecurityAudit extends Command
         // Output results
         if ($outputPath = $this->option('output')) {
             $result = file_put_contents($outputPath, $output);
-            if (false === $result) {
+            if ($result === false) {
                 $this->error("Failed to write report to: {$outputPath}");
             } elseif (! $silent) {
                 $this->info("Report saved to: {$outputPath}");
@@ -236,11 +237,11 @@ class SecurityAudit extends Command
                 $task();
             } catch (Throwable $e) {
                 Log::error("Security audit task '{$title}' failed: {$e->getMessage()}", [
-                    'task'      => $title,
+                    'task' => $title,
                     'exception' => get_class($e),
-                    'message'   => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                 ]);
             }
 
@@ -257,7 +258,7 @@ class SecurityAudit extends Command
      */
     protected function runHeadersScanner(): array
     {
-        $findings          = [];
+        $findings = [];
         $configuredHeaders = config('artisanpack.security.security-headers', []);
 
         $requiredHeaders = [
@@ -282,12 +283,12 @@ class SecurityAudit extends Command
         foreach ($requiredHeaders as $header => $config) {
             if (empty($configuredHeaders[$header])) {
                 $findings[] = SecurityFinding::fromArray([
-                    'id'          => 'HEADERS-'.strtoupper(str_replace('-', '', $header)),
-                    'title'       => "Missing {$header} header",
+                    'id' => 'HEADERS-'.strtoupper(str_replace('-', '', $header)),
+                    'title' => "Missing {$header} header",
                     'description' => "The {$header} security header is not configured",
-                    'severity'    => $config['severity'],
-                    'category'    => $config['category'],
-                    'location'    => 'config/artisanpack/security.php',
+                    'severity' => $config['severity'],
+                    'category' => $config['category'],
+                    'location' => 'config/artisanpack/security.php',
                     'remediation' => "Add {$header} to security-headers configuration",
                 ]);
             }
@@ -297,24 +298,24 @@ class SecurityAudit extends Command
         $csp = $configuredHeaders['Content-Security-Policy'] ?? '';
         if ($csp && str_contains($csp, "'unsafe-inline'") && ! str_contains($csp, "'strict-dynamic'")) {
             $findings[] = SecurityFinding::fromArray([
-                'id'          => 'HEADERS-CSP-UNSAFE-INLINE',
-                'title'       => 'CSP uses unsafe-inline',
+                'id' => 'HEADERS-CSP-UNSAFE-INLINE',
+                'title' => 'CSP uses unsafe-inline',
                 'description' => "Content-Security-Policy contains 'unsafe-inline' without strict-dynamic",
-                'severity'    => 'medium',
-                'category'    => 'Security Headers',
-                'location'    => 'config/artisanpack/security.php',
+                'severity' => 'medium',
+                'category' => 'Security Headers',
+                'location' => 'config/artisanpack/security.php',
                 'remediation' => "Consider using nonces or 'strict-dynamic' instead of 'unsafe-inline'",
             ]);
         }
 
         if ($csp && str_contains($csp, "'unsafe-eval'")) {
             $findings[] = SecurityFinding::fromArray([
-                'id'          => 'HEADERS-CSP-UNSAFE-EVAL',
-                'title'       => 'CSP uses unsafe-eval',
+                'id' => 'HEADERS-CSP-UNSAFE-EVAL',
+                'title' => 'CSP uses unsafe-eval',
                 'description' => "Content-Security-Policy contains 'unsafe-eval' which allows eval()",
-                'severity'    => 'medium',
-                'category'    => 'Security Headers',
-                'location'    => 'config/artisanpack/security.php',
+                'severity' => 'medium',
+                'category' => 'Security Headers',
+                'location' => 'config/artisanpack/security.php',
                 'remediation' => "Remove 'unsafe-eval' if not required by your framework",
             ]);
         }
@@ -326,7 +327,6 @@ class SecurityAudit extends Command
      * Filter findings by minimum severity.
      *
      * @param  array<SecurityFinding>  $findings
-     *
      * @return array<SecurityFinding>
      */
     protected function filterBySeverity(array $findings): array
@@ -340,7 +340,7 @@ class SecurityAudit extends Command
 
         return array_filter($findings, function ($finding) use ($minLevel) {
             $findingSeverity = strtolower($finding->severity ?? 'info');
-            $findingLevel    = $this->severityLevels[$findingSeverity] ?? 0;
+            $findingLevel = $this->severityLevels[$findingSeverity] ?? 0;
 
             return $findingLevel >= $minLevel;
         });
@@ -358,8 +358,8 @@ class SecurityAudit extends Command
         foreach ($findings as $finding) {
             if (! empty($finding->remediation)) {
                 $recommendations[] = [
-                    'severity'    => $finding->severity ?? 'info',
-                    'title'       => $finding->title ?? 'Unknown',
+                    'severity' => $finding->severity ?? 'info',
+                    'title' => $finding->title ?? 'Unknown',
                     'remediation' => $finding->remediation,
                 ];
             }
@@ -381,9 +381,9 @@ class SecurityAudit extends Command
         foreach (array_slice($recommendations, 0, 10) as $i => $rec) {
             $severityColor = match ($rec['severity']) {
                 'critical' => 'red',
-                'high'     => 'yellow',
-                'medium'   => 'blue',
-                default    => 'cyan',
+                'high' => 'yellow',
+                'medium' => 'blue',
+                default => 'cyan',
             };
 
             $this->line(($i + 1).". <fg={$severityColor}>[{$rec['severity']}]</> {$rec['title']}");
@@ -415,7 +415,7 @@ class SecurityAudit extends Command
      * Display audit results.
      *
      * @param  array<string, mixed>  $summary
-     * @param  array<\ArtisanPackUI\Security\Testing\Performance\BenchmarkResult>  $benchmarks
+     * @param  array<BenchmarkResult>  $benchmarks
      */
     protected function displayResults(array $summary, array $benchmarks, float $duration): void
     {
@@ -431,10 +431,10 @@ class SecurityAudit extends Command
         foreach ($summary['bySeverity'] as $severity => $count) {
             $color = match ($severity) {
                 'critical' => 'red',
-                'high'     => 'yellow',
-                'medium'   => 'blue',
-                'low'      => 'cyan',
-                default    => 'gray',
+                'high' => 'yellow',
+                'medium' => 'blue',
+                'low' => 'cyan',
+                default => 'gray',
             };
             $rows[] = ["<fg={$color}>".ucfirst($severity).'</>', $count];
         }

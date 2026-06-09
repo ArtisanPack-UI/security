@@ -3,7 +3,7 @@
   "description": "Core Laravel security toolkit — input sanitization, output escaping, KSES filtering, security headers, XSS protection, basic rate limiting, and Content Security Policy. Authentication / 2FA / RBAC / file uploads / analytics / compliance live in sibling packages.",
   "type": "library",
   "license": "MIT",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "keywords": [
     "laravel",
     "security",
@@ -37,7 +37,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
     "laminas/laminas-escaper": "^2.16",
     "artisanpack-ui/core": "^1.0",
     "laravel/sanctum": "^4.0"
@@ -49,7 +49,7 @@
     "friendsofphp/php-cs-fixer": "^3.75",
     "laravel/pint": "^1.26",
     "livewire/livewire": "^3.6|^4.0",
-    "orchestra/testbench": "^10.2",
+    "orchestra/testbench": "^10.2|^11.0",
     "pestphp/pest": "^3.8",
     "pestphp/pest-plugin-laravel": "^3.1"
   },

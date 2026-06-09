@@ -42,12 +42,12 @@ test('sanitize strings', function (): void {
 
 test('sanitize arrays', function (): void {
     $arrayToTest = [
-        'array_key'       => 'array_value',
+        'array_key' => 'array_value',
         'wrong array key' => '<p>wrong array value</p>',
     ];
 
     $arrayToCheck = [
-        'array_key'       => 'array_value',
+        'array_key' => 'array_value',
         'wrong array key' => 'wrong array value',
     ];
 

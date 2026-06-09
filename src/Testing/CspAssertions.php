@@ -131,7 +131,7 @@ trait CspAssertions
 
         if (isset($directives['script-src'])) {
             // Allow unsafe-inline only when combined with nonce or strict-dynamic
-            $hasNonce         = preg_match("/'nonce-[A-Za-z0-9+\/=]+'/", $directives['script-src']);
+            $hasNonce = preg_match("/'nonce-[A-Za-z0-9+\/=]+'/", $directives['script-src']);
             $hasStrictDynamic = str_contains($directives['script-src'], "'strict-dynamic'");
 
             if (str_contains($directives['script-src'], "'unsafe-inline'")) {
@@ -174,7 +174,7 @@ trait CspAssertions
             'CSP header does not have report-uri',
         );
 
-        if (null !== $uri) {
+        if ($uri !== null) {
             $this->assertStringContainsString(
                 $uri,
                 $csp,
@@ -191,7 +191,7 @@ trait CspAssertions
         $csp = $response->headers->get('Content-Security-Policy')
             ?? $response->headers->get('Content-Security-Policy-Report-Only');
 
-        if (null === $csp) {
+        if ($csp === null) {
             return null;
         }
 
@@ -239,14 +239,14 @@ trait CspAssertions
     {
         return array_merge([
             'csp-report' => [
-                'document-uri'        => 'https://example.com/page',
-                'blocked-uri'         => 'https://evil.com/script.js',
-                'violated-directive'  => 'script-src',
+                'document-uri' => 'https://example.com/page',
+                'blocked-uri' => 'https://evil.com/script.js',
+                'violated-directive' => 'script-src',
                 'effective-directive' => 'script-src',
-                'original-policy'     => "default-src 'self'; script-src 'self'",
-                'disposition'         => 'enforce',
-                'referrer'            => '',
-                'status-code'         => 200,
+                'original-policy' => "default-src 'self'; script-src 'self'",
+                'disposition' => 'enforce',
+                'referrer' => '',
+                'status-code' => 200,
             ],
         ], $overrides);
     }
@@ -273,7 +273,7 @@ trait CspAssertions
     protected function parseCspDirectives(string $policy): array
     {
         $directives = [];
-        $parts      = explode(';', $policy);
+        $parts = explode(';', $policy);
 
         foreach ($parts as $part) {
             $part = trim($part);
@@ -282,11 +282,11 @@ trait CspAssertions
             }
 
             $spacePos = strpos($part, ' ');
-            if (false !== $spacePos) {
-                $name  = substr($part, 0, $spacePos);
+            if ($spacePos !== false) {
+                $name = substr($part, 0, $spacePos);
                 $value = substr($part, $spacePos + 1);
             } else {
-                $name  = $part;
+                $name = $part;
                 $value = '';
             }
 

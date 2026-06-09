@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Concerns;
 
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
 trait ValidatesInput
@@ -11,7 +12,7 @@ trait ValidatesInput
     /**
      * Assert that the given value passes the validation rule.
      *
-     * @param  \Illuminate\Contracts\Validation\Rule  $rule
+     * @param  Rule  $rule
      * @param  mixed  $value
      */
     public function assertValidates($rule, $value): void
@@ -23,7 +24,7 @@ trait ValidatesInput
     /**
      * Assert that the given value fails the validation rule.
      *
-     * @param  \Illuminate\Contracts\Validation\Rule  $rule
+     * @param  Rule  $rule
      * @param  mixed  $value
      */
     public function assertFailsValidation($rule, $value): void

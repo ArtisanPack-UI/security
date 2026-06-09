@@ -32,15 +32,15 @@ class EnvironmentValidationService
      */
     public function validate(string $environment): array
     {
-        $this->errors   = [];
+        $this->errors = [];
         $this->warnings = [];
 
-        if ('production' === $environment) {
+        if ($environment === 'production') {
             $this->validateProductionEnvironment();
         }
 
         return [
-            'errors'   => $this->errors,
+            'errors' => $this->errors,
             'warnings' => $this->warnings,
         ];
     }
