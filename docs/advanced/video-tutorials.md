@@ -25,7 +25,7 @@ Learn how to install and configure the ArtisanPack Security package in a fresh L
 A Laravel application with the security package installed and basic configuration complete.
 
 **Prerequisites**:
-- Laravel 10.x or 11.x application
+- Laravel 10.x, 11.x, 12.x, or 13.x application
 - Composer installed
 - Basic Laravel knowledge
 
