@@ -17,9 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ap.security.csp.violationHandled` action — fires at the end of `CspViolationHandler::handle()` on stored violations with `(CspViolationReport $report)`.
   - See the README "Hooks" section for full payload details and examples.
 
-### Changed
+### Fixed
 
-- `Security::sanitizeInt()` and `Security::sanitizeFloat()` now cast the filtered value back to `int`/`float` before returning, matching their declared return types even when a filter subscriber returns a different numeric shape.
+- `Security::sanitizeFloat()` was declared to return `float` but returned the raw `number_format()` string, which raised a `TypeError` under `strict_types=1` any time the method was actually called. The result is now explicitly cast to `float` before return.
 
 ## [2.0.2] - 2026-06-09
 

@@ -112,7 +112,7 @@ class Security
      */
     public function sanitizeInt(mixed $integer = ''): int
     {
-        return (int) applyFilters(
+        return applyFilters(
             'ap.security.sanitizedInput',
             intval($integer),
             'int',
@@ -168,7 +168,7 @@ class Security
      */
     public function sanitizeFloat(float $float, int $decimals = 2): float
     {
-        return (float) applyFilters(
+        return applyFilters(
             'ap.security.sanitizedInput',
             (float) number_format($float, $decimals, '.', ''),
             'float',
@@ -329,9 +329,14 @@ class Security
      * Fires the `ap.security.ksesAllowedTags` filter to let host apps
      * restrict which HTML elements survive the pass. Subscribers receive
      * an empty array and return the tags they want to allow (lowercase
-     * element names, e.g. `['a', 'p', 'strong']`). When the filter
-     * returns a non-empty list, it overrides htmLawed's default element
-     * whitelist for this call.
+     * element names, e.g. `['a', 'p', 'strong']`).
+     *
+     * The filter is only consulted when the caller uses the default
+     * `$config = 1`; explicitly passing a different profile or a config
+     * array signals caller intent that should not be silently
+     * overridden by a global subscriber. When the filter returns a
+     * non-empty list under the default config, it overrides htmLawed's
+     * default element whitelist for this call.
      *
      * @param  string  $html  The HTML to clean.
      * @param  mixed  $config  Configuration options.
@@ -341,14 +346,14 @@ class Security
      */
     public function kses(string $html, mixed $config = 1, mixed $spec = []): string
     {
-        $allowedTags = applyFilters('ap.security.ksesAllowedTags', []);
+        if ($config === 1) {
+            $allowedTags = applyFilters('ap.security.ksesAllowedTags', []);
 
-        if (is_array($allowedTags) && $allowedTags !== []) {
-            if (! is_array($config)) {
-                $config = [];
+            if (is_array($allowedTags) && $allowedTags !== []) {
+                $config = [
+                    'elements' => implode(',', array_map('strtolower', $allowedTags)),
+                ];
             }
-
-            $config['elements'] = implode(',', array_map('strtolower', $allowedTags));
         }
 
         return htmLawed($html, $config, $spec);

@@ -179,11 +179,11 @@ class CspPolicyService implements CspPolicyInterface
             $this->request ?? request(),
         );
 
-        if (! is_array($directives) || $directives === $this->builder->getDirectives()) {
+        if (! is_array($directives)) {
             return $this->builder->build();
         }
 
-        return $this->buildFromDirectives($directives);
+        return CspPolicyBuilder::buildFrom($directives);
     }
 
     /**
@@ -248,29 +248,6 @@ class CspPolicyService implements CspPolicyInterface
         $this->request = null;
 
         return $this;
-    }
-
-    /**
-     * Serialize a directive array using the same format as CspPolicyBuilder::build().
-     *
-     * Used when the `ap.security.csp.directives` filter mutates the array — the
-     * builder itself never sees the mutated copy, so the caller has to serialize.
-     *
-     * @param  array<string, array<string>|bool>  $directives
-     */
-    protected function buildFromDirectives(array $directives): string
-    {
-        $parts = [];
-
-        foreach ($directives as $directive => $values) {
-            if ($values === true) {
-                $parts[] = $directive;
-            } elseif (is_array($values) && $values !== []) {
-                $parts[] = $directive.' '.implode(' ', $values);
-            }
-        }
-
-        return implode('; ', $parts);
     }
 
     /**

@@ -100,10 +100,23 @@ class HooksTest extends TestCase
         $security->sanitizeText('plain');
         $security->sanitizeArray(['a', 'b']);
 
-        $this->assertSame(
+        $this->assertCount(12, $seenTypes);
+        $this->assertEqualsCanonicalizing(
             ['email', 'url', 'filename', 'password', 'int', 'date', 'datetime', 'float', 'text', 'text', 'text', 'array'],
             $seenTypes,
         );
+    }
+
+    #[Test]
+    public function no_subscribers_leaves_sanitize_and_escape_output_unchanged(): void
+    {
+        $security = new Security;
+
+        $this->assertSame('user@example.com', $security->sanitizeEmail('user@example.com'));
+        $this->assertSame('This is text', $security->sanitizeText('<p>This is text</p>'));
+        $this->assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $security->escHtml('<script>alert(1)</script>'));
+        $this->assertSame(42, $security->sanitizeInt('42'));
+        $this->assertSame(1.23, $security->sanitizeFloat(1.234, 2));
     }
 
     #[Test]
@@ -193,6 +206,24 @@ class HooksTest extends TestCase
         $security->kses('<p>hello</p>');
 
         $this->assertSame([], $received);
+    }
+
+    #[Test]
+    public function kses_allowed_tags_filter_is_bypassed_when_caller_passes_non_default_config(): void
+    {
+        $called = false;
+
+        addFilter('ap.security.ksesAllowedTags', function (array $allowedTags) use (&$called): array {
+            $called = true;
+
+            return ['strong'];
+        });
+
+        $security = new Security;
+        $security->kses('<p>hello</p>', 2);
+        $security->kses('<p>hello</p>', ['elements' => 'p,a']);
+
+        $this->assertFalse($called, 'ksesAllowedTags subscribers must not run when the caller specifies non-default $config.');
     }
 
     #[Test]
