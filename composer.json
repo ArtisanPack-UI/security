@@ -3,7 +3,7 @@
   "description": "Core Laravel security toolkit — input sanitization, output escaping, KSES filtering, security headers, XSS protection, basic rate limiting, and Content Security Policy. Authentication / 2FA / RBAC / file uploads / analytics / compliance live in sibling packages.",
   "type": "library",
   "license": "MIT",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "keywords": [
     "laravel",
     "security",

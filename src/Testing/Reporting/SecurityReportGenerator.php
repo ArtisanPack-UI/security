@@ -45,7 +45,7 @@ class SecurityReportGenerator implements SecurityReportInterface
             'projectName' => $projectName,
             'version' => $version,
             'generator' => 'ArtisanPack Security Testing Framework',
-            'generatorVersion' => '2.0.0',
+            'generatorVersion' => '2.1.0',
         ];
     }
 
