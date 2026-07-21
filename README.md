@@ -76,6 +76,38 @@ Route::middleware('api.rate_limit:api')->group(function () {
 </script>
 ```
 
+## Hooks
+
+The package fires a small set of [`artisanpack-ui/hooks`](https://github.com/ArtisanPack-UI/hooks) filters and actions so host apps can extend sanitization, escaping, KSES, and CSP handling without subclassing. Register subscribers with `addFilter()` / `addAction()`.
+
+| Hook | Type | When it fires | Payload |
+|---|---|---|---|
+| `ap.security.sanitizedInput` | filter | Wraps the return of every `Security::sanitize*` method (email, url, filename, password, int, date, datetime, float, array, text). `sanitizeArray` fires `text` per element before firing `array` on the whole result. | `(mixed $value, string $type, mixed $original)` — `$type` is the sanitizer name (`email`, `url`, `filename`, `password`, `int`, `date`, `datetime`, `float`, `array`, `text`) |
+| `ap.security.escapedOutput` | filter | Wraps the return of every `Security::esc*` method | `(string $value, string $context, string $original)` — `$context` is one of `html`, `attr`, `url`, `js`, `css` |
+| `ap.security.ksesAllowedTags` | filter | At the start of `Security::kses()` **only when the caller uses the default `$config = 1`**; a non-empty return overrides htmLawed's element whitelist for that call. Explicit non-default `$config` bypasses this hook so caller intent isn't silently overridden. | `(array $allowedTags)` — lowercase element names, e.g. `['a', 'p', 'strong']` |
+| `ap.security.csp.directives` | filter | Inside `CspPolicyService::getPolicy()` before the header is serialized; the mutated array is what gets serialized | `(array<string, array<string>\|bool> $directives, Illuminate\Http\Request $request)` |
+| `ap.security.csp.violationHandled` | action | At the end of `CspViolationHandler::handle()` when a violation was stored (`csp.reporting.storeViolations = true`) | `(ArtisanPackUI\Security\Models\CspViolationReport $report)` |
+
+> **Security note.** `ap.security.sanitizedInput` and `ap.security.escapedOutput` subscribers receive the *already sanitized/escaped* value and can return anything — including the untouched original — which effectively lets them weaken the guarantees this package provides. Only register callbacks you fully trust, and prefer narrowing (further sanitization) over broadening. The same applies to `ap.security.ksesAllowedTags`: a subscriber that returns a permissive tag list expands the attack surface of every `kses()` call in the app.
+
+Example:
+
+```php
+// Force every escaped URL through your own allowlist before it's emitted.
+addFilter( 'ap.security.escapedOutput', function ( string $value, string $context, string $original ): string {
+    if ( $context !== 'url' ) {
+        return $value;
+    }
+
+    return app( UrlAllowlist::class )->passes( $original ) ? $value : '#blocked';
+} );
+
+// Ship every stored CSP violation into your own alerting queue.
+addAction( 'ap.security.csp.violationHandled', function ( CspViolationReport $report ): void {
+    SecurityAlerts::dispatch( $report );
+} );
+```
+
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
