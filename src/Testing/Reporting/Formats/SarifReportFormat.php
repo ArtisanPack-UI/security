@@ -31,7 +31,7 @@ class SarifReportFormat implements ReportFormatInterface
                         'driver' => [
                             'name' => 'ArtisanPack Security Scanner',
                             'informationUri' => 'https://github.com/artisanpack/security',
-                            'version' => $metadata['generatorVersion'] ?? '2.0.0',
+                            'version' => $metadata['generatorVersion'] ?? '2.1.0',
                             'rules' => $rules,
                         ],
                     ],

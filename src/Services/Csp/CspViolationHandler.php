@@ -88,6 +88,8 @@ class CspViolationHandler
             $this->logSecurityEvent($violation);
         }
 
+        doAction('ap.security.csp.violationHandled', $violation);
+
         return $violation;
     }
 

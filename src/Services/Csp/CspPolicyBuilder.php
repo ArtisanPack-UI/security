@@ -423,9 +423,26 @@ class CspPolicyBuilder
      */
     public function build(): string
     {
+        return self::buildFrom($this->directives);
+    }
+
+    /**
+     * Serialize an externally-supplied directive array using the same
+     * format as build().
+     *
+     * Exposed so callers that mutate the directive array outside the
+     * builder (e.g. the `ap.security.csp.directives` filter subscribers
+     * consumed in CspPolicyService::getPolicy()) can round-trip through
+     * the exact serialization logic build() uses, keeping both paths in
+     * sync forever.
+     *
+     * @param  array<string, array<string>|bool>  $directives
+     */
+    public static function buildFrom(array $directives): string
+    {
         $parts = [];
 
-        foreach ($this->directives as $directive => $values) {
+        foreach ($directives as $directive => $values) {
             if ($values === true) {
                 $parts[] = $directive;
             } elseif (is_array($values) && ! empty($values)) {

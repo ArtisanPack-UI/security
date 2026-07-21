@@ -258,7 +258,7 @@ class ScanDependencies extends Command
                     'tool' => [
                         'driver' => [
                             'name' => 'ArtisanPackUI Security - Dependency Scanner',
-                            'version' => '2.0.0',
+                            'version' => '2.1.0',
                         ],
                     ],
                     'results' => $results,
