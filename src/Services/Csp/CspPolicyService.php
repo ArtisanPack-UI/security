@@ -50,6 +50,11 @@ class CspPolicyService implements CspPolicyInterface
     protected bool $isBuilt = false;
 
     /**
+     * The request the policy was configured for, if any.
+     */
+    protected ?Request $request = null;
+
+    /**
      * Create a new CSP policy service instance.
      */
     public function __construct(
@@ -105,6 +110,8 @@ class CspPolicyService implements CspPolicyInterface
      */
     public function forRequest(Request $request): self
     {
+        $this->request = $request;
+
         if ($this->isBuilt) {
             return $this;
         }
@@ -157,10 +164,26 @@ class CspPolicyService implements CspPolicyInterface
 
     /**
      * Get the full CSP policy string.
+     *
+     * Fires the `ap.security.csp.directives` filter with the assembled
+     * directive array and the current `Request` (or a fresh instance if
+     * the policy hasn't been configured for a specific request) so host
+     * apps can add, remove, or rewrite directives before the header is
+     * serialized.
      */
     public function getPolicy(): string
     {
-        return $this->builder->build();
+        $directives = applyFilters(
+            'ap.security.csp.directives',
+            $this->builder->getDirectives(),
+            $this->request ?? request(),
+        );
+
+        if (! is_array($directives) || $directives === $this->builder->getDirectives()) {
+            return $this->builder->build();
+        }
+
+        return $this->buildFromDirectives($directives);
     }
 
     /**
@@ -222,8 +245,32 @@ class CspPolicyService implements CspPolicyInterface
         $this->nonceGenerator->reset();
         $this->isBuilt = false;
         $this->currentPreset = null;
+        $this->request = null;
 
         return $this;
+    }
+
+    /**
+     * Serialize a directive array using the same format as CspPolicyBuilder::build().
+     *
+     * Used when the `ap.security.csp.directives` filter mutates the array — the
+     * builder itself never sees the mutated copy, so the caller has to serialize.
+     *
+     * @param  array<string, array<string>|bool>  $directives
+     */
+    protected function buildFromDirectives(array $directives): string
+    {
+        $parts = [];
+
+        foreach ($directives as $directive => $values) {
+            if ($values === true) {
+                $parts[] = $directive;
+            } elseif (is_array($values) && $values !== []) {
+                $parts[] = $directive.' '.implode(' ', $values);
+            }
+        }
+
+        return implode('; ', $parts);
     }
 
     /**

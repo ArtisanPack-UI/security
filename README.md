@@ -76,6 +76,36 @@ Route::middleware('api.rate_limit:api')->group(function () {
 </script>
 ```
 
+## Hooks
+
+The package fires a small set of [`artisanpack-ui/hooks`](https://github.com/ArtisanPack-UI/hooks) filters and actions so host apps can extend sanitization, escaping, KSES, and CSP handling without subclassing. Register subscribers with `addFilter()` / `addAction()`.
+
+| Hook | Type | When it fires | Payload |
+|---|---|---|---|
+| `ap.security.sanitizedInput` | filter | Wraps the return of every `Security::sanitize*` method (email, url, filename, password, int, date, datetime, float, array, text) | `(mixed $value, string $type, mixed $original)` — `$type` is the sanitizer name (`email`, `url`, `filename`, `password`, `int`, `date`, `datetime`, `float`, `array`, `text`) |
+| `ap.security.escapedOutput` | filter | Wraps the return of every `Security::esc*` method | `(string $value, string $context, string $original)` — `$context` is one of `html`, `attr`, `url`, `js`, `css` |
+| `ap.security.ksesAllowedTags` | filter | At the start of `Security::kses()`; when the returned array is non-empty, it overrides htmLawed's element whitelist for that call | `(array $allowedTags)` — lowercase element names, e.g. `['a', 'p', 'strong']` |
+| `ap.security.csp.directives` | filter | Inside `CspPolicyService::getPolicy()` before the header is serialized; the mutated array is what gets serialized | `(array<string, array<string>\|bool> $directives, Illuminate\Http\Request $request)` |
+| `ap.security.csp.violationHandled` | action | At the end of `CspViolationHandler::handle()` when a violation was stored (`csp.reporting.storeViolations = true`) | `(ArtisanPackUI\Security\Models\CspViolationReport $report)` |
+
+Example:
+
+```php
+// Force every escaped URL through your own allowlist before it's emitted.
+addFilter( 'ap.security.escapedOutput', function ( string $value, string $context, string $original ): string {
+    if ( $context !== 'url' ) {
+        return $value;
+    }
+
+    return app( UrlAllowlist::class )->passes( $original ) ? $value : '#blocked';
+} );
+
+// Ship every stored CSP violation into your own alerting queue.
+addAction( 'ap.security.csp.violationHandled', function ( CspViolationReport $report ): void {
+    SecurityAlerts::dispatch( $report );
+} );
+```
+
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)

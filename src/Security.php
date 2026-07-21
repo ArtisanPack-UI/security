@@ -29,10 +29,15 @@ class Security
     public function sanitizeEmail(?string $email = ''): string
     {
         if ($email === null || $email === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'email', $email);
         }
 
-        return filter_var($email, FILTER_SANITIZE_EMAIL);
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            filter_var($email, FILTER_SANITIZE_EMAIL),
+            'email',
+            $email,
+        );
     }
 
     /**
@@ -45,10 +50,15 @@ class Security
     public function sanitizeUrl(?string $url = ''): string
     {
         if ($url === null || $url === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'url', $url);
         }
 
-        return filter_var($url, FILTER_SANITIZE_URL);
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            filter_var($url, FILTER_SANITIZE_URL),
+            'url',
+            $url,
+        );
     }
 
     /**
@@ -61,10 +71,15 @@ class Security
     public function sanitizeFilename(?string $filename = ''): string
     {
         if ($filename === null || $filename === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'filename', $filename);
         }
 
-        return htmlspecialchars($filename, ENT_QUOTES, 'UTF-8');
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            htmlspecialchars($filename, ENT_QUOTES, 'UTF-8'),
+            'filename',
+            $filename,
+        );
     }
 
     /**
@@ -77,10 +92,15 @@ class Security
     public function sanitizePassword(?string $password = ''): string
     {
         if ($password === null || $password === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'password', $password);
         }
 
-        return htmlspecialchars($password, ENT_QUOTES, 'UTF-8');
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            htmlspecialchars($password, ENT_QUOTES, 'UTF-8'),
+            'password',
+            $password,
+        );
     }
 
     /**
@@ -92,7 +112,12 @@ class Security
      */
     public function sanitizeInt(mixed $integer = ''): int
     {
-        return intval($integer);
+        return (int) applyFilters(
+            'ap.security.sanitizedInput',
+            intval($integer),
+            'int',
+            $integer,
+        );
     }
 
     /**
@@ -105,10 +130,15 @@ class Security
     public function sanitizeDate(?string $date = ''): string
     {
         if ($date === null || $date === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'date', $date);
         }
 
-        return date('Y-m-d', strtotime($date));
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            date('Y-m-d', strtotime($date)),
+            'date',
+            $date,
+        );
     }
 
     /**
@@ -120,7 +150,12 @@ class Security
      */
     public function sanitizeDatetime(string $datetime = ''): string
     {
-        return date('Y-m-d H:i:s', strtotime($datetime));
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            date('Y-m-d H:i:s', strtotime($datetime)),
+            'datetime',
+            $datetime,
+        );
     }
 
     /**
@@ -133,7 +168,12 @@ class Security
      */
     public function sanitizeFloat(float $float, int $decimals = 2): float
     {
-        return number_format($float, $decimals, '.', '');
+        return (float) applyFilters(
+            'ap.security.sanitizedInput',
+            (float) number_format($float, $decimals, '.', ''),
+            'float',
+            $float,
+        );
     }
 
     /**
@@ -145,10 +185,16 @@ class Security
      */
     public function sanitizeArray(array $options = []): array
     {
-
-        return array_map(function ($value) {
+        $sanitized = array_map(function ($value) {
             return $this->sanitizeText($value);
         }, $options);
+
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            $sanitized,
+            'array',
+            $options,
+        );
     }
 
     /**
@@ -161,10 +207,15 @@ class Security
     public function sanitizeText(?string $input = ''): string
     {
         if ($input === null || $input === '') {
-            return '';
+            return applyFilters('ap.security.sanitizedInput', '', 'text', $input);
         }
 
-        return strip_tags($input);
+        return applyFilters(
+            'ap.security.sanitizedInput',
+            strip_tags($input),
+            'text',
+            $input,
+        );
     }
 
     /**
@@ -177,10 +228,15 @@ class Security
     public function escHtml(?string $string = ''): string
     {
         if ($string === null || $string === '') {
-            return '';
+            return applyFilters('ap.security.escapedOutput', '', 'html', $string);
         }
 
-        return (new Escaper)->escapeHtml($string);
+        return applyFilters(
+            'ap.security.escapedOutput',
+            (new Escaper)->escapeHtml($string),
+            'html',
+            $string,
+        );
     }
 
     /**
@@ -193,10 +249,15 @@ class Security
     public function escAttr(?string $string = ''): string
     {
         if ($string === null || $string === '') {
-            return '';
+            return applyFilters('ap.security.escapedOutput', '', 'attr', $string);
         }
 
-        return (new Escaper)->escapeHtmlAttr($string);
+        return applyFilters(
+            'ap.security.escapedOutput',
+            (new Escaper)->escapeHtmlAttr($string),
+            'attr',
+            $string,
+        );
     }
 
     /**
@@ -209,10 +270,15 @@ class Security
     public function escUrl(?string $string = ''): string
     {
         if ($string === null || $string === '') {
-            return '';
+            return applyFilters('ap.security.escapedOutput', '', 'url', $string);
         }
 
-        return (new Escaper)->escapeUrl($string);
+        return applyFilters(
+            'ap.security.escapedOutput',
+            (new Escaper)->escapeUrl($string),
+            'url',
+            $string,
+        );
     }
 
     /**
@@ -225,10 +291,15 @@ class Security
     public function escJs(?string $string = ''): string
     {
         if ($string === null || $string === '') {
-            return '';
+            return applyFilters('ap.security.escapedOutput', '', 'js', $string);
         }
 
-        return (new Escaper)->escapeJs($string);
+        return applyFilters(
+            'ap.security.escapedOutput',
+            (new Escaper)->escapeJs($string),
+            'js',
+            $string,
+        );
     }
 
     /**
@@ -241,14 +312,26 @@ class Security
     public function escCss(?string $string = ''): string
     {
         if ($string === null || $string === '') {
-            return '';
+            return applyFilters('ap.security.escapedOutput', '', 'css', $string);
         }
 
-        return (new Escaper)->escapeCss($string);
+        return applyFilters(
+            'ap.security.escapedOutput',
+            (new Escaper)->escapeCss($string),
+            'css',
+            $string,
+        );
     }
 
     /**
      * Returns a secure string for content containing HTML markup.
+     *
+     * Fires the `ap.security.ksesAllowedTags` filter to let host apps
+     * restrict which HTML elements survive the pass. Subscribers receive
+     * an empty array and return the tags they want to allow (lowercase
+     * element names, e.g. `['a', 'p', 'strong']`). When the filter
+     * returns a non-empty list, it overrides htmLawed's default element
+     * whitelist for this call.
      *
      * @param  string  $html  The HTML to clean.
      * @param  mixed  $config  Configuration options.
@@ -258,6 +341,16 @@ class Security
      */
     public function kses(string $html, mixed $config = 1, mixed $spec = []): string
     {
+        $allowedTags = applyFilters('ap.security.ksesAllowedTags', []);
+
+        if (is_array($allowedTags) && $allowedTags !== []) {
+            if (! is_array($config)) {
+                $config = [];
+            }
+
+            $config['elements'] = implode(',', array_map('strtolower', $allowedTags));
+        }
+
         return htmLawed($html, $config, $spec);
     }
 

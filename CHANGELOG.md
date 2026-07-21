@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Extension hooks powered by `artisanpack-ui/hooks` (^1.2):
+  - `ap.security.sanitizedInput` filter — wraps every `Security::sanitize*` return with `(mixed $value, string $type, mixed $original)`.
+  - `ap.security.escapedOutput` filter — wraps every `Security::esc*` return with `(string $value, string $context, string $original)`.
+  - `ap.security.ksesAllowedTags` filter — receives `(array $allowedTags)` from `Security::kses()`; a non-empty return overrides htmLawed's element whitelist for the call.
+  - `ap.security.csp.directives` filter — fires inside `CspPolicyService::getPolicy()` with `(array $directives, Request $request)`, letting host apps mutate the directive array before it is serialized.
+  - `ap.security.csp.violationHandled` action — fires at the end of `CspViolationHandler::handle()` on stored violations with `(CspViolationReport $report)`.
+  - See the README "Hooks" section for full payload details and examples.
+
+### Changed
+
+- `Security::sanitizeInt()` and `Security::sanitizeFloat()` now cast the filtered value back to `int`/`float` before returning, matching their declared return types even when a filter subscriber returns a different numeric shape.
+
 ## [2.0.2] - 2026-06-09
 
 ### Added
