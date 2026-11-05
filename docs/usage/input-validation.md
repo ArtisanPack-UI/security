@@ -36,11 +36,11 @@ class MyFormRequest extends BaseFormRequest
 }
 ```
 
-The available sanitization rules are: `text`, `html`, `email`, `url`, and `filename`.
+The available sanitization rules are: `text`, `html`, `email`, `url`, and `filename`. The `html` rule runs the value through `kses()` with its safe default config, so the result is safe to print unescaped. See [HTML filtering](html-filtering.md).
 
 ## XSS Protection Middleware
 
-The package includes an `XssProtection` middleware that can be applied to your routes to automatically sanitize the entire request body. This provides an additional layer of defense against XSS attacks.
+The package includes an `XssProtection` middleware that can be applied to your routes to automatically sanitize the entire request body with `kses()`'s safe default config. This provides an additional layer of defense against XSS attacks.
 
 To enable the middleware, first add it to your `app/Http/Kernel.php`:
 

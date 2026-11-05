@@ -1089,6 +1089,6 @@ php artisan security:report <type> [options]
 
 ## Related Documentation
 
-- [Configuration Reference](configuration-reference.md)
-- [Implementation Guide](implementation-guide.md)
-- [Troubleshooting Guide](troubleshooting.md)
+- [Configuration Reference](../installation/configuration.md)
+- [Implementation Guide](../advanced/implementation-guide.md)
+- [Troubleshooting Guide](../troubleshooting.md)

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-05
+
 ### Security
 
 - `kses()` now filters executable markup with its default config. Previously the default `$config = 1` ran htmLawed with no filtering, so `<script>`, `on*` event handlers and `javascript:` URLs survived and `{!! kses( $html ) !!}` was open to stored XSS. The default is now `Security::KSES_SAFE_CONFIG` (htmLawed safe mode, no `<style>`, `<link>` or `<meta>` elements, no `on*` or `style` attributes); `javascript:` and `data:` URLs are rewritten to `denied:…`. **Behavior change:** callers that relied on the permissive default must now pass their own `$config`. `sanitize()` / `BaseFormRequest` with the `html` rule and the opt-in `XssProtection` middleware pick up the same default. Passing any config other than `1` is forwarded unchanged ([#52](https://github.com/ArtisanPack-UI/security/issues/52), [#53](https://github.com/ArtisanPack-UI/security/issues/53)).
@@ -17,9 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The release workflow now has a `sync-docs` job that queues documentation and changelog imports on docs.artisanpackui.dev after each release. It needs the `DOCS_API_TOKEN` org secret and skips with a notice when the secret isn't set. Both imports are attempted on every run, and the job fails unless each returns `202`. Set a `DOCS_PACKAGE_SLUG` repository variable if the docs-site slug ever differs from the repo name. The Packagist update now runs in its own job, so a Packagist failure no longer blocks the docs import, and the workflow defaults to read-only `GITHUB_TOKEN` permissions ([#51](https://github.com/ArtisanPack-UI/security/issues/51)).
+- New [HTML filtering](docs/usage/html-filtering.md) guide covering the safe `kses()` default, narrowing elements with `ap.security.ksesAllowedTags`, `$spec` and custom configs, plus an "Upgrading to 2.2" section in [UPGRADE.md](UPGRADE.md). The API reference now documents `Security::KSES_SAFE_CONFIG`, `Security::KSES_ID_PREFIX` and `Security::ksesSafeTag()`.
 
 ### Changed
 
+- The security report generator's `generatorVersion` metadata now reports `2.2.0`.
 - The global `kses()` helper now accepts and forwards `$config` and `$spec` like `Security::kses()`. Previously it silently dropped them ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
 
 ### Fixed

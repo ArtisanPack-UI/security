@@ -479,5 +479,5 @@ All commands should pass without critical issues.
 ## Related Documentation
 
 - [Implementation Guide](implementation-guide.md)
-- [Configuration Reference](configuration-reference.md)
-- [Troubleshooting Guide](troubleshooting.md)
+- [Configuration Reference](../installation/configuration.md)
+- [Troubleshooting Guide](../troubleshooting.md)

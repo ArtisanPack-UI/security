@@ -196,20 +196,19 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-i
 
 When using `kses()` for rich content:
 
-```php
-// Allow only safe HTML tags
-$allowedTags = [
-    'p' => [],
-    'br' => [],
-    'strong' => [],
-    'em' => [],
-    'ul' => [],
-    'ol' => [],
-    'li' => []
-];
+- Use the default config. Its output is safe to print unescaped; any other `$config` is passed to htmLawed as-is and loses that guarantee.
+- Limit the allowed elements app-wide with the `ap.security.ksesAllowedTags` filter rather than a custom config:
 
-$safeContent = kses($userContent, $allowedTags);
+```php
+// Allow only basic formatting tags
+addFilter( 'ap.security.ksesAllowedTags', fn ( array $allowedTags ): array => [
+    'p', 'br', 'strong', 'em', 'ul', 'ol', 'li',
+] );
+
+$safeContent = kses($userContent);
 ```
+
+- If you do need a custom config, start from `Security::KSES_SAFE_CONFIG` and change a single key. See [HTML filtering](../usage/html-filtering.md#custom-configs).
 
 ## Common Security Mistakes
 
@@ -302,4 +301,4 @@ If you discover a security vulnerability:
 - [Laravel Security Best Practices](https://laravel.com/docs/security)
 - [PHP Security Guidelines](https://www.php.net/manual/en/security.php)
 
-For AI-specific security guidelines, see [AI Guidelines](Ai-Guidelines).
+For AI-specific security guidelines, see [AI Guidelines](ai-guidelines.md).

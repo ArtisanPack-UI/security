@@ -515,6 +515,6 @@ SECURITY_LOG_CHANNEL=security
 
 ## Related Documentation
 
-- [Configuration Reference](configuration-reference.md)
-- [Implementation Guide](implementation-guide.md)
-- [Troubleshooting Guide](troubleshooting.md)
+- [Configuration Reference](configuration.md)
+- [Implementation Guide](../advanced/implementation-guide.md)
+- [Troubleshooting Guide](../troubleshooting.md)

@@ -322,27 +322,60 @@ escCss('.class-name {background-color: #000000;}');
 
 ### kses()
 
-WordPress-style HTML filtering that allows safe HTML while removing potentially dangerous tags and attributes.
+WordPress-style HTML filtering built on htmLawed. With the default `$config` the output is safe to print unescaped. See [HTML filtering](../usage/html-filtering.md) for the full rule set.
 
 **Usage:**
 ```php
 Security::kses($html, $config, $spec);
-kses($html);
+kses($html, $config, $spec);
 ```
 
 **Parameters:**
-- `string $html` - HTML string to filter
-- `mixed $config` - Configuration for allowed tags (optional)
-- `mixed $spec` - Specification for filtering rules (optional)
+- `string $html` - HTML string to filter (the helper also accepts `null`)
+- `mixed $config` - htmLawed configuration, or `1` (default) for `Security::KSES_SAFE_CONFIG`. Any other value is forwarded to htmLawed unchanged, without the safe-output guarantee.
+- `mixed $spec` - htmLawed attribute specification, as a string or parsed array (optional). Under the default config, entries that permit `on*`, `style`, `class` or `ping` are dropped.
 
 **Returns:** `string` - Filtered HTML
+
+**Hooks:** fires the `ap.security.ksesAllowedTags` filter under the default config only.
 
 **Examples:**
 ```php
 $html = '<div class="test-div"><p>Safe content</p><script>alert("xss")</script></div>';
 $safe = kses($html);
-// Returns: '<div class="test-div"><p>Safe content</p></div>'
+// Returns: '<div><p>Safe content</p>alert("xss")</div>'
 ```
+
+**Since:** 1.0.0. In 2.2.0 the default config began filtering executable markup, and the helper began forwarding `$config` and `$spec`.
+
+### Security::KSES_SAFE_CONFIG
+
+The htmLawed config `kses()` uses by default: safe mode; no `<style>`, `<link>`, `<meta>`, `<base>`, forms, form controls or frames; `on*`, `class`, `ping` and `style` attributes denied; custom elements disabled; `http`/`https` URLs only (plus `mailto`/`tel` for `href`); and `Security::ksesSafeTag()` as the `hook_tag`. Copy it and change one key to build a custom config that keeps the other rules.
+
+**Since:** 2.2.0
+
+### Security::KSES_ID_PREFIX
+
+The prefix (`'user-content-'`) added to `id` and `name` values under the default config to prevent DOM clobbering. Fragment links and ID references are rewritten to match.
+
+**Since:** 2.2.0
+
+### Security::ksesSafeTag()
+
+The `hook_tag` callback used by `KSES_SAFE_CONFIG`. It removes Alpine/Livewire directive attributes (`x-*`, `@*`, `:*`, `wire:*`) and `is`, strips `rel="opener"` and adds `noopener` to links with a `target`, and applies `KSES_ID_PREFIX`.
+
+**Usage:**
+```php
+Security::ksesSafeTag(string $element, array|int $attributes = 0): string
+```
+
+**Parameters:**
+- `string $element` - Element name
+- `array<string, string>|int $attributes` - Attributes that survived htmLawed's filtering, or `0` for a closing tag
+
+**Returns:** `string` - The rendered tag
+
+**Since:** 2.2.0
 
 ## Security Helper
 

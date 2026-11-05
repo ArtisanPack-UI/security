@@ -8,7 +8,8 @@ The package exposes its functionality through five layers — sanitization helpe
 
 ## Topics
 
-- [Input validation + sanitization](usage/input-validation.md) — `sanitizeEmail`, `sanitizeText`, `sanitizeInt`, `sanitizeArray`, `kses()`, `NoHtml` / `SecureUrl` rules
+- [Input validation + sanitization](usage/input-validation.md) — `sanitizeEmail`, `sanitizeText`, `sanitizeInt`, `sanitizeArray`, `NoHtml` / `SecureUrl` rules
+- [HTML filtering (kses)](usage/html-filtering.md) — the safe default config, narrowing allowed elements, `$spec`, custom configs
 - [Security headers](usage/security-headers.md) — `security.headers` middleware, configured headers, custom headers
 - [Content Security Policy (CSP)](usage/csp.md) — nonce generator, policy builder, presets, violation reporting, dashboard
 - [Rate limiting](usage/rate-limiting.md) — named limiters, per-route `api.rate_limit`

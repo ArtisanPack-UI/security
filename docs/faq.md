@@ -206,7 +206,7 @@ Add Google's domains to your CSP:
 'script-src' => ["'self'", "'nonce'", 'https://www.google-analytics.com'],
 ```
 
-See [CSP Framework Guide](csp-framework.md) for complete configurations.
+See [CSP Framework Guide](usage/csp.md) for complete configurations.
 
 ### Is unsafe-inline ever acceptable?
 
@@ -338,7 +338,7 @@ Do not report security vulnerabilities through public GitHub issues. Contact the
 
 ### How do I test security features?
 
-The package provides test helpers and traits. See [Security Testing Guide](security-testing.md) for comprehensive testing documentation.
+The package provides test helpers and traits. See [Security Testing Guide](advanced/security-testing.md) for comprehensive testing documentation.
 
 ### Can I extend the package's classes?
 
@@ -410,5 +410,5 @@ Published configuration files won't be overwritten. Check the changelog for any 
 ## Related Documentation
 
 - [Troubleshooting Guide](troubleshooting.md)
-- [Implementation Guide](implementation-guide.md)
-- [Configuration Reference](configuration-reference.md)
+- [Implementation Guide](advanced/implementation-guide.md)
+- [Configuration Reference](installation/configuration.md)
