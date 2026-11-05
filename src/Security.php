@@ -25,9 +25,18 @@ class Security
      *
      * Safe mode drops script-capable elements (script, iframe, object, embed,
      * applet, ...) and neutralizes `javascript:`/`data:` URLs by prefixing them
-     * with `denied:`. The `<style>`, `<link>` and `<meta>` elements and every
-     * `on*` / `style` attribute are also removed so the output can be printed
-     * unescaped.
+     * with `denied:`. On top of that:
+     *
+     * - Elements that can restyle or hijack the page are removed: `<style>`,
+     *   `<link>`, `<meta>`, `<base>`, forms and form controls, and frames.
+     * - Every `on*`, `style` and `ping` attribute is removed.
+     * - Custom (hyphenated) elements are removed, because htmLawed lets them
+     *   keep every attribute, including Alpine/Livewire directives such as
+     *   `x-init`.
+     * - URLs are limited to `http`/`https` (plus `mailto`/`tel` for `href`).
+     *   Relative URLs are kept.
+     *
+     * The output can therefore be printed unescaped.
      *
      * @since 2.2.0
      *
@@ -35,8 +44,10 @@ class Security
      */
     public const KSES_SAFE_CONFIG = [
         'safe' => 1,
-        'elements' => '*-link-meta-style',
-        'deny_attribute' => 'on*, style',
+        'elements' => '*-base-button-datalist-form-frame-frameset-input-isindex-keygen-link-meta-optgroup-option-select-style-textarea',
+        'deny_attribute' => 'on*, ping, style',
+        'any_custom_element' => 0,
+        'schemes' => 'href: http, https, mailto, tel; src: http, https; *: http, https',
     ];
 
     /**
@@ -45,15 +56,19 @@ class Security
      *
      * htmLawed applies an explicit element list verbatim, bypassing safe
      * mode's own element removal, so these are subtracted before the list
-     * is handed over. `<link>`, `<meta>` and `<style>` are included because
-     * they allow CSS injection or page-level side effects.
+     * is handed over. `<link>`, `<meta>`, `<style>` and `<base>` are included
+     * because they allow CSS injection or page-level side effects, and forms,
+     * form controls and frames because they allow fake login forms and
+     * framing on the site's own origin.
      *
      * @since 2.2.0
      *
      * @var list<string>
      */
     protected const KSES_UNSAFE_ELEMENTS = [
-        'applet', 'audio', 'canvas', 'dialog', 'embed', 'iframe', 'link', 'meta', 'object', 'script', 'style', 'video',
+        'applet', 'audio', 'base', 'button', 'canvas', 'datalist', 'dialog', 'embed', 'form', 'frame', 'frameset',
+        'iframe', 'input', 'isindex', 'keygen', 'link', 'meta', 'object', 'optgroup', 'option', 'script', 'select',
+        'style', 'textarea', 'video',
     ];
 
     /**
@@ -365,9 +380,11 @@ class Security
      *
      * With the default `$config = 1` the HTML is filtered with
      * {@see self::KSES_SAFE_CONFIG}: script-capable elements, `<style>`,
-     * `on*` event handlers and `style` attributes are removed, and
-     * `javascript:`-style URLs are rewritten to `denied:javascript:...`, so
-     * the result is safe to print unescaped. Under the default config `$spec`
+     * `<link>`, `<meta>`, `<base>`, forms, form controls and frames, `on*`
+     * event handlers, `ping` and `style` attributes and custom elements are
+     * removed, and URLs with any
+     * scheme other than `http`/`https` (plus `mailto`/`tel` in `href`) are
+     * rewritten to `denied:<url>`, so the result is safe to print unescaped. Under the default config `$spec`
      * cannot re-enable `on*` or `style` attributes; those entries are dropped
      * before it reaches htmLawed. Passing any other `$config` hands full
      * control to the caller, and `$config` and `$spec` are forwarded as-is.
@@ -382,8 +399,8 @@ class Security
      * array signals caller intent that should not be silently
      * overridden by a global subscriber. When the filter returns a
      * non-empty list under the default config, it replaces the element
-     * whitelist for this call; script-capable elements, `<link>`, `<meta>`
-     * and `<style>` are still dropped from that list, and the attribute and URL rules still apply.
+     * whitelist for this call; the {@see self::KSES_UNSAFE_ELEMENTS} are still
+     * dropped from that list, and the attribute and URL rules still apply.
      *
      * @param  string  $html  The HTML to clean.
      * @param  mixed  $config  htmLawed configuration, or `1` for the safe default.
@@ -414,6 +431,8 @@ class Security
      * Each entry is trimmed and lowercased. Anything that isn't a plain element
      * name is dropped (wildcards, htmLawed `+`/`-` operators, whitespace
      * tricks, non-strings), and so are the {@see self::KSES_UNSAFE_ELEMENTS}.
+     * Custom (hyphenated) element names are dropped too: htmLawed lets a listed
+     * custom element keep every attribute, including Alpine/Livewire directives.
      * When nothing survives, every element is stripped.
      *
      * @param  array<int|string, mixed>  $allowedTags  Tags returned by the filter.
@@ -431,7 +450,7 @@ class Security
 
             $tag = strtolower(trim($tag));
 
-            if (preg_match('/^[a-z][a-z0-9-]*$/', $tag) === 1 && ! in_array($tag, self::KSES_UNSAFE_ELEMENTS, true)) {
+            if (preg_match('/^[a-z][a-z0-9]*$/', $tag) === 1 && ! in_array($tag, self::KSES_UNSAFE_ELEMENTS, true)) {
                 $safeTags[$tag] = $tag;
             }
         }
