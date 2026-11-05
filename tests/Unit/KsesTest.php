@@ -45,6 +45,7 @@ test('the default config strips executable markup', function (string $html, stri
     'custom element alpine click' => ['<my-el @click="alert(1)" x-on:mouseover="alert(2)">hi</my-el>', '@click'],
     'custom element livewire action' => ['<my-el wire:click="delete(1)">hi</my-el>', 'wire:click'],
     'custom element bound href' => ['<a-b x-bind:href="\'javascript:alert(1)\'">hi</a-b>', 'x-bind'],
+    'class attribute' => ['<div class="fixed inset-0 z-50 bg-white">x</div>', 'class='],
     'standard element alpine directives' => ['<div x-data x-init="alert(1)" @click="x()" wire:click="y()">d</div>', 'x-init'],
 ]);
 
@@ -79,7 +80,7 @@ test('the default config only allows http and https URLs, plus mailto and tel li
 
 test('the default config keeps relative and fragment URLs', function (): void {
     expect(kses('<a href="/products/linen">r</a><a href="#details">h</a><img src="images/a.jpg" alt="a">'))
-        ->toBe('<a href="/products/linen">r</a><a href="#details">h</a><img src="images/a.jpg" alt="a" />');
+        ->toBe('<a href="/products/linen">r</a><a href="#user-content-details">h</a><img src="images/a.jpg" alt="a" />');
 });
 
 test('the default config reproduces the full-strip issue payload safely', function (): void {
@@ -91,12 +92,12 @@ test('the default config reproduces the full-strip issue payload safely', functi
 });
 
 test('the default config keeps ordinary formatting markup', function (): void {
-    $html = '<p class="lead">Hello <strong>bold</strong> <em>ital</em> <a href="https://example.com" title="Example">link</a></p>'
+    $html = '<p>Hello <strong>bold</strong> <em>ital</em> <a href="https://example.com" title="Example">link</a></p>'
         .'<h2>Heading</h2><h3>Sub</h3><ul><li>one</li></ul><ol><li>two</li></ol>'
         .'<img src="/a.jpg" alt="An image" srcset="/a.jpg 1x, /a@2x.jpg 2x">';
 
     expect(kses($html))->toBe(
-        '<p class="lead">Hello <strong>bold</strong> <em>ital</em> <a href="https://example.com" title="Example">link</a></p>'
+        '<p>Hello <strong>bold</strong> <em>ital</em> <a href="https://example.com" title="Example">link</a></p>'
         .'<h2>Heading</h2><h3>Sub</h3><ul><li>one</li></ul><ol><li>two</li></ol>'
         .'<img src="/a.jpg" alt="An image" srcset="/a.jpg 1x, /a@2x.jpg 2x" />'
     );
@@ -115,15 +116,64 @@ test('quoted spec rule values keep their separator characters', function (): voi
         ->and(kses('<b title="a">x</b>', 1, $spec))->toBe('<b>x</b>');
 });
 
-test('a spec cannot re-enable on* or style attributes under the default config', function (mixed $spec): void {
-    $output = kses('<p onclick="x()" onmouseover="y()" style="color:red" title="t">x</p>', 1, $spec);
+test('a spec cannot re-enable on*, style or class attributes under the default config', function (mixed $spec): void {
+    $output = kses('<p onclick="x()" onmouseover="y()" style="color:red" class="fixed" title="t">x</p>', 1, $spec);
 
     expect($output)->toBe('<p title="t">x</p>');
 })->with([
-    'string spec' => ['p=onclick,onmouseover,style,title'],
-    'wildcard string spec' => ['p=on*,style,title'],
-    'array spec' => [['p' => ['onclick' => 1, 'ONMOUSEOVER' => 1, 'Style' => 1, 'title' => 1]]],
+    'string spec' => ['p=onclick,onmouseover,style,class,title'],
+    'wildcard string spec' => ['p=on*,style,class,title'],
+    'array spec' => [['p' => ['onclick' => 1, 'ONMOUSEOVER' => 1, 'Style' => 1, 'Class' => 1, 'title' => 1]]],
 ]);
+
+test('a spec cannot re-enable ping under the default config', function (): void {
+    expect(kses('<a href="https://example.com" ping="https://evil.test">x</a>', 1, 'a=href,ping'))
+        ->toBe('<a href="https://example.com">x</a>');
+});
+
+test('a spec cannot re-enable Alpine or Livewire directives under the default config', function (mixed $spec): void {
+    expect(kses('<div x-init="alert(1)" title="t">d</div>', 1, $spec))->toBe('<div title="t">d</div>');
+})->with([
+    'string spec' => ['div=x-init,title'],
+    'array spec' => [['div' => ['x-init' => 1, '@click' => 1, 'wire:click' => 1, ':class' => 1, 'is' => 1, 'title' => 1]]],
+]);
+
+test('the default config removes rel opener and adds noopener to targeted links', function (string $html, string $expected): void {
+    expect(kses($html))->toBe($expected);
+})->with([
+    'opener with target' => ['<a href="https://example.com" target="_blank" rel="opener">x</a>', '<a href="https://example.com" target="_blank" rel="noopener">x</a>'],
+    'opener among other link types' => ['<a href="https://example.com" target="_blank" rel="nofollow OPENER">x</a>', '<a href="https://example.com" target="_blank" rel="nofollow noopener">x</a>'],
+    'target without rel' => ['<a href="https://example.com" target="_blank">x</a>', '<a href="https://example.com" target="_blank" rel="noopener">x</a>'],
+    'existing noopener kept once' => ['<a href="https://example.com" target="_blank" rel="noopener noreferrer">x</a>', '<a href="https://example.com" target="_blank" rel="noopener noreferrer">x</a>'],
+    'opener without target' => ['<a href="https://example.com" rel="opener">x</a>', '<a href="https://example.com">x</a>'],
+    'other rel without target' => ['<a href="https://example.com" rel="nofollow">x</a>', '<a href="https://example.com" rel="nofollow">x</a>'],
+]);
+
+test('the default config prefixes ids and names to prevent DOM clobbering', function (): void {
+    expect(kses('<h2 id="intro">I</h2><img name="config" src="a.jpg" alt="a">'))
+        ->toBe('<h2 id="user-content-intro">I</h2><img src="a.jpg" alt="a" id="user-content-config" />');
+});
+
+test('the default config rewrites id references so in-page links keep working', function (): void {
+    expect(kses('<a href="#intro">j</a><a href="#">top</a><a href="https://example.com/#intro">e</a>'))
+        ->toBe('<a href="#user-content-intro">j</a><a href="#">top</a><a href="https://example.com/#intro">e</a>')
+        ->and(kses('<div aria-labelledby="h1 h2" aria-describedby="d">x</div><table><tr><th id="c">C</th><td headers="c">1</td></tr></table>'))
+        ->toBe('<div aria-labelledby="user-content-h1 user-content-h2" aria-describedby="user-content-d">x</div><table><tr><th id="user-content-c">C</th><td headers="user-content-c">1</td></tr></table>')
+        ->and(kses('<img src="a.jpg" alt="a" usemap="#m"><map name="m"><area href="#intro" alt="x" shape="rect" coords="0,0,1,1"></map>'))
+        ->toBe('<img src="a.jpg" alt="a" usemap="#user-content-m" /><map name="user-content-m" id="user-content-m"><area href="#user-content-intro" alt="x" shape="rect" coords="0,0,1,1" /></map>');
+});
+
+test('the default config output is stable when sanitized again', function (): void {
+    $once = kses('<h2 id="a">x</h2><a href="#a" target="_blank" rel="opener">y</a><td headers="a">z</td><img src="a.jpg" alt="a"><br>');
+
+    expect(kses($once))->toBe($once);
+});
+
+test('the safe tag hook keeps other attributes and closes void elements', function (): void {
+    expect(Security::ksesSafeTag('p', ['title' => 't', 'lang' => 'en']))->toBe('<p title="t" lang="en">')
+        ->and(Security::ksesSafeTag('br', []))->toBe('<br />')
+        ->and(Security::ksesSafeTag('p'))->toBe('</p>');
+});
 
 test('a spec default cannot inject an executable URL', function (): void {
     expect(kses('<a href="">x</a>', 1, 'a=href(default="javascript:alert(1)")'))
@@ -252,8 +302,9 @@ test('the safe config constant is exposed for callers that want to extend it', f
     expect(Security::KSES_SAFE_CONFIG)->toMatchArray([
         'safe' => 1,
         'elements' => '*-base-button-datalist-form-frame-frameset-input-isindex-keygen-link-meta-optgroup-option-select-style-textarea',
-        'deny_attribute' => 'on*, ping, style',
+        'deny_attribute' => 'on*, class, ping, style',
         'any_custom_element' => 0,
         'schemes' => 'href: http, https, mailto, tel; src: http, https; *: http, https',
+        'hook_tag' => [Security::class, 'ksesSafeTag'],
     ]);
 });
