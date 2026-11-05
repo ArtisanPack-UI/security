@@ -15,10 +15,125 @@ namespace ArtisanPackUI\Security;
 
 use Laminas\Escaper\Escaper;
 
+use function ArtisanPackUI\Security\HTMLawed\hl_spec;
 use function ArtisanPackUI\Security\HTMLawed\htmLawed;
 
 class Security
 {
+    /**
+     * The htmLawed config `kses()` uses when the caller passes the default `$config = 1`.
+     *
+     * Safe mode drops script-capable elements (script, iframe, object, embed,
+     * applet, ...) and neutralizes `javascript:`/`data:` URLs by prefixing them
+     * with `denied:`. On top of that:
+     *
+     * - Elements that can restyle or hijack the page are removed: `<style>`,
+     *   `<link>`, `<meta>`, `<base>`, forms and form controls, and frames.
+     * - Every `on*`, `style`, `class` and `ping` attribute is removed, so
+     *   content can't run script, restyle the page or borrow the site's own
+     *   CSS classes for a full-page overlay.
+     * - {@see self::ksesSafeTag()} runs on every tag: it removes Alpine and
+     *   Livewire directive attributes (`x-*`, `@*`, `:*`, `wire:*`) and `is`,
+     *   drops `rel="opener"` (and adds `noopener` when a link has a
+     *   `target`), and prefixes `id`/`name` values with
+     *   {@see self::KSES_ID_PREFIX} to prevent DOM clobbering, rewriting
+     *   fragment links and other ID references to match. IDs are kept
+     *   unique within each `kses()` call after prefixing (htmLawed's own
+     *   `unique_ids` check is off because it runs before the prefix is
+     *   added and remembers IDs across calls).
+     * - Custom (hyphenated) elements are removed, because htmLawed lets them
+     *   keep every attribute, including Alpine/Livewire directives such as
+     *   `x-init`.
+     * - URLs are limited to `http`/`https` (plus `mailto`/`tel` for `href`).
+     *   Relative URLs are kept.
+     *
+     * The output can therefore be printed unescaped.
+     *
+     * @since 2.2.0
+     *
+     * @var array<string, int|string|array{0: class-string, 1: string}>
+     */
+    public const KSES_SAFE_CONFIG = [
+        'safe' => 1,
+        'elements' => '*-base-button-datalist-form-frame-frameset-input-isindex-keygen-link-meta-optgroup-option-select-style-textarea',
+        'deny_attribute' => 'on*, class, ping, style',
+        'any_custom_element' => 0,
+        'schemes' => 'href: http, https, mailto, tel; src: http, https; *: http, https',
+        'unique_ids' => 0,
+        'hook_tag' => [self::class, 'ksesSafeTag'],
+    ];
+
+    /**
+     * The prefix `kses()` adds to `id` and `name` values under the default config.
+     *
+     * Prefixing keeps user content from clobbering globals or DOM lookups
+     * the page's own scripts rely on (e.g. an `<img name="config">`
+     * shadowing `document.config`). Values that already carry the prefix
+     * are left alone, so sanitizing twice gives the same output.
+     *
+     * @since 2.2.0
+     */
+    public const KSES_ID_PREFIX = 'user-content-';
+
+    /**
+     * Elements `kses()` never lets through under the default config, even
+     * when an `ap.security.ksesAllowedTags` subscriber lists them.
+     *
+     * htmLawed applies an explicit element list verbatim, bypassing safe
+     * mode's own element removal, so these are subtracted before the list
+     * is handed over. `<link>`, `<meta>`, `<style>` and `<base>` are included
+     * because they allow CSS injection or page-level side effects, and forms,
+     * form controls and frames because they allow fake login forms and
+     * framing on the site's own origin.
+     *
+     * @since 2.2.0
+     *
+     * @var list<string>
+     */
+    protected const KSES_UNSAFE_ELEMENTS = [
+        'applet', 'audio', 'base', 'button', 'canvas', 'datalist', 'dialog', 'embed', 'form', 'frame', 'frameset',
+        'iframe', 'input', 'isindex', 'keygen', 'link', 'meta', 'object', 'optgroup', 'option', 'script', 'select',
+        'style', 'textarea', 'video',
+    ];
+
+    /**
+     * Elements that cannot have a closing tag, so {@see self::ksesSafeTag()}
+     * renders them self-closed like htmLawed does.
+     *
+     * @since 2.2.0
+     *
+     * @var list<string>
+     */
+    protected const KSES_VOID_ELEMENTS = [
+        'area', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param',
+        'source', 'track', 'wbr',
+    ];
+
+    /**
+     * Attributes whose value is a space-separated list of element IDs, which
+     * {@see self::ksesSafeTag()} prefixes to match the prefixed `id` values.
+     *
+     * @since 2.2.0
+     *
+     * @var list<string>
+     */
+    protected const KSES_ID_REFERENCE_ATTRIBUTES = [
+        'aria-activedescendant', 'aria-controls', 'aria-describedby', 'aria-details', 'aria-errormessage',
+        'aria-flowto', 'aria-labelledby', 'aria-owns', 'for', 'headers', 'itemref', 'list',
+    ];
+
+    /**
+     * Prefixed IDs {@see self::ksesSafeTag()} has already emitted in the current `kses()` call.
+     *
+     * `kses()` clears it before each call, so sanitizing the same content
+     * twice, or two pieces of content that share an ID, keeps the IDs.
+     *
+     * @since 2.2.0
+     *
+     * @var array<string, true>
+     */
+    protected static array $ksesIds = [];
+
     /**
      * Returns a sanitized email string.
      *
@@ -326,6 +441,26 @@ class Security
     /**
      * Returns a secure string for content containing HTML markup.
      *
+     * With the default `$config = 1` the HTML is filtered with
+     * {@see self::KSES_SAFE_CONFIG}, so the result is safe to print unescaped:
+     *
+     * - Script-capable elements, `<style>`, `<link>`, `<meta>`, `<base>`,
+     *   forms, form controls, frames and custom elements are removed.
+     * - `on*`, `style`, `class` and `ping` attributes and Alpine/Livewire
+     *   directives are removed.
+     * - `rel="opener"` is dropped and targeted links get `noopener`.
+     * - `id`/`name` values and the references to them are prefixed with
+     *   {@see self::KSES_ID_PREFIX}.
+     * - URLs with any scheme other than `http`/`https` (plus `mailto`/`tel`
+     *   in `href`) are rewritten to `denied:<url>`.
+     *
+     * Under the default config `$spec` cannot re-enable `on*`, `style`,
+     * `class` or `ping` attributes or directives; those entries are dropped
+     * before it reaches htmLawed. Passing any other `$config` hands full
+     * control to the caller, and `$config` and `$spec` are forwarded as-is.
+     * To keep the safe rules while changing one of them, start from
+     * {@see self::KSES_SAFE_CONFIG} (its `hook_tag` included).
+     *
      * Fires the `ap.security.ksesAllowedTags` filter to let host apps
      * restrict which HTML elements survive the pass. Subscribers receive
      * an empty array and return the tags they want to allow (lowercase
@@ -335,28 +470,224 @@ class Security
      * `$config = 1`; explicitly passing a different profile or a config
      * array signals caller intent that should not be silently
      * overridden by a global subscriber. When the filter returns a
-     * non-empty list under the default config, it overrides htmLawed's
-     * default element whitelist for this call.
+     * non-empty list under the default config, it replaces the element
+     * whitelist for this call; the {@see self::KSES_UNSAFE_ELEMENTS} are still
+     * dropped from that list, and the attribute and URL rules still apply.
      *
      * @param  string  $html  The HTML to clean.
-     * @param  mixed  $config  Configuration options.
-     * @param  mixed  $spec  Specification options.
+     * @param  mixed  $config  htmLawed configuration, or `1` for the safe default.
+     * @param  mixed  $spec  htmLawed attribute specification.
      *
      * @since 1.0.0
+     * @since 2.2.0 The default config filters executable markup.
      */
     public function kses(string $html, mixed $config = 1, mixed $spec = []): string
     {
+        self::$ksesIds = [];
+
         if ($config === 1) {
+            $config = self::KSES_SAFE_CONFIG;
             $allowedTags = applyFilters('ap.security.ksesAllowedTags', []);
 
             if (is_array($allowedTags) && $allowedTags !== []) {
-                $config = [
-                    'elements' => implode(',', array_map('strtolower', $allowedTags)),
-                ];
+                $config['elements'] = $this->ksesElementList($allowedTags);
             }
+
+            $spec = $this->ksesSafeSpec($spec);
         }
 
         return htmLawed($html, $config, $spec);
+    }
+
+    /**
+     * Renders a tag for htmLawed's `hook_tag` under {@see self::KSES_SAFE_CONFIG}.
+     *
+     * htmLawed calls this with the attributes that survived its own
+     * filtering (values already escaped) and uses the return value as the
+     * tag. On top of htmLawed's rules it:
+     *
+     * - removes Alpine/Livewire directive attributes (`x-*`, `@*`, `:*`,
+     *   `wire:*`) and `is`, which `$spec` could otherwise permit;
+     * - removes the `opener` link type from `rel` and adds `noopener` when
+     *   the element has a `target`, so linked pages can't reach
+     *   `window.opener` (reverse tabnabbing);
+     * - prefixes `id` and `name` with {@see self::KSES_ID_PREFIX}, plus
+     *   `#fragment` values of `href`/`usemap` and the ID lists in
+     *   {@see self::KSES_ID_REFERENCE_ATTRIBUTES}, so in-page links keep
+     *   working;
+     * - drops an `id` that contains whitespace or repeats a prefixed `id`
+     *   already emitted in the current `kses()` call.
+     *
+     * @param  string  $element  The element name.
+     * @param  array<string, string>|int  $attributes  The filtered attributes, or `0` for a closing tag.
+     * @return string The rendered tag.
+     *
+     * @since 2.2.0
+     */
+    public static function ksesSafeTag(string $element, array|int $attributes = 0): string
+    {
+        if (! is_array($attributes)) {
+            return '</'.$element.'>';
+        }
+
+        $safeAttributes = [];
+
+        foreach ($attributes as $name => $value) {
+            $name = (string) $name;
+            $value = (string) $value;
+
+            if (preg_match('/^(x-|@|:|wire:|is$)/i', $name) === 1) {
+                continue;
+            }
+
+            if ($name === 'id') {
+                $id = self::ksesPrefixId($value);
+
+                if ($id === '' || preg_match('/\s/', $id) === 1 || isset(self::$ksesIds[$id])) {
+                    continue;
+                }
+
+                self::$ksesIds[$id] = true;
+                $safeAttributes['id'] = $id;
+
+                continue;
+            }
+
+            $safeAttributes[$name] = match (true) {
+                $name === 'rel' => implode(' ', array_filter(
+                    self::ksesSplitTokens($value),
+                    fn (string $linkType): bool => strtolower($linkType) !== 'opener',
+                )),
+                $name === 'name' => self::ksesPrefixId($value),
+                ($name === 'href' || $name === 'usemap') && preg_match('/^#./', $value) === 1 => '#'.self::ksesPrefixId(substr($value, 1)),
+                in_array($name, self::KSES_ID_REFERENCE_ATTRIBUTES, true) => implode(' ', array_map(
+                    self::ksesPrefixId(...),
+                    self::ksesSplitTokens($value),
+                )),
+                default => $value,
+            };
+        }
+
+        if (isset($safeAttributes['target'])) {
+            $linkTypes = self::ksesSplitTokens($safeAttributes['rel'] ?? '');
+
+            if (! in_array('noopener', array_map(strtolower(...), $linkTypes), true)) {
+                $linkTypes[] = 'noopener';
+            }
+
+            $safeAttributes['rel'] = implode(' ', $linkTypes);
+        }
+
+        if (isset($safeAttributes['rel']) && $safeAttributes['rel'] === '') {
+            unset($safeAttributes['rel']);
+        }
+
+        $html = '<'.$element;
+
+        foreach ($safeAttributes as $name => $value) {
+            $html .= ' '.$name.'="'.$value.'"';
+        }
+
+        return $html.(in_array($element, self::KSES_VOID_ELEMENTS, true) ? ' />' : '>');
+    }
+
+    /**
+     * Prefixes an element ID with {@see self::KSES_ID_PREFIX} unless it already has it.
+     *
+     * @param  string  $id  The ID (or `name`) value.
+     * @return string The prefixed ID; an empty value is returned unchanged.
+     *
+     * @since 2.2.0
+     */
+    protected static function ksesPrefixId(string $id): string
+    {
+        return $id === '' || str_starts_with($id, self::KSES_ID_PREFIX) ? $id : self::KSES_ID_PREFIX.$id;
+    }
+
+    /**
+     * Splits a space-separated attribute value (link types, ID lists) into tokens.
+     *
+     * @param  string  $value  The attribute value.
+     * @return list<string> The non-empty tokens.
+     *
+     * @since 2.2.0
+     */
+    protected static function ksesSplitTokens(string $value): array
+    {
+        return preg_split('/\s+/', trim($value), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    }
+
+    /**
+     * Builds a safe htmLawed `elements` list from `ksesAllowedTags` output.
+     *
+     * Each entry is trimmed and lowercased. Anything that isn't a plain element
+     * name is dropped (wildcards, htmLawed `+`/`-` operators, whitespace
+     * tricks, non-strings), and so are the {@see self::KSES_UNSAFE_ELEMENTS}.
+     * Custom (hyphenated) element names are dropped too: htmLawed lets a listed
+     * custom element keep every attribute, including Alpine/Livewire directives.
+     * When nothing survives, every element is stripped.
+     *
+     * @param  array<int|string, mixed>  $allowedTags  Tags returned by the filter.
+     *
+     * @since 2.2.0
+     */
+    protected function ksesElementList(array $allowedTags): string
+    {
+        $safeTags = [];
+
+        foreach ($allowedTags as $tag) {
+            if (! is_string($tag)) {
+                continue;
+            }
+
+            $tag = strtolower(trim($tag));
+
+            if (preg_match('/^[a-z][a-z0-9]*$/', $tag) === 1 && ! in_array($tag, self::KSES_UNSAFE_ELEMENTS, true)) {
+                $safeTags[$tag] = $tag;
+            }
+        }
+
+        return $safeTags === [] ? '-*' : implode(',', $safeTags);
+    }
+
+    /**
+     * Removes `on*`, `style`, `class` and `ping` permissions from an htmLawed `$spec`.
+     *
+     * htmLawed lets `$spec` permit attributes that `deny_attribute` denies, so
+     * under the default config those entries would undo the safe rules. A
+     * string spec is parsed with htmLawed's own parser first. Element-level
+     * `deny` rules and every other attribute rule are kept.
+     *
+     * @param  mixed  $spec  The caller's htmLawed spec (string or parsed array).
+     * @return array<string, mixed> The parsed spec without `on*`/`style`/`class`/`ping` entries.
+     *
+     * @since 2.2.0
+     */
+    protected function ksesSafeSpec(mixed $spec): array
+    {
+        if (is_string($spec)) {
+            $spec = trim($spec) === '' ? [] : hl_spec($spec);
+        }
+
+        if (! is_array($spec)) {
+            return [];
+        }
+
+        foreach ($spec as $element => $rules) {
+            if (! is_array($rules)) {
+                continue;
+            }
+
+            foreach (array_keys($rules) as $attribute) {
+                $name = strtolower((string) $attribute);
+
+                if (in_array($name, ['class', 'ping', 'style'], true) || str_starts_with($name, 'on')) {
+                    unset($spec[$element][$attribute]);
+                }
+            }
+        }
+
+        return $spec;
     }
 
     /**

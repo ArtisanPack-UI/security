@@ -670,7 +670,7 @@ Monitor violations before enforcing.
 
 ## Related Documentation
 
-- [Implementation Guide](implementation-guide.md)
-- [Security Headers](security-guidelines.md)
-- [Configuration Reference](configuration-reference.md)
-- [Troubleshooting Guide](troubleshooting.md)
+- [Implementation Guide](../advanced/implementation-guide.md)
+- [Security Headers](../advanced/security-guidelines.md)
+- [Configuration Reference](../installation/configuration.md)
+- [Troubleshooting Guide](../troubleshooting.md)

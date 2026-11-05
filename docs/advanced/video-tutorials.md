@@ -497,8 +497,8 @@ Each tutorial has an accompanying code repository:
 ### Common Issues
 
 If you get stuck:
-1. Check the [Troubleshooting Guide](troubleshooting.md)
-2. Review the [FAQ](faq.md)
+1. Check the [Troubleshooting Guide](../troubleshooting.md)
+2. Review the [FAQ](../faq.md)
 3. Compare with the completed code
 4. Ask in the community forum
 
@@ -519,5 +519,5 @@ Have a topic you'd like covered? We welcome suggestions for new tutorials.
 ## Related Documentation
 
 - [Implementation Guide](implementation-guide.md)
-- [Configuration Reference](configuration-reference.md)
-- [FAQ](faq.md)
+- [Configuration Reference](../installation/configuration.md)
+- [FAQ](../faq.md)

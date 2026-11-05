@@ -561,10 +561,10 @@ If legitimate users are being logged out:
 2. Relax binding strictness
 3. Check for proxy/CDN IP changes
 
-See the [Troubleshooting Guide](troubleshooting.md) for more solutions.
+See the [Troubleshooting Guide](../troubleshooting.md) for more solutions.
 
 ## Related Documentation
 
-- [Advanced Authentication Guide](advanced-authentication.md)
-- [Implementation Guide](implementation-guide.md)
-- [Configuration Reference](configuration-reference.md)
+- [Advanced Authentication Guide](https://github.com/ArtisanPack-UI/security-advanced-auth)
+- [Implementation Guide](../advanced/implementation-guide.md)
+- [Configuration Reference](../installation/configuration.md)

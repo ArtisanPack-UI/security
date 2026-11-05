@@ -548,7 +548,7 @@ $user->hasRole('super-admin');  // Must match exactly
 
 **Solution**:
 
-Add required sources. See [CSP Framework Guide](csp-framework.md) for common configurations.
+Add required sources. See [CSP Framework Guide](usage/csp.md) for common configurations.
 
 Example for Google Analytics:
 
@@ -812,6 +812,6 @@ If you can't resolve an issue:
 
 ## Related Documentation
 
-- [Configuration Reference](configuration-reference.md)
+- [Configuration Reference](installation/configuration.md)
 - [FAQ](faq.md)
-- [Implementation Guide](implementation-guide.md)
+- [Implementation Guide](advanced/implementation-guide.md)

@@ -194,7 +194,7 @@ Configure headers in `config/artisanpack/security.php`:
 ],
 ```
 
-For detailed CSP configuration, see the [CSP Framework Guide](csp-framework.md).
+For detailed CSP configuration, see the [CSP Framework Guide](../usage/csp.md).
 
 ### 3. Two-Factor Authentication
 
@@ -240,7 +240,7 @@ $valid = TwoFactor::verify($user, $code);
 TwoFactor::disable($user);
 ```
 
-For complete 2FA implementation, see the [Two-Factor Authentication Guide](two-factor-authentication.md).
+For complete 2FA implementation, see the [Two-Factor Authentication Guide](https://github.com/ArtisanPack-UI/security-auth).
 
 ### 4. Role-Based Access Control
 
@@ -317,7 +317,7 @@ Route::middleware(['auth', 'permission:manage-users'])->group(function () {
 });
 ```
 
-For more details, see the [RBAC Guide](rbac.md).
+For more details, see the [RBAC Guide](https://github.com/ArtisanPack-UI/rbac).
 
 ### 5. API Security
 
@@ -350,7 +350,7 @@ Route::middleware(['auth:sanctum', 'api.security', 'api.throttle'])->group(funct
 });
 ```
 
-For complete API security, see the [API Security Guide](api-security.md).
+For complete API security, see the [API Security Guide](../usage/api-security.md).
 
 ### 6. Password Security
 
@@ -435,7 +435,7 @@ Configure in `config/artisanpack/security.php`:
 ],
 ```
 
-For advanced session features, see the [Session Security Guide](session-security.md).
+For advanced session features, see the [Session Security Guide](../usage/session-security.md).
 
 ### 8. File Upload Security
 
@@ -472,7 +472,7 @@ public function store(Request $request, SecureFileStorageInterface $storage)
 }
 ```
 
-For complete file security, see the [File Upload Security Guide](file-upload-security.md).
+For complete file security, see the [File Upload Security Guide](https://github.com/ArtisanPack-UI/secure-uploads).
 
 ## Security Architecture Overview
 
@@ -579,7 +579,7 @@ php artisan security:scan-dependencies
 
 ## Next Steps
 
-- [Configuration Reference](configuration-reference.md) - Complete configuration options
-- [Command Reference](command-reference.md) - All available Artisan commands
-- [Troubleshooting Guide](troubleshooting.md) - Common issues and solutions
+- [Configuration Reference](../installation/configuration.md) - Complete configuration options
+- [Command Reference](../usage/artisan-commands.md) - All available Artisan commands
+- [Troubleshooting Guide](../troubleshooting.md) - Common issues and solutions
 - [Security Checklist](security-checklist.md) - Pre-launch security checklist

@@ -847,5 +847,5 @@ php artisan vendor:publish --provider="ArtisanPackUI\Security\SecurityServicePro
 ## Related Documentation
 
 - [Environment Variables](environment-variables.md)
-- [Implementation Guide](implementation-guide.md)
-- [Troubleshooting Guide](troubleshooting.md)
+- [Implementation Guide](../advanced/implementation-guide.md)
+- [Troubleshooting Guide](../troubleshooting.md)

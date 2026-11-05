@@ -12,7 +12,7 @@ The **core** Laravel security toolkit in the ArtisanPack UI ecosystem. Focused o
 
 - **Sanitization** — `sanitizeEmail`, `sanitizeUrl`, `sanitizeText`, `sanitizeInt`, `sanitizeArray`, …
 - **Escaping** — `escHtml`, `escAttr`, `escUrl`, `escJs`, `escCss` (Laminas Escaper-backed)
-- **KSES filtering** — `kses()` WordPress-style allowed-tag filtering
+- **KSES filtering** — `kses()` WordPress-style HTML filtering, safe to print unescaped by default
 - **Validation rules** — `NoHtml`, `SecureUrl`
 - **Middleware** — `csp`, `security.headers`, `xss.protection`, `api.security`, `api.rate_limit`
 - **Content Security Policy** — nonce generator, policy builder, presets (Strict / Relaxed / Livewire), violation reporting endpoint, optional CSP dashboard Livewire component, Artisan commands (`csp:test`, `csp:stats`, `csp:prune`, `csp:generate`)
@@ -38,5 +38,5 @@ The **core** Laravel security toolkit in the ArtisanPack UI ecosystem. Focused o
 - [Advanced](advanced.md) — security testing toolkit, checklist, guidelines, AI assistant guidelines, video tutorials, implementation guide, migration guides
 - [FAQ](faq.md)
 - [Troubleshooting](troubleshooting.md)
-- [Upgrading from 1.x](../UPGRADE.md)
+- [Upgrade guide](../UPGRADE.md) — 2.1 → 2.2 and 1.x → 2.0
 - [Changelog](../CHANGELOG.md)

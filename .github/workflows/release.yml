@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -94,10 +97,59 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  packagist:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Update Packagist
+
+    permissions: {}
+
+    steps:
       - name: Update Packagist
-        if: success()
         run: |
           curl --fail-with-body --show-error --retry 3 --retry-delay 2 --max-time 30 -X POST \
             "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_API_TOKEN }}" \
             -d "{\"repository\":{\"url\":\"https://github.com/${{ github.repository }}\"}}" \
             -H "Content-Type: application/json"
+
+  sync-docs:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Import docs on docs site
+
+    permissions: {}
+
+    steps:
+      - name: Queue documentation and changelog imports
+        env:
+          DOCS_API_TOKEN: ${{ secrets.DOCS_API_TOKEN }}
+          DOCS_PACKAGE_SLUG: ${{ vars.DOCS_PACKAGE_SLUG || github.event.repository.name }}
+        run: |
+          if [ -z "$DOCS_API_TOKEN" ]; then
+            echo "::notice::DOCS_API_TOKEN is not set; skipping docs-site import."
+            exit 0
+          fi
+
+          FAILED=0
+
+          for IMPORT in import-docs import-changelog; do
+            echo "Triggering $IMPORT for $DOCS_PACKAGE_SLUG"
+            BODY_FILE="$RUNNER_TEMP/$IMPORT.json"
+            rm -f "$BODY_FILE"
+            HTTP_STATUS=$(curl -sS --retry 3 --max-time 30 -X POST \
+              -o "$BODY_FILE" -w '%{http_code}' \
+              "https://docs.artisanpackui.dev/api/v1/packages/${DOCS_PACKAGE_SLUG}/${IMPORT}" \
+              -H "Authorization: Bearer ${DOCS_API_TOKEN}" \
+              -H "Accept: application/json") || true
+            cat "$BODY_FILE" 2>/dev/null || true
+            echo
+
+            if [ "$HTTP_STATUS" != "202" ]; then
+              echo "::error::$IMPORT returned HTTP ${HTTP_STATUS:-000}; expected 202."
+              FAILED=1
+            fi
+          done
+
+          exit "$FAILED"

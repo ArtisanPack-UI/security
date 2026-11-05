@@ -174,7 +174,7 @@ function htmLawed(string $t, mixed $C = 1, mixed $S = []): string
     $C['show_setting'] = ! empty($C['show_setting']) ? $C['show_setting'] : 0;
     $C['style_pass'] = empty($C['style_pass']) ? 0 : 1;
     $C['tidy'] = empty($C['tidy']) ? 0 : $C['tidy'];
-    $C['unique_ids'] = isset($C['unique_ids']) && (! preg_match('`\W`', $C['unique_ids'])) ? $C['unique_ids'] : 1;
+    $C['unique_ids'] = isset($C['unique_ids']) && (! preg_match('`\W`', (string) $C['unique_ids'])) ? $C['unique_ids'] : 1;
     $C['xml:lang'] = isset($C['xml:lang']) ? $C['xml:lang'] : 0;
 
     if (isset($GLOBALS['C'])) {
@@ -329,6 +329,105 @@ function hl_attributeValue(string $attr, string $value, array $ruleAr, string $e
     $out = implode($valSep == ',' ? ', ' : ' ', $out);
 
     return isset($out[0]) ? $out : (isset($ruleAr['default']) ? $ruleAr['default'] : 0);
+}
+
+/**
+ * Check URLs in an attribute value, and URLs and CSS expressions in a style value.
+ *
+ * @param  string  $attr  Attribute name.
+ * @param  string  $v  Attribute value.
+ * @param  string  $ele  Element.
+ * @param  bool  $isUrlAttr  Whether the attribute holds one or more URLs.
+ * @return string The checked value.
+ */
+function hl_attributeUrls(string $attr, string $v, string $ele, bool $isUrlAttr): string
+{
+    global $C;
+    if ($attr == 'style' && ! $C['style_pass']) {
+        if (strpos($v, '&#') !== false) { // Change any entity to character
+            static $entityAr = ['&#32;' => ' ', '&#x20;' => ' ', '&#58;' => ':', '&#x3a;' => ':', '&#34;' => '"', '&#x22;' => '"', '&#40;' => '(', '&#x28;' => '(', '&#41;' => ')', '&#x29;' => ')', '&#42;' => '*', '&#x2a;' => '*', '&#47;' => '/', '&#x2f;' => '/', '&#92;' => '\\', '&#x5c;' => '\\', '&#101;' => 'e', '&#69;' => 'e', '&#x45;' => 'e', '&#x65;' => 'e', '&#105;' => 'i', '&#73;' => 'i', '&#x49;' => 'i', '&#x69;' => 'i', '&#108;' => 'l', '&#76;' => 'l', '&#x4c;' => 'l', '&#x6c;' => 'l', '&#110;' => 'n', '&#78;' => 'n', '&#x4e;' => 'n', '&#x6e;' => 'n', '&#111;' => 'o', '&#79;' => 'o', '&#x4f;' => 'o', '&#x6f;' => 'o', '&#112;' => 'p', '&#80;' => 'p', '&#x50;' => 'p', '&#x70;' => 'p', '&#114;' => 'r', '&#82;' => 'r', '&#x52;' => 'r', '&#x72;' => 'r', '&#115;' => 's', '&#83;' => 's', '&#x53;' => 's', '&#x73;' => 's', '&#117;' => 'u', '&#85;' => 'u', '&#x55;' => 'u', '&#x75;' => 'u', '&#120;' => 'x', '&#88;' => 'x', '&#x58;' => 'x', '&#x78;' => 'x', '&#39;' => "'", '&#x27;' => "'"];
+            $v = strtr($v, $entityAr);
+        }
+        $v =
+            preg_replace_callback(
+                '`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS',
+                __NAMESPACE__.'\\hl_url',
+                $v);
+        $v = ! $C['css_expression']
+            ? preg_replace('`expression`i', ' ', preg_replace('`\\\\\S|(/|(%2f))(\*|(%2a))`i', ' ', $v))
+            : $v;
+    } elseif ($isUrlAttr) {
+        $v =
+            str_replace('­', ' ',
+                (strpos($v, '&') !== false  // ! Double-quoted character = soft-hyphen
+                    ? str_replace(['&#xad;', '&#173;', '&shy;'], ' ', $v)
+                    : $v));
+        if ($attr == 'srcset') {
+            $vNew = '';
+            foreach (hl_srcsetCandidates($v) as [$url, $descriptor]) {
+                $vNew .= hl_url($url, $attr).($descriptor === '' ? '' : ' '.$descriptor).', ';
+            }
+            $v = rtrim($vNew, ', ');
+        } elseif ($attr == 'archive' && $ele == 'applet') {
+            $vNew = '';
+            foreach (explode(',', $v) as $x) {
+                $x = trim($x);
+                if (isset($x[0])) {
+                    $vNew .= hl_url($x, $attr).', ';
+                }
+            }
+            $v = rtrim($vNew, ', ');
+        } elseif ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
+            $vNew = '';
+            foreach (explode(' ', $v) as $x) {
+                if (isset($x[0])) {
+                    $vNew .= hl_url($x, $attr).' ';
+                }
+            }
+            $v = trim($vNew, ' ');
+        } else {
+            $v = hl_url($v, $attr);
+        }
+    }
+
+    return $v;
+}
+
+/**
+ * Split a srcset value into its image candidates.
+ *
+ * Follows the HTML srcset parsing rules: a URL runs to the next whitespace,
+ * so commas inside it (such as in a data: URL) stay part of the URL, and a
+ * candidate ends at the comma after its descriptor.
+ *
+ * @param  string  $value  The srcset value.
+ * @return list<array{0: string, 1: string}> URL and descriptor pairs.
+ */
+function hl_srcsetCandidates(string $value): array
+{
+    $candidates = [];
+    $length = strlen($value);
+    $pos = 0;
+    while ($pos < $length) {
+        $pos += strspn($value, " \t\n\r\f,", $pos);
+        if ($pos >= $length) {
+            break;
+        }
+        $urlLength = strcspn($value, " \t\n\r\f", $pos);
+        $url = substr($value, $pos, $urlLength);
+        $pos += $urlLength;
+        $descriptor = '';
+        if (substr($url, -1) == ',') {
+            $url = rtrim($url, ',');
+        } else {
+            $descriptorLength = strcspn($value, ',', $pos);
+            $descriptor = trim(substr($value, $pos, $descriptorLength));
+            $pos += $descriptorLength + 1;
+        }
+        $candidates[] = [$url, $descriptor];
+    }
+
+    return $candidates;
 }
 
 /*
@@ -906,23 +1005,20 @@ function hl_spec(string $t): array
 
     // Hide special characters used for rules.
 
-    if (! function_exists('hl_aux1')) {
-        function hl_aux1($x)
-        {
-            return
-                substr(
-                    str_replace(
-                        [';', '|', '~', ' ', ',', '/', '(', ')', '`"'],
-                        ["\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", '"'],
-                        $x[0]),
-                    1, -1);
-        }
-    }
+    $hideRuleCharacters = function ($x) {
+        return
+            substr(
+                str_replace(
+                    [';', '|', '~', ' ', ',', '/', '(', ')', '`"'],
+                    ["\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", '"'],
+                    $x[0]),
+                1, -1);
+    };
     $t =
         str_replace(
             ["\t", "\r", "\n", ' '],
             '',
-            preg_replace_callback('/"(?>(`.|[^"])*)"/sm', 'hl_aux1', trim($t)));
+            preg_replace_callback('/"(?>(`.|[^"])*)"/sm', $hideRuleCharacters, trim($t)));
 
     // Tag, attribute, and rule separators: semi-colon, comma, and slash respectively.
 
@@ -1230,54 +1326,12 @@ function hl_tag(array $t): string
                 $v = (isset($lCaseStdAttrValAr[($vNew = strtolower($v))])) ? $vNew : $v;
             }
 
-            // .. URLs and CSS expressions in style attribute.
+            // .. URLs and CSS expressions in style and URL attributes.
 
-            if ($attr == 'style' && ! $C['style_pass']) {
-                if (strpos($v, '&#') !== false) { // Change any entity to character
-                    static $entityAr = ['&#32;' => ' ', '&#x20;' => ' ', '&#58;' => ':', '&#x3a;' => ':', '&#34;' => '"', '&#x22;' => '"', '&#40;' => '(', '&#x28;' => '(', '&#41;' => ')', '&#x29;' => ')', '&#42;' => '*', '&#x2a;' => '*', '&#47;' => '/', '&#x2f;' => '/', '&#92;' => '\\', '&#x5c;' => '\\', '&#101;' => 'e', '&#69;' => 'e', '&#x45;' => 'e', '&#x65;' => 'e', '&#105;' => 'i', '&#73;' => 'i', '&#x49;' => 'i', '&#x69;' => 'i', '&#108;' => 'l', '&#76;' => 'l', '&#x4c;' => 'l', '&#x6c;' => 'l', '&#110;' => 'n', '&#78;' => 'n', '&#x4e;' => 'n', '&#x6e;' => 'n', '&#111;' => 'o', '&#79;' => 'o', '&#x4f;' => 'o', '&#x6f;' => 'o', '&#112;' => 'p', '&#80;' => 'p', '&#x50;' => 'p', '&#x70;' => 'p', '&#114;' => 'r', '&#82;' => 'r', '&#x52;' => 'r', '&#x72;' => 'r', '&#115;' => 's', '&#83;' => 's', '&#x53;' => 's', '&#x73;' => 's', '&#117;' => 'u', '&#85;' => 'u', '&#x55;' => 'u', '&#x75;' => 'u', '&#120;' => 'x', '&#88;' => 'x', '&#x58;' => 'x', '&#x78;' => 'x', '&#39;' => "'", '&#x27;' => "'"];
-                    $v = strtr($v, $entityAr);
-                }
-                $v =
-                    preg_replace_callback(
-                        '`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS',
-                        'hl_url',
-                        $v);
-                $v = ! $C['css_expression']
-                    ? preg_replace('`expression`i', ' ', preg_replace('`\\\\\S|(/|(%2f))(\*|(%2a))`i', ' ', $v))
-                    : $v;
+            $isUrlAttr = isset($urlAttrAr[$attr]) || (isset($globalAttrAr[$attr]) && strpos($attr, 'on') === 0);
+            $v = hl_attributeUrls($attr, $v, $ele, $isUrlAttr);
 
-                // .. URLs in other attributes.
-
-            } elseif (isset($urlAttrAr[$attr]) || (isset($globalAttrAr[$attr]) && strpos($attr, 'on') === 0)) {
-                $v =
-                    str_replace('­', ' ',
-                        (strpos($v, '&') !== false  // ! Double-quoted character = soft-hyphen
-                            ? str_replace(['&#xad;', '&#173;', '&shy;'], ' ', $v)
-                            : $v));
-                if ($attr == 'srcset' || ($attr == 'archive' && $ele == 'applet')) {
-                    $vNew = '';
-                    foreach (explode(',', $v) as $k => $x) {
-                        $x = explode(' ', ltrim($x), 2);
-                        $k = isset($x[1]) ? trim($x[1]) : '';
-                        $x = trim($x[0]);
-                        if (isset($x[0])) {
-                            $vNew .= HTMLawed.phphl_url($x, $attr).(empty($k) ? '' : ' '.$k).', ';
-                        }
-                    }
-                    $v = trim($vNew, ', ');
-                }
-                if ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
-                    $vNew = '';
-                    foreach (explode(' ', $v) as $x) {
-                        if (isset($x[0])) {
-                            $vNew .= hl_url($x, $attr).' HTMLawed.php';
-                        }
-                    }
-                    $v = trim($vNew, ' ');
-                } else {
-                    $v = hl_url($v, $attr);
-                }
-
+            if ($isUrlAttr) {
                 // Anti-spam measure.
 
                 if ($attr == 'href') {
@@ -1308,10 +1362,22 @@ function hl_tag(array $t): string
 
             // .. Check attribute value against any $spec rule.
 
-            if (isset($eleSpec[$attr])
-                && is_array($eleSpec[$attr])
-                && ($v = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele)) === 0) {
-                continue;
+            // A $spec default replaces the value after the URL and CSS checks above
+            // ran, so run a default through the same checks. Values the spec only
+            // filtered were already checked.
+
+            if (isset($eleSpec[$attr]) && is_array($eleSpec[$attr])) {
+                $checkedValue = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele);
+                if ($checkedValue === 0) {
+                    continue;
+                }
+                if ($checkedValue !== $v
+                    && isset($eleSpec[$attr]['default'])
+                    && $checkedValue === $eleSpec[$attr]['default']
+                ) {
+                    $checkedValue = hl_attributeUrls($attr, (string) $checkedValue, $ele, $isUrlAttr);
+                }
+                $v = $checkedValue;
             }
 
             $filtAttrAr[$attr] = str_replace('"', '&quot;', $v);
@@ -1446,6 +1512,20 @@ function hl_tag(array $t): string
                 : $eleTransformed;
     }
 
+    // -- Drop a generated style attribute when $config or $spec denies style and $spec doesn't permit it.
+
+    if (isset($filtAttrAr['style'])
+        && ! isset($eleSpec['style'])
+        && (
+            isset($eleSpec['deny']['*'])
+            || isset($eleSpec['deny']['style'])
+            || (! empty($deniedAttrAr)
+                && (isset($deniedAttrAr['*']) ? ! isset($deniedAttrAr['-style']) : isset($deniedAttrAr['style'])))
+        )
+    ) {
+        unset($filtAttrAr['style']);
+    }
+
     // -- Return opening tag with attributes.
 
     if (empty($C['hook_tag'])) {
@@ -1477,25 +1557,22 @@ function hl_tidy(string $t, mixed $format, string $parentEle): mixed
 
     // Hide CDATA/comment.
 
-    if (! function_exists('hl_aux2')) {
-        function hl_aux2($x)
-        {
-            return
-                $x[1]
-                .str_replace(
-                    ['<', '>', "\n", "\r", "\t", ' '],
-                    ["\x01", "\x02", "\x03", "\x04", "\x05", "\x07"],
-                    $x[3])
-                .$x[4];
-        }
-    }
+    $hideCdataAndComments = function ($x) {
+        return
+            $x[1]
+            .str_replace(
+                ['<', '>', "\n", "\r", "\t", ' '],
+                ["\x01", "\x02", "\x03", "\x04", "\x05", "\x07"],
+                $x[3])
+            .$x[4];
+    };
     $t =
         preg_replace(
             ['`(<\w[^>]*(?<!/)>)\s+`', '`\s+`', '`(<\w[^>]*(?<!/)>) `'],
             [' $1', ' ', '$1'],
             preg_replace_callback(
                 ['`(<(!\[CDATA\[))(.+?)(\]\]>)`sm', '`(<(!--))(.+?)(-->)`sm', '`(<(pre|script|textarea)[^>]*?>)(.+?)(</\2>)`sm'],
-                'hl_aux2',
+                $hideCdataAndComments,
                 $t));
 
     if (($format = strtolower($format)) == -1) {
@@ -1615,9 +1692,9 @@ function hl_url(mixed $url, mixed $attr = null): string
             $url = substr($url, strlen($C['base_url']));
         } elseif (empty($m[1])) { // Make URL absolute
             if (substr($url, 0, 2) == '//') {
-                $url = HTMLawed.phpsubstr($C['base_url'], 0, strpos($C['base_url'], ':') + 1).$url;
+                $url = substr($C['base_url'], 0, strpos($C['base_url'], ':') + 1).$url;
             } elseif ($url[0] == '/') {
-                $url = HTMLawed.phppreg_replace('`(^.+?://[^/]+)(.*)`', '$1', $C['base_url']).$url;
+                $url = preg_replace('`(^.+?://[^/]+)(.*)`', '$1', $C['base_url']).$url;
             } elseif (strcspn($url, './')) {
                 $url = $C['base_url'].$url;
             } else {

@@ -88,8 +88,11 @@ The `kses` function provides WordPress-style HTML filtering:
 
 ```php
 $safeHtml = kses($userHtml);
-// Allows safe HTML tags while removing potentially dangerous ones
+// Keeps safe formatting markup; removes scripts, event handlers, styles,
+// forms, frames and javascript: URLs
 ```
+
+With the default config the result is safe to print unescaped (`{!! kses($html) !!}`). See [HTML filtering](usage/html-filtering.md) for the full rule set and how to customize it.
 
 ## Security Best Practices
 
@@ -100,6 +103,6 @@ $safeHtml = kses($userHtml);
 
 ## Next Steps
 
-- Explore the complete [API Reference](Api-Reference) for detailed function documentation
-- Read the [Security Guidelines](Security-Guidelines) for advanced security practices
-- Check out the [AI Guidelines](Ai-Guidelines) if you're using AI code generation
+- Explore the complete [API Reference](api/reference.md) for detailed function documentation
+- Read the [Security Guidelines](advanced/security-guidelines.md) for advanced security practices
+- Check out the [AI Guidelines](advanced/ai-guidelines.md) if you're using AI code generation
