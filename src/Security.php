@@ -37,7 +37,10 @@ class Security
      *   drops `rel="opener"` (and adds `noopener` when a link has a
      *   `target`), and prefixes `id`/`name` values with
      *   {@see self::KSES_ID_PREFIX} to prevent DOM clobbering, rewriting
-     *   fragment links and other ID references to match.
+     *   fragment links and other ID references to match. IDs are kept
+     *   unique within each `kses()` call after prefixing (htmLawed's own
+     *   `unique_ids` check is off because it runs before the prefix is
+     *   added and remembers IDs across calls).
      * - Custom (hyphenated) elements are removed, because htmLawed lets them
      *   keep every attribute, including Alpine/Livewire directives such as
      *   `x-init`.
@@ -56,6 +59,7 @@ class Security
         'deny_attribute' => 'on*, class, ping, style',
         'any_custom_element' => 0,
         'schemes' => 'href: http, https, mailto, tel; src: http, https; *: http, https',
+        'unique_ids' => 0,
         'hook_tag' => [self::class, 'ksesSafeTag'],
     ];
 
@@ -115,8 +119,20 @@ class Security
      */
     protected const KSES_ID_REFERENCE_ATTRIBUTES = [
         'aria-activedescendant', 'aria-controls', 'aria-describedby', 'aria-details', 'aria-errormessage',
-        'aria-flowto', 'aria-labelledby', 'aria-owns', 'for', 'headers', 'list',
+        'aria-flowto', 'aria-labelledby', 'aria-owns', 'for', 'headers', 'itemref', 'list',
     ];
+
+    /**
+     * Prefixed IDs {@see self::ksesSafeTag()} has already emitted in the current `kses()` call.
+     *
+     * `kses()` clears it before each call, so sanitizing the same content
+     * twice, or two pieces of content that share an ID, keeps the IDs.
+     *
+     * @since 2.2.0
+     *
+     * @var array<string, true>
+     */
+    protected static array $ksesIds = [];
 
     /**
      * Returns a sanitized email string.
@@ -467,6 +483,8 @@ class Security
      */
     public function kses(string $html, mixed $config = 1, mixed $spec = []): string
     {
+        self::$ksesIds = [];
+
         if ($config === 1) {
             $config = self::KSES_SAFE_CONFIG;
             $allowedTags = applyFilters('ap.security.ksesAllowedTags', []);
@@ -496,7 +514,9 @@ class Security
      * - prefixes `id` and `name` with {@see self::KSES_ID_PREFIX}, plus
      *   `#fragment` values of `href`/`usemap` and the ID lists in
      *   {@see self::KSES_ID_REFERENCE_ATTRIBUTES}, so in-page links keep
-     *   working.
+     *   working;
+     * - drops an `id` that contains whitespace or repeats a prefixed `id`
+     *   already emitted in the current `kses()` call.
      *
      * @param  string  $element  The element name.
      * @param  array<string, string>|int  $attributes  The filtered attributes, or `0` for a closing tag.
@@ -520,12 +540,25 @@ class Security
                 continue;
             }
 
+            if ($name === 'id') {
+                $id = self::ksesPrefixId($value);
+
+                if ($id === '' || preg_match('/\s/', $id) === 1 || isset(self::$ksesIds[$id])) {
+                    continue;
+                }
+
+                self::$ksesIds[$id] = true;
+                $safeAttributes['id'] = $id;
+
+                continue;
+            }
+
             $safeAttributes[$name] = match (true) {
                 $name === 'rel' => implode(' ', array_filter(
                     self::ksesSplitTokens($value),
                     fn (string $linkType): bool => strtolower($linkType) !== 'opener',
                 )),
-                $name === 'id', $name === 'name' => self::ksesPrefixId($value),
+                $name === 'name' => self::ksesPrefixId($value),
                 ($name === 'href' || $name === 'usemap') && preg_match('/^#./', $value) === 1 => '#'.self::ksesPrefixId(substr($value, 1)),
                 in_array($name, self::KSES_ID_REFERENCE_ATTRIBUTES, true) => implode(' ', array_map(
                     self::ksesPrefixId(...),

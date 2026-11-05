@@ -59,8 +59,17 @@ Then, enable it in your `config/artisanpack/security.php` file:
 ```php
 'xss' => [
     'enabled' => true,
+
+    // Input keys left unfiltered, at any nesting depth (these are the defaults).
+    'except' => [
+        'password',
+        'password_confirmation',
+        'current_password',
+    ],
 ],
 ```
+
+Keys in `except` are never filtered, so credentials reach the hasher unchanged. Add any other field that must keep its exact value, such as an API secret.
 
 ## Custom Validation Rules
 

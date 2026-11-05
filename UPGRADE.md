@@ -29,7 +29,8 @@ It also gains a `user-content-` prefix on `id`/`name` values (with matching `#fr
    ```
 
 3. If you passed `$config` or `$spec` to the global `kses()` helper, they were silently dropped before 2.2. The helper now forwards them like `Security::kses()` does, so check those calls still give the output you expect.
-4. `ap.security.ksesAllowedTags` subscribers can no longer re-enable unsafe elements (`script`, `style`, `iframe`, forms, frames, …) or custom elements, and wildcard or htmLawed `+`/`-` entries are ignored. Return a plain list of element names.
+4. The `XssProtection` middleware now skips the keys in `artisanpack.security.xss.except` (`password`, `password_confirmation` and `current_password` by default). If you published the config, add the `except` key to keep credentials unfiltered.
+5. `ap.security.ksesAllowedTags` subscribers can no longer re-enable unsafe elements (`script`, `style`, `iframe`, forms, frames, …) or custom elements, and wildcard or htmLawed `+`/`-` entries are ignored. Return a plain list of element names.
 
 Any `$config` other than `1` keeps its 2.1 behavior. See [HTML filtering](docs/usage/html-filtering.md) for the full rule set.
 

@@ -138,7 +138,7 @@ jobs:
             echo "Triggering $IMPORT for $DOCS_PACKAGE_SLUG"
             BODY_FILE="$RUNNER_TEMP/$IMPORT.json"
             rm -f "$BODY_FILE"
-            HTTP_STATUS=$(curl -sS --retry 3 -X POST \
+            HTTP_STATUS=$(curl -sS --retry 3 --max-time 30 -X POST \
               -o "$BODY_FILE" -w '%{http_code}' \
               "https://docs.artisanpackui.dev/api/v1/packages/${DOCS_PACKAGE_SLUG}/${IMPORT}" \
               -H "Authorization: Bearer ${DOCS_API_TOKEN}" \

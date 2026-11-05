@@ -350,7 +350,7 @@ $safe = kses($html);
 
 ### Security::KSES_SAFE_CONFIG
 
-The htmLawed config `kses()` uses by default: safe mode; no `<style>`, `<link>`, `<meta>`, `<base>`, forms, form controls or frames; `on*`, `class`, `ping` and `style` attributes denied; custom elements disabled; `http`/`https` URLs only (plus `mailto`/`tel` for `href`); and `Security::ksesSafeTag()` as the `hook_tag`. Copy it and change one key to build a custom config that keeps the other rules.
+The htmLawed config `kses()` uses by default: safe mode; no `<style>`, `<link>`, `<meta>`, `<base>`, forms, form controls or frames; `on*`, `class`, `ping` and `style` attributes denied; custom elements disabled; `http`/`https` URLs only (plus `mailto`/`tel` for `href`); htmLawed's `unique_ids` off (`ksesSafeTag()` enforces unique IDs per call instead); and `Security::ksesSafeTag()` as the `hook_tag`. Copy it and change one key to build a custom config that keeps the other rules.
 
 **Since:** 2.2.0
 
@@ -362,7 +362,7 @@ The prefix (`'user-content-'`) added to `id` and `name` values under the default
 
 ### Security::ksesSafeTag()
 
-The `hook_tag` callback used by `KSES_SAFE_CONFIG`. It removes Alpine/Livewire directive attributes (`x-*`, `@*`, `:*`, `wire:*`) and `is`, strips `rel="opener"` and adds `noopener` to links with a `target`, and applies `KSES_ID_PREFIX`.
+The `hook_tag` callback used by `KSES_SAFE_CONFIG`. It removes Alpine/Livewire directive attributes (`x-*`, `@*`, `:*`, `wire:*`) and `is`, strips `rel="opener"` and adds `noopener` to links with a `target`, applies `KSES_ID_PREFIX`, and drops an `id` that contains whitespace or repeats one already emitted in the current `kses()` call.
 
 **Usage:**
 ```php

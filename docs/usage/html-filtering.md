@@ -32,14 +32,14 @@ The default config:
 | Custom elements removed | Hyphenated elements such as `<x-alert>` are dropped (their text is kept). |
 | URL schemes | `href` allows `http`, `https`, `mailto` and `tel`; every other URL attribute allows `http` and `https`. Any other scheme (`javascript:`, `data:`, `ftp:`, `file:`, …) is rewritten to `denied:…`. Relative and `#fragment` URLs are kept. |
 | Reverse tabnabbing | `rel="opener"` is removed, and `noopener` is added to links with a `target`. |
-| DOM clobbering | `id` and `name` values are prefixed with `Security::KSES_ID_PREFIX` (`user-content-`). `#fragment` links and ID references (`for`, `headers`, `usemap`, `list`, `aria-labelledby`, `aria-describedby`, `aria-controls`, …) are rewritten to match, so in-page links keep working. Values that already carry the prefix are left alone. |
+| DOM clobbering | `id` and `name` values are prefixed with `Security::KSES_ID_PREFIX` (`user-content-`). `#fragment` links and ID references (`for`, `headers`, `usemap`, `list`, `itemref`, `aria-labelledby`, `aria-describedby`, `aria-controls`, …) are rewritten to match, so in-page links keep working. Values that already carry the prefix are left alone. IDs stay unique within each call after prefixing: a repeated `id` (or one containing whitespace) is dropped. |
 
 ```php
 kses( '<div class="x" id="intro"><p onclick="steal()">Hi <a href="javascript:alert(1)">x</a> <a href="#intro" target="_blank">top</a></p><script>alert(1)</script></div>' );
 // <div id="user-content-intro"><p>Hi <a href="denied:javascript:alert(1)">x</a> <a href="#user-content-intro" target="_blank" rel="noopener">top</a></p>alert(1)</div>
 ```
 
-Sanitizing output that has already been through `kses()` gives the same result, so it is safe to run on both write and read.
+Sanitizing output that has already been through `kses()` gives the same result, so it is safe to run on both write and read. ID uniqueness is checked per call, so separate `kses()` calls (for example, one per comment) each keep their IDs. If you print several sanitized fragments on one page, an `id` repeated across them can still appear twice.
 
 ### Where the default applies
 
@@ -47,7 +47,7 @@ The same safe default is used by:
 
 - the global `kses()` helper and `Security::kses()`;
 - `Security::sanitize()` and `BaseFormRequest` for fields using the `html` rule;
-- the opt-in `XssProtection` middleware.
+- the opt-in `XssProtection` middleware, which skips the input keys in `artisanpack.security.xss.except` (`password`, `password_confirmation` and `current_password` by default) so credentials reach the hasher unchanged.
 
 ## Narrowing allowed elements
 

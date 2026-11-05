@@ -95,6 +95,14 @@ return [
 
     'xss' => [
         'enabled' => env('SECURITY_XSS_PROTECTION_ENABLED', false),
+
+        // Input keys the middleware never filters, at any nesting depth.
+        // Credentials must reach the hasher unchanged.
+        'except' => [
+            'password',
+            'password_confirmation',
+            'current_password',
+        ],
     ],
 
     /*

@@ -132,9 +132,9 @@ test('a spec cannot re-enable ping under the default config', function (): void 
 });
 
 test('a spec cannot re-enable Alpine or Livewire directives under the default config', function (mixed $spec): void {
-    expect(kses('<div x-init="alert(1)" title="t">d</div>', 1, $spec))->toBe('<div title="t">d</div>');
+    expect(kses('<div x-init="alert(1)" @click="x()" wire:click="y()" :class="c" is="z" title="t">d</div>', 1, $spec))->toBe('<div title="t">d</div>');
 })->with([
-    'string spec' => ['div=x-init,title'],
+    'string spec' => ['div=x-init,@click,wire:click,:class,is,title'],
     'array spec' => [['div' => ['x-init' => 1, '@click' => 1, 'wire:click' => 1, ':class' => 1, 'is' => 1, 'title' => 1]]],
 ]);
 
@@ -165,8 +165,26 @@ test('the default config rewrites id references so in-page links keep working', 
 
 test('the default config output is stable when sanitized again', function (): void {
     $once = kses('<h2 id="a">x</h2><a href="#a" target="_blank" rel="opener">y</a><td headers="a">z</td><img src="a.jpg" alt="a"><br>');
+    $twice = kses($once);
 
-    expect(kses($once))->toBe($once);
+    expect($once)->toContain('id="user-content-a"')
+        ->and($twice)->toBe($once)
+        ->and(kses($twice))->toBe($once);
+});
+
+test('separate kses calls keep the same id', function (): void {
+    expect(kses('<p id="z">1</p>'))->toBe('<p id="user-content-z">1</p>')
+        ->and(kses('<p id="z">2</p>'))->toBe('<p id="user-content-z">2</p>');
+});
+
+test('ids stay unique within a call after prefixing', function (): void {
+    expect(kses('<p id="intro">1</p><p id="user-content-intro">2</p><p id="intro">3</p><p id="other">4</p>'))
+        ->toBe('<p id="user-content-intro">1</p><p>2</p><p>3</p><p id="user-content-other">4</p>');
+});
+
+test('the default config rewrites itemref to match prefixed ids', function (): void {
+    expect(kses('<div itemscope itemref="extra more"></div><p id="extra">e</p>'))
+        ->toBe('<div itemscope="itemscope" itemref="user-content-extra user-content-more"></div><p id="user-content-extra">e</p>');
 });
 
 test('the safe tag hook keeps other attributes and closes void elements', function (): void {
@@ -180,6 +198,30 @@ test('a spec default cannot inject an executable URL', function (): void {
         ->toBe('<a href="denied:javascript:alert(1)">x</a>')
         ->and(kses('<a href="">x</a>', 1, 'a=href(default="https://example.com")'))
         ->toBe('<a href="https://example.com">x</a>');
+});
+
+test('a srcset spec default has every candidate scheme-checked', function (): void {
+    expect(kses('<img src="a.jpg" alt="a" srcset="">', 1, ['img' => ['srcset' => ['default' => 'https://example.com/a.png 1x, data:image/png;base64,AAAA 2x']]]))
+        ->toBe('<img src="a.jpg" alt="a" srcset="https://example.com/a.png 1x, denied:data:image/png;base64,AAAA 2x" />');
+});
+
+test('srcset candidates keep commas inside their URLs', function (): void {
+    expect(kses('<img src="a.jpg" alt="a" srcset="data:image/png;base64,AAAA 1x,b.jpg 2x">', ['schemes' => '*: data, http, https']))
+        ->toBe('<img src="a.jpg" alt="a" srcset="data:image/png;base64,AAAA 1x, b.jpg 2x" />')
+        ->and(kses('<img src="a.jpg" alt="a" srcset="data:image/png;base64,AAAA 1x, javascript:alert(1) 2x">'))
+        ->toBe('<img src="a.jpg" alt="a" srcset="denied:data:image/png;base64,AAAA 1x, denied:javascript:alert(1) 2x" />');
+});
+
+test('a style spec default gets the CSS URL and expression checks', function (): void {
+    $output = kses('<p style="">x</p>', ['safe' => 1], ['p' => ['style' => ['default' => 'background:url(javascript:alert(1)); width:expression(alert(1))']]]);
+
+    expect($output)->toContain('url(denied:javascript:alert(1))')
+        ->not->toContain('expression');
+});
+
+test('a spec style denial drops style generated from deprecated markup', function (): void {
+    expect(kses('<center>c</center><div align="center">d</div>', ['safe' => 1], 'div=-style'))
+        ->toBe('<div>c</div><div>d</div>');
 });
 
 test('an explicit config still lets a spec permit on* attributes', function (): void {
