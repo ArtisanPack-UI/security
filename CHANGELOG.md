@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- `kses()` now filters executable markup with its default config. Previously the default `$config = 1` ran htmLawed with no filtering, so `<script>`, `on*` event handlers and `javascript:` URLs survived and `{!! kses( $html ) !!}` was open to stored XSS. The default is now `Security::KSES_SAFE_CONFIG` (htmLawed safe mode, no `<style>`, `<link>` or `<meta>` elements, no `on*` or `style` attributes); `javascript:` and `data:` URLs are rewritten to `denied:…`. **Behavior change:** callers that relied on the permissive default must now pass their own `$config`. `sanitize()` / `BaseFormRequest` with the `html` rule and the opt-in `XssProtection` middleware pick up the same default. Passing any config other than `1` is forwarded unchanged ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
+- Tags returned by the `ap.security.ksesAllowedTags` filter can no longer re-enable `script`, `style`, `link`, `meta`, `iframe`, `object`, `embed`, `applet`, `audio`, `video`, `canvas` or `dialog`. Entries are trimmed and lowercased, and anything that isn't a plain element name (wildcards, htmLawed `+`/`-` operators, comma lists, non-strings) is ignored. The safe attribute and URL rules also apply to the filtered list ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
+
+### Changed
+
+- The global `kses()` helper now accepts and forwards `$config` and `$spec` like `Security::kses()`. Previously it silently dropped them ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
+
+### Fixed
+
+- Bundled htmLawed: safe mode no longer throws on `style` attributes containing `url(…)` (the `hl_url` callback didn't resolve in the namespaced copy). Corrupted `srcset`/`archive`/`itemtype` and `abs_url` code paths are repaired, and `$spec` strings now parse on every call instead of failing on the namespaced `hl_aux1`/`hl_aux2` callbacks ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
+
 ## [2.1.0] - 2026-07-21
 
 ### Added
