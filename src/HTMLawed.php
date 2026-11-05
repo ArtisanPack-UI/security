@@ -1262,8 +1262,7 @@ function hl_tag(array $t): string
                         }
                     }
                     $v = trim($vNew, ', ');
-                }
-                if ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
+                } elseif ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
                     $vNew = '';
                     foreach (explode(' ', $v) as $x) {
                         if (isset($x[0])) {
@@ -1305,10 +1304,20 @@ function hl_tag(array $t): string
 
             // .. Check attribute value against any $spec rule.
 
-            if (isset($eleSpec[$attr])
-                && is_array($eleSpec[$attr])
-                && ($v = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele)) === 0) {
-                continue;
+            // A $spec default replaces the value after the URL check above ran, so
+            // re-check URL-bearing defaults the same way.
+
+            if (isset($eleSpec[$attr]) && is_array($eleSpec[$attr])) {
+                $checkedValue = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele);
+                if ($checkedValue === 0) {
+                    continue;
+                }
+                if ($checkedValue !== $v
+                    && (isset($urlAttrAr[$attr]) || (isset($globalAttrAr[$attr]) && strpos($attr, 'on') === 0))
+                ) {
+                    $checkedValue = hl_url($checkedValue, $attr);
+                }
+                $v = $checkedValue;
             }
 
             $filtAttrAr[$attr] = str_replace('"', '&quot;', $v);
@@ -1441,6 +1450,16 @@ function hl_tag(array $t): string
             isset($filtAttrAr['style'])
                 ? rtrim($filtAttrAr['style'], ' ;').'; '.$eleTransformed
                 : $eleTransformed;
+    }
+
+    // -- Drop a generated style attribute when $config denies style and $spec doesn't permit it.
+
+    if (isset($filtAttrAr['style'])
+        && ! isset($eleSpec['style'])
+        && ! empty($deniedAttrAr)
+        && (isset($deniedAttrAr['*']) ? ! isset($deniedAttrAr['-style']) : isset($deniedAttrAr['style']))
+    ) {
+        unset($filtAttrAr['style']);
     }
 
     // -- Return opening tag with attributes.

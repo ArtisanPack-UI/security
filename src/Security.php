@@ -15,6 +15,7 @@ namespace ArtisanPackUI\Security;
 
 use Laminas\Escaper\Escaper;
 
+use function ArtisanPackUI\Security\HTMLawed\hl_spec;
 use function ArtisanPackUI\Security\HTMLawed\htmLawed;
 
 class Security
@@ -366,8 +367,10 @@ class Security
      * {@see self::KSES_SAFE_CONFIG}: script-capable elements, `<style>`,
      * `on*` event handlers and `style` attributes are removed, and
      * `javascript:`-style URLs are rewritten to `denied:javascript:...`, so
-     * the result is safe to print unescaped. Passing any other `$config`
-     * hands full control to the caller and is forwarded to htmLawed as-is.
+     * the result is safe to print unescaped. Under the default config `$spec`
+     * cannot re-enable `on*` or `style` attributes; those entries are dropped
+     * before it reaches htmLawed. Passing any other `$config` hands full
+     * control to the caller, and `$config` and `$spec` are forwarded as-is.
      *
      * Fires the `ap.security.ksesAllowedTags` filter to let host apps
      * restrict which HTML elements survive the pass. Subscribers receive
@@ -398,6 +401,8 @@ class Security
             if (is_array($allowedTags) && $allowedTags !== []) {
                 $config['elements'] = $this->ksesElementList($allowedTags);
             }
+
+            $spec = $this->ksesSafeSpec($spec);
         }
 
         return htmLawed($html, $config, $spec);
@@ -432,6 +437,46 @@ class Security
         }
 
         return $safeTags === [] ? '-*' : implode(',', $safeTags);
+    }
+
+    /**
+     * Removes `on*` and `style` permissions from an htmLawed `$spec`.
+     *
+     * htmLawed lets `$spec` permit attributes that `deny_attribute` denies, so
+     * under the default config those entries would undo the safe rules. A
+     * string spec is parsed with htmLawed's own parser first. Element-level
+     * `deny` rules and every other attribute rule are kept.
+     *
+     * @param  mixed  $spec  The caller's htmLawed spec (string or parsed array).
+     * @return array<string, mixed> The parsed spec without `on*`/`style` entries.
+     *
+     * @since 2.2.0
+     */
+    protected function ksesSafeSpec(mixed $spec): array
+    {
+        if (is_string($spec)) {
+            $spec = trim($spec) === '' ? [] : hl_spec($spec);
+        }
+
+        if (! is_array($spec)) {
+            return [];
+        }
+
+        foreach ($spec as $element => $rules) {
+            if (! is_array($rules)) {
+                continue;
+            }
+
+            foreach (array_keys($rules) as $attribute) {
+                $name = strtolower((string) $attribute);
+
+                if ($name === 'style' || str_starts_with($name, 'on')) {
+                    unset($spec[$element][$attribute]);
+                }
+            }
+        }
+
+        return $spec;
     }
 
     /**

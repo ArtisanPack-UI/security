@@ -69,6 +69,53 @@ test('the kses helper forwards config and spec to Security::kses', function (): 
         ->and(kses('<b title="t" id="i">x</b>', 1, 'b=-id'))->toBe('<b title="t">x</b>');
 });
 
+test('quoted spec rule values keep their separator characters', function (): void {
+    $spec = 'b=title(oneof="a; b|c, d")';
+
+    expect(kses('<b title="a; b">x</b>', 1, $spec))->toBe('<b title="a; b">x</b>')
+        ->and(kses('<b title="c, d">x</b>', 1, $spec))->toBe('<b title="c, d">x</b>')
+        ->and(kses('<b title="a">x</b>', 1, $spec))->toBe('<b>x</b>');
+});
+
+test('a spec cannot re-enable on* or style attributes under the default config', function (mixed $spec): void {
+    $output = kses('<p onclick="x()" onmouseover="y()" style="color:red" title="t">x</p>', 1, $spec);
+
+    expect($output)->toBe('<p title="t">x</p>');
+})->with([
+    'string spec' => ['p=onclick,onmouseover,style,title'],
+    'wildcard string spec' => ['p=on*,style,title'],
+    'array spec' => [['p' => ['onclick' => 1, 'ONMOUSEOVER' => 1, 'Style' => 1, 'title' => 1]]],
+]);
+
+test('a spec default cannot inject an executable URL', function (): void {
+    expect(kses('<a href="">x</a>', 1, 'a=href(default="javascript:alert(1)")'))
+        ->toBe('<a href="denied:javascript:alert(1)">x</a>')
+        ->and(kses('<a href="">x</a>', 1, 'a=href(default="https://example.com")'))
+        ->toBe('<a href="https://example.com">x</a>');
+});
+
+test('an explicit config still lets a spec permit on* attributes', function (): void {
+    expect(kses('<p onclick="x()">x</p>', ['elements' => 'p'], 'p=onclick'))->toBe('<p onclick="x()">x</p>');
+});
+
+test('deprecated markup does not generate style attributes under the default config', function (): void {
+    expect(kses('<center>c</center><font color="red">f</font><img src="a.jpg" align="left" alt="a"><table><tr><td bgcolor="red">t</td></tr></table>'))
+        ->toBe('<div>c</div><span>f</span><img src="a.jpg" alt="a" /><table><tr><td>t</td></tr></table>');
+});
+
+test('deprecated markup still converts to style when style is allowed', function (): void {
+    expect(kses('<center>c</center>', ['safe' => 1]))->toBe('<div style="text-align: center;">c</div>');
+});
+
+test('srcset candidates are converted once when abs_url is set', function (): void {
+    $config = ['base_url' => 'https://example.com/media/'];
+
+    expect(kses('<img src="a.jpg" srcset="a.jpg 1x, b.jpg 2x" alt="a">', $config + ['abs_url' => 1]))
+        ->toBe('<img src="https://example.com/media/a.jpg" srcset="https://example.com/media/a.jpg 1x, https://example.com/media/b.jpg 2x" alt="a" />')
+        ->and(kses('<img src="https://example.com/media/a.jpg" srcset="https://example.com/media/a.jpg 1x, https://example.com/media/b.jpg 2x" alt="a">', $config + ['abs_url' => -1]))
+        ->toBe('<img src="a.jpg" srcset="a.jpg 1x, b.jpg 2x" alt="a" />');
+});
+
 test('the kses helper returns an empty string for null input', function (): void {
     expect(kses(null))->toBe('');
 });
