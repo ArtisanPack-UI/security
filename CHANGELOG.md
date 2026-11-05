@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Under the default config, `$spec` can no longer re-enable `on*`, `style`, `class` or `ping` attributes (htmLawed lets `$spec` override `deny_attribute`). Those entries are dropped before the spec reaches htmLawed ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
 - Tags returned by the `ap.security.ksesAllowedTags` filter can no longer re-enable `script`, `style`, `link`, `meta`, `base`, `iframe`, `frame`, `frameset`, `object`, `embed`, `applet`, `audio`, `video`, `canvas`, `dialog`, or forms and form controls. Entries are trimmed and lowercased, and anything that isn't a plain element name (wildcards, htmLawed `+`/`-` operators, comma lists, non-strings) is ignored. The safe attribute and URL rules also apply to the filtered list ([#50](https://github.com/ArtisanPack-UI/security/issues/50), [#52](https://github.com/ArtisanPack-UI/security/issues/52)).
 
+### Added
+
+- The release workflow now has a `sync-docs` job that queues documentation and changelog imports on docs.artisanpackui.dev after each release. It needs the `DOCS_API_TOKEN` org secret and skips with a notice when the secret isn't set. Set a `DOCS_PACKAGE_SLUG` repository variable if the docs-site slug ever differs from the repo name ([#51](https://github.com/ArtisanPack-UI/security/issues/51)).
+
 ### Changed
 
 - The global `kses()` helper now accepts and forwards `$config` and `$spec` like `Security::kses()`. Previously it silently dropped them ([#52](https://github.com/ArtisanPack-UI/security/issues/52)).
