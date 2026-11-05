@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The release workflow now has a `sync-docs` job that queues documentation and changelog imports on docs.artisanpackui.dev after each release. It needs the `DOCS_API_TOKEN` org secret and skips with a notice when the secret isn't set. Set a `DOCS_PACKAGE_SLUG` repository variable if the docs-site slug ever differs from the repo name ([#51](https://github.com/ArtisanPack-UI/security/issues/51)).
+- The release workflow now has a `sync-docs` job that queues documentation and changelog imports on docs.artisanpackui.dev after each release. It needs the `DOCS_API_TOKEN` org secret and skips with a notice when the secret isn't set. Both imports are attempted on every run, and the job fails unless each returns `202`. Set a `DOCS_PACKAGE_SLUG` repository variable if the docs-site slug ever differs from the repo name. The Packagist update now runs in its own job, so a Packagist failure no longer blocks the docs import, and the workflow defaults to read-only `GITHUB_TOKEN` permissions ([#51](https://github.com/ArtisanPack-UI/security/issues/51)).
 
 ### Changed
 
