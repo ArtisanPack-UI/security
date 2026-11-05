@@ -131,9 +131,21 @@ if (! function_exists('escCss')) {
 }
 
 if (! function_exists('kses')) {
-    function kses(?string $string = ''): string
+    /**
+     * Filters HTML so it is safe to print unescaped when `$config` is `1`.
+     *
+     * Any other `$config` is forwarded to htmLawed as-is, without that guarantee.
+     *
+     * @param  string|null  $string  The HTML to clean.
+     * @param  mixed  $config  htmLawed configuration, or `1` for the safe default.
+     * @param  mixed  $spec  htmLawed attribute specification.
+     *
+     * @since 1.0.0
+     * @since 2.2.0 Accepts and forwards `$config` and `$spec`.
+     */
+    function kses(?string $string = '', mixed $config = 1, mixed $spec = []): string
     {
-        return security()->kses($string);
+        return security()->kses($string ?? '', $config, $spec);
     }
 }
 

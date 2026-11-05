@@ -906,23 +906,20 @@ function hl_spec(string $t): array
 
     // Hide special characters used for rules.
 
-    if (! function_exists('hl_aux1')) {
-        function hl_aux1($x)
-        {
-            return
-                substr(
-                    str_replace(
-                        [';', '|', '~', ' ', ',', '/', '(', ')', '`"'],
-                        ["\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", '"'],
-                        $x[0]),
-                    1, -1);
-        }
-    }
+    $hideRuleCharacters = function ($x) {
+        return
+            substr(
+                str_replace(
+                    [';', '|', '~', ' ', ',', '/', '(', ')', '`"'],
+                    ["\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", '"'],
+                    $x[0]),
+                1, -1);
+    };
     $t =
         str_replace(
             ["\t", "\r", "\n", ' '],
             '',
-            preg_replace_callback('/"(?>(`.|[^"])*)"/sm', 'hl_aux1', trim($t)));
+            preg_replace_callback('/"(?>(`.|[^"])*)"/sm', $hideRuleCharacters, trim($t)));
 
     // Tag, attribute, and rule separators: semi-colon, comma, and slash respectively.
 
@@ -1240,7 +1237,7 @@ function hl_tag(array $t): string
                 $v =
                     preg_replace_callback(
                         '`(url(?:\()(?: )*(?:\'|"|&(?:quot|apos);)?)(.+?)((?:\'|"|&(?:quot|apos);)?(?: )*(?:\)))`iS',
-                        'hl_url',
+                        __NAMESPACE__.'\\hl_url',
                         $v);
                 $v = ! $C['css_expression']
                     ? preg_replace('`expression`i', ' ', preg_replace('`\\\\\S|(/|(%2f))(\*|(%2a))`i', ' ', $v))
@@ -1261,16 +1258,15 @@ function hl_tag(array $t): string
                         $k = isset($x[1]) ? trim($x[1]) : '';
                         $x = trim($x[0]);
                         if (isset($x[0])) {
-                            $vNew .= HTMLawed.phphl_url($x, $attr).(empty($k) ? '' : ' '.$k).', ';
+                            $vNew .= hl_url($x, $attr).(empty($k) ? '' : ' '.$k).', ';
                         }
                     }
                     $v = trim($vNew, ', ');
-                }
-                if ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
+                } elseif ($attr == 'itemtype' || ($attr == 'archive' && $ele == 'object')) {
                     $vNew = '';
                     foreach (explode(' ', $v) as $x) {
                         if (isset($x[0])) {
-                            $vNew .= hl_url($x, $attr).' HTMLawed.php';
+                            $vNew .= hl_url($x, $attr).' ';
                         }
                     }
                     $v = trim($vNew, ' ');
@@ -1308,10 +1304,20 @@ function hl_tag(array $t): string
 
             // .. Check attribute value against any $spec rule.
 
-            if (isset($eleSpec[$attr])
-                && is_array($eleSpec[$attr])
-                && ($v = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele)) === 0) {
-                continue;
+            // A $spec default replaces the value after the URL check above ran, so
+            // re-check URL-bearing defaults the same way.
+
+            if (isset($eleSpec[$attr]) && is_array($eleSpec[$attr])) {
+                $checkedValue = hl_attributeValue($attr, $v, $eleSpec[$attr], $ele);
+                if ($checkedValue === 0) {
+                    continue;
+                }
+                if ($checkedValue !== $v
+                    && (isset($urlAttrAr[$attr]) || (isset($globalAttrAr[$attr]) && strpos($attr, 'on') === 0))
+                ) {
+                    $checkedValue = hl_url($checkedValue, $attr);
+                }
+                $v = $checkedValue;
             }
 
             $filtAttrAr[$attr] = str_replace('"', '&quot;', $v);
@@ -1446,6 +1452,16 @@ function hl_tag(array $t): string
                 : $eleTransformed;
     }
 
+    // -- Drop a generated style attribute when $config denies style and $spec doesn't permit it.
+
+    if (isset($filtAttrAr['style'])
+        && ! isset($eleSpec['style'])
+        && ! empty($deniedAttrAr)
+        && (isset($deniedAttrAr['*']) ? ! isset($deniedAttrAr['-style']) : isset($deniedAttrAr['style']))
+    ) {
+        unset($filtAttrAr['style']);
+    }
+
     // -- Return opening tag with attributes.
 
     if (empty($C['hook_tag'])) {
@@ -1477,25 +1493,22 @@ function hl_tidy(string $t, mixed $format, string $parentEle): mixed
 
     // Hide CDATA/comment.
 
-    if (! function_exists('hl_aux2')) {
-        function hl_aux2($x)
-        {
-            return
-                $x[1]
-                .str_replace(
-                    ['<', '>', "\n", "\r", "\t", ' '],
-                    ["\x01", "\x02", "\x03", "\x04", "\x05", "\x07"],
-                    $x[3])
-                .$x[4];
-        }
-    }
+    $hideCdataAndComments = function ($x) {
+        return
+            $x[1]
+            .str_replace(
+                ['<', '>', "\n", "\r", "\t", ' '],
+                ["\x01", "\x02", "\x03", "\x04", "\x05", "\x07"],
+                $x[3])
+            .$x[4];
+    };
     $t =
         preg_replace(
             ['`(<\w[^>]*(?<!/)>)\s+`', '`\s+`', '`(<\w[^>]*(?<!/)>) `'],
             [' $1', ' ', '$1'],
             preg_replace_callback(
                 ['`(<(!\[CDATA\[))(.+?)(\]\]>)`sm', '`(<(!--))(.+?)(-->)`sm', '`(<(pre|script|textarea)[^>]*?>)(.+?)(</\2>)`sm'],
-                'hl_aux2',
+                $hideCdataAndComments,
                 $t));
 
     if (($format = strtolower($format)) == -1) {
@@ -1615,9 +1628,9 @@ function hl_url(mixed $url, mixed $attr = null): string
             $url = substr($url, strlen($C['base_url']));
         } elseif (empty($m[1])) { // Make URL absolute
             if (substr($url, 0, 2) == '//') {
-                $url = HTMLawed.phpsubstr($C['base_url'], 0, strpos($C['base_url'], ':') + 1).$url;
+                $url = substr($C['base_url'], 0, strpos($C['base_url'], ':') + 1).$url;
             } elseif ($url[0] == '/') {
-                $url = HTMLawed.phppreg_replace('`(^.+?://[^/]+)(.*)`', '$1', $C['base_url']).$url;
+                $url = preg_replace('`(^.+?://[^/]+)(.*)`', '$1', $C['base_url']).$url;
             } elseif (strcspn($url, './')) {
                 $url = $C['base_url'].$url;
             } else {
